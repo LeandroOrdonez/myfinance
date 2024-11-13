@@ -1,0 +1,177 @@
+import React, { useState } from 'react';
+import * as Select from '@radix-ui/react-select';
+import { Transaction, TransactionType, ExpenseCategory, IncomeCategory, SortParams } from '../types/transaction';
+import { format } from 'date-fns';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Pagination } from './common/Pagination';
+
+interface TransactionListProps {
+  transactions: Transaction[];
+  totalTransactions: number;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  sortParams: SortParams;
+  onSortChange: (params: SortParams) => void;
+  onTransactionUpdate: (
+    transactionId: number,
+    category: ExpenseCategory | IncomeCategory,
+    transactionType: TransactionType
+  ) => Promise<void>;
+  onTransactionDelete: (transactionId: number) => Promise<void>;
+}
+
+type SortField = 'date' | 'description' | 'amount' | 'type';
+type SortDirection = 'asc' | 'desc';
+
+export const TransactionList: React.FC<TransactionListProps> = ({
+  transactions,
+  totalTransactions,
+  currentPage,
+  totalPages,
+  onPageChange,
+  sortParams,
+  onSortChange,
+  onTransactionUpdate,
+  onTransactionDelete,
+}) => {
+  const handleSort = (field: SortField) => {
+    if (field === sortParams.field) {
+      onSortChange({
+        field,
+        direction: sortParams.direction === 'asc' ? 'desc' : 'asc'
+      });
+    } else {
+      onSortChange({
+        field,
+        direction: 'asc'
+      });
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (field !== sortParams.field) return null;
+    return sortParams.direction === 'asc' ? 
+      <ChevronUp className="w-4 h-4" /> : 
+      <ChevronDown className="w-4 h-4" />;
+  };
+
+  const TableHeader = ({ field, label }: { field: SortField; label: string }) => (
+    <th
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center space-x-1">
+        <span>{label}</span>
+        <SortIcon field={field} />
+      </div>
+    </th>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <TableHeader field="date" label="Date" />
+              <TableHeader field="description" label="Description" />
+              <TableHeader field="amount" label="Amount" />
+              <TableHeader field="type" label="Type" />
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {transactions.map((transaction) => (
+              <tr key={transaction.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {format(new Date(transaction.transaction_date), 'dd/MM/yyyy')}
+                </td>
+                <td className="px-6 py-4">
+                  {transaction.description}
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap ${
+                  transaction.transaction_type === TransactionType.INCOME 
+                    ? 'text-green-600' 
+                    : 'text-red-600'
+                }`}>
+                  {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: transaction.currency,
+                  }).format(Math.abs(transaction.amount))}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {transaction.transaction_type}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Select.Root
+                    value={transaction.transaction_type === TransactionType.EXPENSE 
+                      ? transaction.expense_category 
+                      : transaction.income_category}
+                    onValueChange={(value) =>
+                      onTransactionUpdate(
+                        transaction.id,
+                        value as (ExpenseCategory | IncomeCategory),
+                        transaction.transaction_type
+                      )
+                    }
+                  >
+                    <Select.Trigger className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                      <Select.Value placeholder="Select category" />
+                    </Select.Trigger>
+
+                    <Select.Portal>
+                      <Select.Content className="overflow-hidden bg-white rounded-md shadow-lg">
+                        <Select.Viewport className="p-1">
+                          {transaction.transaction_type === TransactionType.EXPENSE
+                            ? Object.values(ExpenseCategory).map((category) => (
+                                <Select.Item
+                                  key={category}
+                                  value={category}
+                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
+                                >
+                                  <Select.ItemText>{category}</Select.ItemText>
+                                </Select.Item>
+                              ))
+                            : Object.values(IncomeCategory).map((category) => (
+                                <Select.Item
+                                  key={category}
+                                  value={category}
+                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
+                                >
+                                  <Select.ItemText>{category}</Select.ItemText>
+                                </Select.Item>
+                              ))
+                          }
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => onTransactionDelete(transaction.id)}
+                    className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
+    </div>
+  );
+}; 
