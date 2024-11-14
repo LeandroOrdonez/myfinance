@@ -35,7 +35,17 @@ class TransactionBase(BaseModel):
         return v
 
 class TransactionCreate(TransactionBase):
-    pass
+    @validator('expense_category', 'income_category', pre=True)
+    def validate_categories(cls, v, values):
+        if not v:
+            return None
+            
+        if 'transaction_type' in values:
+            if values['transaction_type'] == TransactionType.EXPENSE:
+                return ExpenseCategory(v) if isinstance(v, (str, ExpenseCategory)) else None
+            if values['transaction_type'] == TransactionType.INCOME:
+                return IncomeCategory(v) if isinstance(v, (str, IncomeCategory)) else None
+        return None
 
 class Transaction(TransactionBase):
     id: int

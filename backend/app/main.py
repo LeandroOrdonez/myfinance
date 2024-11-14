@@ -6,6 +6,13 @@ import pandas as pd
 from typing import List
 import tempfile
 import os
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 from .database import get_db
 from .models import transaction as models
@@ -14,7 +21,6 @@ from .services.csv_parser import CSVParser
 from .services.statistics_service import StatisticsService
 from .models.transaction import ExpenseCategory, IncomeCategory, TransactionType
 from .database_manager import init_database, reset_database
-import logging
 import calendar
 
 from .models.statistics import FinancialStatistics, StatisticsPeriod
@@ -67,21 +73,44 @@ async def upload_csv(
             else:
                 transactions = CSVParser.parse_kbc_csv(temp_file.name)
             
-            # Save to database
+            # Save to database with category suggestions
             db_transactions = []
             for trans in transactions:
+                # Get category suggestions before creating the transaction
+                suggestions = category_suggestion_service.suggest_category(
+                    trans.description,
+                    trans.amount,
+                    trans.transaction_type
+                )
+                
+                # If we have suggestions with high confidence, set the category
+                if suggestions and suggestions[0][1] > 0.5:  # Check if confidence > 0.5
+                    best_category, confidence = suggestions[0]
+                    logger.info(f"Setting category {best_category} with confidence {confidence} for transaction: {trans.description}")
+                    
+                    if trans.transaction_type == TransactionType.EXPENSE:
+                        trans.expense_category = ExpenseCategory(best_category)
+                    else:
+                        trans.income_category = IncomeCategory(best_category)
+                
+                # Create and save the transaction
                 db_trans = models.Transaction(**trans.dict())
                 db.add(db_trans)
                 db_transactions.append(db_trans)
             
             db.commit()
             
-            # Refresh to get IDs
+            # Refresh to get IDs and add to suggestion service
             for trans in db_transactions:
                 db.refresh(trans)
-                category_suggestion_service.add_transaction(trans)            
+                if trans.expense_category or trans.income_category:
+                    category_suggestion_service.add_transaction(trans)
+                    
             return db_transactions
             
+        except Exception as e:
+            logger.error(f"Error processing CSV upload: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
         finally:
             os.unlink(temp_file.name)
 
@@ -139,7 +168,7 @@ def get_transactions(
             "total_pages": (total_count + page_size - 1) // page_size
         }
     except Exception as e:
-        logging.error(f"Error fetching transactions: {str(e)}")
+        logger.error(f"Error fetching transactions: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/transactions/{transaction_id}")
@@ -331,7 +360,7 @@ def get_statistics_overview(db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error in get_statistics_overview: {str(e)}")
+        logger.error(f"Error in get_statistics_overview: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/statistics/initialize")
