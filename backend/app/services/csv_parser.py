@@ -1,7 +1,10 @@
+import logging
 import pandas as pd
 from typing import List
 from ..schemas.transaction import TransactionCreate
 from ..models.transaction import TransactionType
+
+logger = logging.getLogger(__name__)
 
 class CSVParser:
     @staticmethod
@@ -37,7 +40,7 @@ class CSVParser:
 
     @staticmethod
     def parse_ing_csv(file_path: str) -> List[TransactionCreate]:
-        df = pd.read_csv(file_path, sep=';')
+        df = CSVParser.read_csv_with_fallback(file_path)
         transactions = []
         
         for _, row in df.iterrows():
@@ -59,7 +62,7 @@ class CSVParser:
 
     @staticmethod
     def parse_kbc_csv(file_path: str) -> List[TransactionCreate]:
-        df = pd.read_csv(file_path, sep=';')
+        df = CSVParser.read_csv_with_fallback(file_path)
         transactions = []
         
         for _, row in df.iterrows():
@@ -80,3 +83,13 @@ class CSVParser:
             transactions.append(transaction)
             
         return transactions
+
+    @staticmethod
+    def read_csv_with_fallback(file_path: str) -> pd.DataFrame:
+        encodings = ['utf-8', 'latin1', 'iso-8859-1']
+        for encoding in encodings:
+            try:
+                return pd.read_csv(file_path, sep=';', encoding=encoding)
+            except UnicodeDecodeError as e:
+                logger.warning(f"Failed to read CSV with encoding {encoding}: {e}")
+        raise ValueError("Failed to read CSV with all attempted encodings")

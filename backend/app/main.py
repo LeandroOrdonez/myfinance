@@ -35,6 +35,10 @@ init_database()
 # Initialize the service
 category_suggestion_service = CategorySuggestionService()
 
+# Initialize category suggestions
+with next(get_db()) as db:
+    category_suggestion_service.train_on_existing_transactions(db)
+
 app = FastAPI(title="MyFinance API")
 
 # Configure CORS
@@ -63,7 +67,7 @@ async def upload_csv(
         
         try:
             # Read CSV headers to detect format
-            df = pd.read_csv(temp_file.name, sep=';', nrows=0)
+            df = CSVParser.read_csv_with_fallback(temp_file.name)
             print(df.columns.tolist())
             bank_format = CSVParser.detect_bank_format(df.columns.tolist())
             
