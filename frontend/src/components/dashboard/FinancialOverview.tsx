@@ -35,6 +35,17 @@ export const FinancialOverview: React.FC = () => {
       {/* Top row - Total metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <BaseMetricCard
+          title="Total Net Savings"
+          Icon={Euro}
+          amount={statistics.current_month.total_net_savings}
+          change={calculateChange(
+            statistics.current_month.total_net_savings,
+            statistics.last_month.total_net_savings
+          )}
+          previousAmount={statistics.last_month.total_net_savings}
+          colorType="neutral"
+        />
+        <BaseMetricCard
           title="Total Income"
           Icon={Download}
           amount={statistics.current_month.total_income}
@@ -55,17 +66,6 @@ export const FinancialOverview: React.FC = () => {
           )}
           previousAmount={statistics.last_month.total_expenses}
           colorType="expense"
-        />
-        <BaseMetricCard
-          title="Total Net Savings"
-          Icon={Euro}
-          amount={statistics.current_month.total_net_savings}
-          change={calculateChange(
-            statistics.current_month.total_net_savings,
-            statistics.last_month.total_net_savings
-          )}
-          previousAmount={statistics.last_month.total_net_savings}
-          colorType="neutral"
         />
         <BaseMetricCard
           title="Total Savings Rate"
