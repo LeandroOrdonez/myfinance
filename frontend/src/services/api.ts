@@ -77,6 +77,19 @@ export const api = {
       throw new Error('Failed to delete transaction');
     }
   },
+  
+  async restoreTransaction(transaction: Transaction): Promise<Transaction> {
+    const response = await axios.post(
+      `${API_BASE_URL}/transactions/restore`,
+      transaction
+    );
+    
+    if (!response.data) {
+      throw new Error('Failed to restore transaction');
+    }
+    
+    return response.data;
+  },
 
   getStatisticsOverview: async () => {
     const response = await axios.get(`${API_BASE_URL}/statistics/overview`);

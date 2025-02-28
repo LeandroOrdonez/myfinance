@@ -52,3 +52,9 @@ class Transaction(TransactionBase):
 
     class Config:
         orm_mode = True
+        
+class TransactionRestore(TransactionBase):
+    id: Optional[int] = None
+
+    class Config:
+        orm_mode = True

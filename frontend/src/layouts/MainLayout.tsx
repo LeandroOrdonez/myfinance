@@ -1,18 +1,19 @@
 import React from 'react';
 import { FileUpload } from '../components/FileUpload';
-
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
+import { UndoButton } from '../components/UndoButton';
 
 interface MainLayoutProps {
   children: React.ReactNode;
   onUploadSuccess?: () => void;  // Make it optional
+  onUndo?: () => Promise<boolean>;
+  canUndo?: boolean;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ 
   children, 
-  onUploadSuccess = () => {} 
+  onUploadSuccess = () => {},
+  onUndo,
+  canUndo = false
 }) => {
   return (
     <div className="min-h-screen bg-gray-100">
@@ -22,7 +23,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             <h1 className="text-3xl font-bold text-gray-900">
               MyFinance Dashboard
             </h1>
-            <FileUpload onUploadSuccess={onUploadSuccess} />
+            <div className="flex space-x-3">
+              {onUndo && (
+                <UndoButton onUndo={onUndo} canUndo={canUndo} />
+              )}
+              <FileUpload onUploadSuccess={onUploadSuccess} />
+            </div>
           </div>
           {children}
         </div>

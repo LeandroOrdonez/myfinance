@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Query
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -422,4 +422,27 @@ def suggest_category(
             ]
         }
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
+@app.post("/transactions/restore", response_model=schemas.Transaction)
+def restore_transaction(
+    transaction_data: schemas.TransactionRestore = Body(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Create a new transaction with the provided data
+        # The ID will be auto-generated, which is fine for our purpose
+        new_transaction = models.Transaction(**transaction_data.dict(exclude={"id"}))
+        db.add(new_transaction)
+        db.commit()
+        db.refresh(new_transaction)
+        
+        # Update statistics for the affected period
+        StatisticsService.update_statistics(db, new_transaction.transaction_date)
+        
+        return new_transaction
+        
+    except Exception as e:
+        logger.error(f"Error restoring transaction: {str(e)}")
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

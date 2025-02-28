@@ -68,4 +68,24 @@ export interface SuggestCategoryResponse {
 export interface SortParams {
   field: 'date' | 'description' | 'amount' | 'type';
   direction: 'asc' | 'desc';
-} 
+}
+
+export enum ActionType {
+  DELETE_TRANSACTION = 'DELETE_TRANSACTION',
+  UPDATE_CATEGORY = 'UPDATE_CATEGORY'
+}
+
+export interface DeleteTransactionAction {
+  type: ActionType.DELETE_TRANSACTION;
+  transaction: Transaction;
+}
+
+export interface UpdateCategoryAction {
+  type: ActionType.UPDATE_CATEGORY;
+  transactionId: number;
+  oldCategory: ExpenseCategory | IncomeCategory | undefined;
+  newCategory: ExpenseCategory | IncomeCategory;
+  transactionType: TransactionType;
+}
+
+export type UndoableAction = DeleteTransactionAction | UpdateCategoryAction;

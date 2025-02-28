@@ -8,6 +8,7 @@ import { MonthlyTrends } from './components/dashboard/MonthlyTrends';
 import { FinancialOverview } from './components/dashboard/FinancialOverview';
 import { FinancialTrends } from './components/dashboard/FinancialTrends';
 import { Loading } from './components/common/Loading';
+import { UndoButton } from './components/UndoButton';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
 
@@ -23,6 +24,8 @@ function App() {
     setDateRange,
     handleCategoryUpdate,
     handleDeleteTransaction,
+    handleUndo,
+    canUndo,
     currentPage,
     totalPages,
     totalTransactions,
@@ -49,7 +52,11 @@ function App() {
   }
 
   return (
-    <MainLayout onUploadSuccess={handleUploadSuccess}>
+    <MainLayout 
+      onUploadSuccess={handleUploadSuccess}
+      onUndo={handleUndo}
+      canUndo={canUndo}
+    >
       <Tabs.Root defaultValue="analytics" className="mt-6">
         <Tabs.List className="flex border-b border-gray-200 mb-6">
           <Tabs.Trigger

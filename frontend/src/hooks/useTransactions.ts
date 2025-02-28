@@ -6,15 +6,18 @@ import {
   TransactionType,
   CategoryStatistics,
   SortParams,
+  ActionType,
 } from '../types/transaction';
 import { api } from '../services/api';
 import { isWithinInterval } from 'date-fns';
+import { useActionHistory } from './useActionHistory';
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [statistics, setStatistics] = useState<CategoryStatistics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addAction, undoLastAction, canUndo } = useActionHistory();
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,6 +125,15 @@ export const useTransactions = () => {
         ? transaction.expense_category 
         : transaction.income_category;
 
+      // Record this action for potential undo
+      addAction({
+        type: ActionType.UPDATE_CATEGORY,
+        transactionId,
+        oldCategory,
+        newCategory: category,
+        transactionType
+      });
+
       const updatedTransaction = await api.updateCategory(
         transactionId, 
         category, 
@@ -147,12 +159,19 @@ export const useTransactions = () => {
 
   const handleDeleteTransaction = async (transactionId: number) => {
     try {
+      // Find transaction before deleting
+      const transaction = transactions.find(t => t.id === transactionId);
+      if (!transaction) return;
+      
+      // Record this action for potential undo
+      addAction({
+        type: ActionType.DELETE_TRANSACTION,
+        transaction: transaction
+      });
+      
       await api.deleteTransaction(transactionId);
       
       // Remove from local transactions
-      const transaction = transactions.find(t => t.id === transactionId);
-      if (!transaction) return;
-
       setTransactions(prev => prev.filter(t => t.id !== transactionId));
 
       // Update local statistics
@@ -219,6 +238,15 @@ export const useTransactions = () => {
     });
   }, [transactions, searchTerm, categoryFilter, dateRange]);
 
+  const handleUndo = async () => {
+    const success = await undoLastAction();
+    if (success) {
+      // Refresh data after successful undo
+      await fetchData();
+    }
+    return success;
+  };
+
   return {
     transactions: filteredTransactions,
     statistics,
@@ -234,6 +262,8 @@ export const useTransactions = () => {
     setDateRange,
     handleCategoryUpdate,
     handleDeleteTransaction,
+    handleUndo,
+    canUndo,
     sortParams,
     setSortParams,
   };
