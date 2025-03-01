@@ -27,7 +27,7 @@ export const useTransactions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTransactions, setTotalTransactions] = useState(0);
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 7;
 
   const [sortParams, setSortParams] = useState<SortParams>({
     field: 'date',
