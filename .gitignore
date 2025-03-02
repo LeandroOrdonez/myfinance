@@ -28,3 +28,4 @@ venv/
 *.pyc
 
 .vscode
+convs.md

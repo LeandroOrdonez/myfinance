@@ -63,8 +63,18 @@ export const api = {
     return response.data;
   },
 
-  getCategoryStatistics: async () => {
-    const response = await axios.get(`${API_BASE_URL}/statistics/by-category`);
+  getCategoryStatistics: async (
+    period: 'daily' | 'monthly' | 'all_time' = 'monthly',
+    date?: string
+  ) => {
+    const params: Record<string, string> = { period };
+    if (date) {
+      params.date = date;
+    }
+    
+    const response = await axios.get(`${API_BASE_URL}/statistics/by-category`, {
+      params
+    });
     return response.data;
   },
 

@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, Float, String, Date, Enum
+from sqlalchemy import Column, Integer, Float, String, Date, Enum, ForeignKey
 from ..database import Base
-from .transaction import TransactionType
+from .transaction import TransactionType, ExpenseCategory, IncomeCategory
 import enum
 
 class StatisticsPeriod(enum.Enum):
@@ -37,3 +37,36 @@ class FinancialStatistics(Base):
     # New: Yearly metrics
     yearly_income = Column(Float, default=0)
     yearly_expenses = Column(Float, default=0)
+
+class CategoryStatistics(Base):
+    __tablename__ = "category_statistics"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    period = Column(Enum(StatisticsPeriod), nullable=False)
+    date = Column(Date, nullable=True)  # Null for ALL_TIME
+    
+    # Category identification
+    category_name = Column(String(100), nullable=False)
+    transaction_type = Column(Enum(TransactionType), nullable=False)
+    
+    # Period-specific metrics
+    period_amount = Column(Float, default=0)
+    period_transaction_count = Column(Integer, default=0)
+    period_percentage = Column(Float, default=0)  # Percentage of total for the period
+    
+    # Cumulative metrics
+    total_amount = Column(Float, default=0)
+    total_transaction_count = Column(Integer, default=0)
+    
+    # Averages
+    average_transaction_amount = Column(Float, default=0)
+    
+    # Yearly metrics
+    yearly_amount = Column(Float, default=0)
+    yearly_transaction_count = Column(Integer, default=0)
+    
+    # Unique constraint
+    __table_args__ = (
+        # unique constraint for category, transaction_type, period, and date
+        {'sqlite_autoincrement': True},
+    )

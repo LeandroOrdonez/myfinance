@@ -4,6 +4,8 @@ import { TransactionList } from './components/TransactionList';
 import { TransactionFilters } from './components/TransactionFilters';
 import { FinancialOverview } from './components/dashboard/FinancialOverview';
 import { FinancialTrends } from './components/dashboard/FinancialTrends';
+import { CategoryBreakdown } from './components/dashboard/CategoryBreakdown';
+import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
@@ -71,6 +73,10 @@ function App() {
           {activeView === 'analytics' && (
             <div className="space-y-6 mt-4">
               <FinancialOverview />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <CategoryBreakdown />
+                <CategoryTrends />
+              </div>
               <FinancialTrends />
             </div>
           )}

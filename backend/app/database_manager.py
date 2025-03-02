@@ -2,7 +2,7 @@ from sqlalchemy import inspect
 import logging
 from .database import engine, Base
 from .models.transaction import Transaction
-from .models.statistics import FinancialStatistics
+from .models.statistics import FinancialStatistics, CategoryStatistics
 from .services.statistics_service import StatisticsService
 from sqlalchemy.orm import Session
 
@@ -18,7 +18,7 @@ def init_database():
     existing_tables = inspector.get_table_names()
     logger.info(f"Existing tables: {existing_tables}")
 
-    tables_to_check = ["transactions", "financial_statistics"]
+    tables_to_check = ["transactions", "financial_statistics", "category_statistics"]
     missing_tables = [table for table in tables_to_check if table not in existing_tables]
 
     if missing_tables:
@@ -39,10 +39,24 @@ def init_database():
                 logger.info(f"Columns in {table} table: {columns}")
 
             # Initialize statistics if transactions table already existed
-            if "transactions" in existing_tables and "financial_statistics" in missing_tables:
+            need_stats_init = False
+            need_category_stats_init = False
+            
+            if "transactions" in existing_tables:
+                if "financial_statistics" in missing_tables:
+                    need_stats_init = True
+                if "category_statistics" in missing_tables:
+                    need_category_stats_init = True
+            
+            if need_stats_init or need_category_stats_init:
                 logger.info("Initializing statistics for existing transactions...")
                 with Session(engine) as db:
-                    StatisticsService.initialize_statistics(db)
+                    if need_stats_init:
+                        logger.info("Initializing financial statistics...")
+                        StatisticsService.initialize_statistics(db)
+                    if need_category_stats_init:
+                        logger.info("Initializing category statistics...")
+                        StatisticsService.initialize_category_statistics(db)
                 logger.info("Statistics initialized successfully!")
             
         except Exception as e:

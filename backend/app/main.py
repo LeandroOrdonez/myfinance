@@ -23,8 +23,8 @@ from .models.transaction import ExpenseCategory, IncomeCategory, TransactionType
 from .database_manager import init_database, reset_database
 import calendar
 
-from .models.statistics import FinancialStatistics, StatisticsPeriod
-from datetime import date, timedelta
+from .models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
+from datetime import date, timedelta, datetime
 
 from .services.category_suggestion_service import CategorySuggestionService
 from pydantic import BaseModel
@@ -223,48 +223,132 @@ def update_transaction_category(
     return transaction
 
 @app.get("/statistics/by-category")
-def get_category_statistics(db: Session = Depends(get_db)):
-    # Get expense statistics
-    expense_stats = db.query(
-        models.Transaction.expense_category,
-        func.sum(models.Transaction.amount).label("total_amount"),
-        func.count(models.Transaction.id).label("transaction_count")
-    ).filter(
-        models.Transaction.transaction_type == models.TransactionType.EXPENSE
-    ).group_by(models.Transaction.expense_category).all()
+def get_category_statistics(
+    db: Session = Depends(get_db),
+    period: str = Query("monthly", description="Statistics period (daily, monthly, all_time)"),
+    date: str = Query(None, description="Target date in ISO format (YYYY-MM-DD). Required for daily/monthly periods.")
+):
+    try:
+        # Convert period string to enum
+        try:
+            stat_period = StatisticsPeriod(period)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid period: {period}. Must be one of: daily, monthly, all_time")
+        
+        # Parse date if provided and needed
+        target_date = None
+        if date and stat_period != StatisticsPeriod.ALL_TIME:
+            try:
+                target_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid date format: {date}. Use YYYY-MM-DD")
+        
+        # For ALL_TIME, we don't need a specific date
+        if stat_period == StatisticsPeriod.ALL_TIME:
+            target_date = None
+        # For MONTHLY and no date specified, use last day of current month
+        elif stat_period == StatisticsPeriod.MONTHLY and not target_date:
+            today = datetime.now().date()
+            target_date = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+        # For DAILY and no date specified, use today
+        elif stat_period == StatisticsPeriod.DAILY and not target_date:
+            target_date = datetime.now().date()
+        
+        # If it's monthly period, ensure we're using the last day of the month
+        if stat_period == StatisticsPeriod.MONTHLY and target_date:
+            target_date = target_date.replace(day=calendar.monthrange(target_date.year, target_date.month)[1])
+            
+        # Query category statistics from the new model
+        query = db.query(CategoryStatistics).filter(
+            CategoryStatistics.period == stat_period
+        )
+        
+        # Add date filter if needed
+        if target_date and stat_period != StatisticsPeriod.ALL_TIME:
+            query = query.filter(CategoryStatistics.date == target_date)
+        
+        # Execute query
+        stats = query.all()
+        
+        if not stats:
+            # If no advanced stats found, fall back to simple calculation for backward compatibility
+            # Get expense statistics
+            expense_stats = db.query(
+                models.Transaction.expense_category,
+                func.sum(models.Transaction.amount).label("total_amount"),
+                func.count(models.Transaction.id).label("transaction_count")
+            ).filter(
+                models.Transaction.transaction_type == models.TransactionType.EXPENSE
+            ).group_by(models.Transaction.expense_category).all()
 
-    # Get income statistics
-    income_stats = db.query(
-        models.Transaction.income_category,
-        func.sum(models.Transaction.amount).label("total_amount"),
-        func.count(models.Transaction.id).label("transaction_count")
-    ).filter(
-        models.Transaction.transaction_type == models.TransactionType.INCOME
-    ).group_by(models.Transaction.income_category).all()
+            # Get income statistics
+            income_stats = db.query(
+                models.Transaction.income_category,
+                func.sum(models.Transaction.amount).label("total_amount"),
+                func.count(models.Transaction.id).label("transaction_count")
+            ).filter(
+                models.Transaction.transaction_type == models.TransactionType.INCOME
+            ).group_by(models.Transaction.income_category).all()
 
-    results = []
-    
-    # Process expense statistics
-    for stat in expense_stats:
-        if stat.expense_category:
-            results.append({
-                "category": stat.expense_category.value,
-                "total_amount": abs(float(stat.total_amount)),
-                "transaction_count": stat.transaction_count,
-                "transaction_type": "Expense"
-            })
+            results = []
+            
+            # Process expense statistics
+            for stat in expense_stats:
+                if stat.expense_category:
+                    results.append({
+                        "category": stat.expense_category.value,
+                        "total_amount": abs(float(stat.total_amount)),
+                        "transaction_count": stat.transaction_count,
+                        "transaction_type": "Expense"
+                    })
 
-    # Process income statistics
-    for stat in income_stats:
-        if stat.income_category:
-            results.append({
-                "category": stat.income_category.value,
-                "total_amount": float(stat.total_amount),
-                "transaction_count": stat.transaction_count,
-                "transaction_type": "Income"
-            })
+            # Process income statistics
+            for stat in income_stats:
+                if stat.income_category:
+                    results.append({
+                        "category": stat.income_category.value,
+                        "total_amount": float(stat.total_amount),
+                        "transaction_count": stat.transaction_count,
+                        "transaction_type": "Income"
+                    })
 
-    return results
+            return results
+        
+        # Format results
+        results = []
+        for stat in stats:
+            result = {
+                "category": stat.category_name,
+                "transaction_type": stat.transaction_type.value,
+                "period": stat.period.value,
+                "date": stat.date.isoformat() if stat.date else None,
+                
+                # Period-specific metrics
+                "period_amount": float(stat.period_amount),
+                "period_transaction_count": stat.period_transaction_count,
+                "period_percentage": float(stat.period_percentage),
+                
+                # For backward compatibility
+                "total_amount": float(stat.period_amount),
+                "transaction_count": stat.period_transaction_count,
+                
+                # Cumulative metrics
+                "total_amount_cumulative": float(stat.total_amount),
+                "total_transaction_count": stat.total_transaction_count,
+                
+                # Averages
+                "average_transaction_amount": float(stat.average_transaction_amount),
+                
+                # Yearly metrics
+                "yearly_amount": float(stat.yearly_amount),
+                "yearly_transaction_count": stat.yearly_transaction_count
+            }
+            results.append(result)
+        
+        return results
+    except Exception as e:
+        logger.error(f"Error in get_category_statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/statistics/overview")
 def get_statistics_overview(db: Session = Depends(get_db)):

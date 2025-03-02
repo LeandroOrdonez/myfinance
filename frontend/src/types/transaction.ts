@@ -51,9 +51,29 @@ export interface Transaction {
 
 export interface CategoryStatistics {
   category: string;
+  transaction_type: TransactionType;
+  period?: string;
+  date?: string;
+  
+  // For backward compatibility
   total_amount: number;
   transaction_count: number;
-  transaction_type: TransactionType;
+  
+  // Period-specific metrics
+  period_amount?: number;
+  period_transaction_count?: number;
+  period_percentage?: number;
+  
+  // Cumulative metrics
+  total_amount_cumulative?: number;
+  total_transaction_count?: number;
+  
+  // Averages
+  average_transaction_amount?: number;
+  
+  // Yearly metrics
+  yearly_amount?: number;
+  yearly_transaction_count?: number;
 }
 
 export interface CategorySuggestion {
