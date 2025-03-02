@@ -235,9 +235,15 @@ def get_category_statistics(
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid period: {period}. Must be one of: daily, monthly, all_time")
         
+        # Get latest transaction date
+        latest_transaction = db.query(models.Transaction).order_by(models.Transaction.transaction_date.desc()).first()
+        
         # Parse date if provided and needed
         target_date = None
-        if date and stat_period != StatisticsPeriod.ALL_TIME:
+
+        if not date:
+            target_date = latest_transaction.transaction_date
+        elif stat_period != StatisticsPeriod.ALL_TIME:
             try:
                 target_date = datetime.strptime(date, "%Y-%m-%d").date()
             except ValueError:
@@ -271,48 +277,8 @@ def get_category_statistics(
         stats = query.all()
         
         if not stats:
-            # If no advanced stats found, fall back to simple calculation for backward compatibility
-            # Get expense statistics
-            expense_stats = db.query(
-                models.Transaction.expense_category,
-                func.sum(models.Transaction.amount).label("total_amount"),
-                func.count(models.Transaction.id).label("transaction_count")
-            ).filter(
-                models.Transaction.transaction_type == models.TransactionType.EXPENSE
-            ).group_by(models.Transaction.expense_category).all()
-
-            # Get income statistics
-            income_stats = db.query(
-                models.Transaction.income_category,
-                func.sum(models.Transaction.amount).label("total_amount"),
-                func.count(models.Transaction.id).label("transaction_count")
-            ).filter(
-                models.Transaction.transaction_type == models.TransactionType.INCOME
-            ).group_by(models.Transaction.income_category).all()
-
-            results = []
-            
-            # Process expense statistics
-            for stat in expense_stats:
-                if stat.expense_category:
-                    results.append({
-                        "category": stat.expense_category.value,
-                        "total_amount": abs(float(stat.total_amount)),
-                        "transaction_count": stat.transaction_count,
-                        "transaction_type": "Expense"
-                    })
-
-            # Process income statistics
-            for stat in income_stats:
-                if stat.income_category:
-                    results.append({
-                        "category": stat.income_category.value,
-                        "total_amount": float(stat.total_amount),
-                        "transaction_count": stat.transaction_count,
-                        "transaction_type": "Income"
-                    })
-
-            return results
+            logger.error(f"Error in get_category_statistics: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
         
         # Format results
         results = []

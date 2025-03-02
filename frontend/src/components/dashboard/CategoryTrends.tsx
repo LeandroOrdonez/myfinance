@@ -71,29 +71,34 @@ export const CategoryTrends: React.FC = () => {
     }).format(value);
   };
 
+  // Get current month name from statistics
+  const currentDate = new Date(statistics.current_month.date!);
+  const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+  const currentMonthNumber = currentDate.getMonth() + 1; // Adding 1 because getMonth() returns 0-11
+  const currentYear = currentDate.getFullYear();
+
+  // Calculate yearly averages
+  const yearlyIncomeAverage = statistics.current_month.yearly_income / currentMonthNumber;
+  const yearlyExpenseAverage = statistics.current_month.yearly_expenses / currentMonthNumber;
+
   // Prepare monthly vs yearly data
   const monthlyData = [
     {
       name: 'Income',
       Monthly: statistics.current_month.period_income,
-      'Monthly Average': statistics.current_month.yearly_income / 12
+      'Monthly Average': yearlyIncomeAverage
     },
     {
       name: 'Expenses',
       Monthly: statistics.current_month.period_expenses,
-      'Monthly Average': statistics.current_month.yearly_expenses / 12
+      'Monthly Average': yearlyExpenseAverage
     },
     {
       name: 'Net Savings',
       Monthly: statistics.current_month.period_net_savings,
-      'Monthly Average': (statistics.current_month.yearly_income - statistics.current_month.yearly_expenses) / 12
+      'Monthly Average': yearlyIncomeAverage - yearlyExpenseAverage
     }
-  ];
-
-  // Get current month name from statistics
-  const currentDate = new Date(statistics.current_month.date!);
-  const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
-  const currentYear = currentDate.getFullYear();
+  ]; 
 
   // Handle period change
   const handlePeriodChange = (newPeriod: 'monthly' | 'yearly' | 'all_time') => {

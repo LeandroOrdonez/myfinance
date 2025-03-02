@@ -57,6 +57,7 @@ export const CategoryBreakdown: React.FC = () => {
   // Get current month name from statistics
   const currentDate = new Date(statistics.current_month.date!);
   const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+  const currentMonthNumber = currentDate.getMonth() + 1; // Adding 1 because getMonth() returns 0-11
   const currentYear = currentDate.getFullYear();
   
   // Format data for charts
@@ -84,14 +85,15 @@ export const CategoryBreakdown: React.FC = () => {
       name: item.category,
       value: item.period_amount !== undefined ? item.period_amount : item.total_amount,
       percentage: item.percentage.toFixed(1)
-    }));
+    })); 
 
+  // Calculate yearly averages
+  const yearlyIncomeAverage = statistics.current_month.yearly_income / currentMonthNumber;
+  const yearlyExpenseAverage = statistics.current_month.yearly_expenses / currentMonthNumber;
+  
   // Calculate percentage of monthly income/expense compared to yearly
-  const monthlyVsYearlyExpense = statistics.current_month.period_expenses / 
-    (statistics.current_month.yearly_expenses / 12) * 100;
-    
-  const monthlyVsYearlyIncome = statistics.current_month.period_income / 
-    (statistics.current_month.yearly_income / 12) * 100;
+  const monthlyVsYearlyExpense = (statistics.current_month.period_expenses / yearlyExpenseAverage) * 100;
+  const monthlyVsYearlyIncome = (statistics.current_month.period_income / yearlyIncomeAverage) * 100;
     
   // Handle period change
   const handlePeriodChange = (newPeriod: 'monthly' | 'yearly' | 'all_time') => {
@@ -331,8 +333,8 @@ export const CategoryBreakdown: React.FC = () => {
               <span className="font-medium">
                 {formatCurrency(
                   activeTab === 'expenses' 
-                    ? statistics.current_month.yearly_expenses / 12
-                    : statistics.current_month.yearly_income / 12
+                    ? yearlyExpenseAverage
+                    : yearlyIncomeAverage
                 )}
               </span>
             </div>
@@ -351,20 +353,22 @@ export const CategoryBreakdown: React.FC = () => {
           <p className={`text-xl font-bold ${activeTab === 'expenses' ? 'text-red-700' : 'text-green-700'}`}>
             {formatCurrency(
               activeTab === 'expenses' 
-                ? (selectedPeriod === 'yearly' ? yearlyTotalExpenses : 
-                   selectedPeriod === 'all_time' ? cumulativeTotalExpenses : 
-                   totalExpenses)
-                : (selectedPeriod === 'yearly' ? yearlyTotalIncome : 
-                   selectedPeriod === 'all_time' ? cumulativeTotalIncome : 
-                   totalIncome)
+                ? (selectedPeriod === 'yearly' ? statistics.current_month.yearly_expenses : 
+                   selectedPeriod === 'all_time' ? statistics.all_time.total_expenses : 
+                   statistics.current_month.period_expenses)
+                : (selectedPeriod === 'yearly' ? statistics.current_month.yearly_income : 
+                   selectedPeriod === 'all_time' ? statistics.all_time.total_income : 
+                   statistics.current_month.period_income)
             )}
           </p>
         </div>
         <div className={`p-4 rounded-lg ${activeTab === 'expenses' ? 'bg-red-50' : 'bg-green-50'}`}>
           <h4 className="text-sm font-medium mb-1">Top Category</h4>
           <p className={`text-xl font-bold ${activeTab === 'expenses' ? 'text-red-700' : 'text-green-700'}`}>
-            {activeTab === 'expenses' && expenseData.length > 0 ? expenseData[0].name : 'None'}
-            {activeTab === 'income' && incomeData.length > 0 ? incomeData[0].name : 'None'}
+          {activeTab === 'expenses' 
+            ? (expenseData.length > 0 ? expenseData[0].name : 'None')
+            : (incomeData.length > 0 ? incomeData[0].name : 'None')
+          }
           </p>
           {(activeTab === 'expenses' && expenseData.length > 0) || (activeTab === 'income' && incomeData.length > 0) ? (
             <p className="text-sm text-gray-600 mt-1">

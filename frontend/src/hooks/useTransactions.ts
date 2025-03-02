@@ -37,15 +37,11 @@ export const useTransactions = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [transactionsResponse, statsData] = await Promise.all([
-        api.getTransactions(currentPage, PAGE_SIZE, sortParams),
-        api.getCategoryStatistics(),
-      ]);
+      const transactionsResponse = await api.getTransactions(currentPage, PAGE_SIZE, sortParams);
       
       setTransactions(transactionsResponse.items);
       setTotalTransactions(transactionsResponse.total);
       setTotalPages(transactionsResponse.total_pages);
-      setStatistics(statsData);
       setError(null);
     } catch (err) {
       setError('Failed to fetch data');
@@ -53,63 +49,6 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateLocalStatistics = (
-    updatedTransaction: Transaction,
-    oldCategory: ExpenseCategory | IncomeCategory | undefined,
-    newCategory: ExpenseCategory | IncomeCategory
-  ) => {
-    setStatistics(prevStats => {
-      const newStats = [...prevStats];
-      const amount = Math.abs(updatedTransaction.amount);
-
-      // Remove from old category if it exists
-      if (oldCategory) {
-        const oldStatIndex = newStats.findIndex(
-          stat => stat.category === oldCategory && 
-                 stat.transaction_type === updatedTransaction.transaction_type
-        );
-        if (oldStatIndex !== -1) {
-          const oldStat = newStats[oldStatIndex];
-          if (oldStat.transaction_count === 1) {
-            // Remove the category if this was the last transaction
-            newStats.splice(oldStatIndex, 1);
-          } else {
-            // Update the category stats
-            newStats[oldStatIndex] = {
-              ...oldStat,
-              total_amount: oldStat.total_amount - amount,
-              transaction_count: oldStat.transaction_count - 1
-            };
-          }
-        }
-      }
-
-      // Add to new category
-      const newStatIndex = newStats.findIndex(
-        stat => stat.category === newCategory && 
-               stat.transaction_type === updatedTransaction.transaction_type
-      );
-      if (newStatIndex !== -1) {
-        // Update existing category
-        newStats[newStatIndex] = {
-          ...newStats[newStatIndex],
-          total_amount: newStats[newStatIndex].total_amount + amount,
-          transaction_count: newStats[newStatIndex].transaction_count + 1
-        };
-      } else {
-        // Add new category
-        newStats.push({
-          category: newCategory,
-          total_amount: amount,
-          transaction_count: 1,
-          transaction_type: updatedTransaction.transaction_type
-        });
-      }
-
-      return newStats;
-    });
   };
 
   const handleCategoryUpdate = async (
@@ -146,9 +85,6 @@ export const useTransactions = () => {
           t.id === transactionId ? updatedTransaction : t
         )
       );
-
-      // Update local statistics
-      updateLocalStatistics(updatedTransaction, oldCategory, category);
       
       // Refresh financial statistics
       await api.getStatisticsOverview();
