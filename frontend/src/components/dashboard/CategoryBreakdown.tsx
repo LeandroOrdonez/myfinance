@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { 
+  ResponsiveContainer, Tooltip, Legend, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+  Treemap, 
+} from 'recharts';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useCategoryStatistics } from '../../hooks/useCategoryStatistics';
@@ -24,7 +28,7 @@ const INCOME_COLORS = [
 
 export const CategoryBreakdown: React.FC = () => {
   const [activeTab, setActiveTab] = useState('expenses');
-  const [chartType, setChartType] = useState('pie');
+  const [chartType, setChartType] = useState('treemap');
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly' | 'all_time'>('monthly');
   
   const { 
@@ -61,30 +65,48 @@ export const CategoryBreakdown: React.FC = () => {
   const currentYear = currentDate.getFullYear();
   
   // Format data for charts
+  // Filter out zero values to avoid empty boxes in treemap
   const expenseData = expenseCategoriesWithPercentage
+    .filter(item => {
+      const amount = item.period_amount !== undefined ? item.period_amount : item.total_amount;
+      return amount > 0;
+    })
     .sort((a, b) => {
       // Use period_amount if available, otherwise use total_amount
       const amountA = a.period_amount !== undefined ? a.period_amount : a.total_amount;
       const amountB = b.period_amount !== undefined ? b.period_amount : b.total_amount;
       return amountB - amountA;
     })
-    .map(item => ({
+    .map((item, index) => ({
       name: item.category,
       value: item.period_amount !== undefined ? item.period_amount : item.total_amount,
-      percentage: item.percentage.toFixed(1)
+      percentage: item.percentage !== undefined ? item.percentage.toFixed(1) : '0.0',
+      // Format for treemap display - must be greater than 0
+      size: Math.max(item.period_amount !== undefined ? item.period_amount : item.total_amount, 0.01),
+      // Add color information for treemap
+      color: EXPENSE_COLORS[index % EXPENSE_COLORS.length]
     }));
 
+  // Filter out zero values to avoid empty boxes in treemap
   const incomeData = incomeCategoriesWithPercentage
+    .filter(item => {
+      const amount = item.period_amount !== undefined ? item.period_amount : item.total_amount;
+      return amount > 0; 
+    })
     .sort((a, b) => {
       // Use period_amount if available, otherwise use total_amount
       const amountA = a.period_amount !== undefined ? a.period_amount : a.total_amount;
       const amountB = b.period_amount !== undefined ? b.period_amount : b.total_amount;
       return amountB - amountA;
     })
-    .map(item => ({
+    .map((item, index) => ({
       name: item.category,
       value: item.period_amount !== undefined ? item.period_amount : item.total_amount,
-      percentage: item.percentage.toFixed(1)
+      percentage: item.percentage !== undefined ? item.percentage.toFixed(1) : '0.0',
+      // Format for treemap display - must be greater than 0
+      size: Math.max(item.period_amount !== undefined ? item.period_amount : item.total_amount, 0.01),
+      // Add color information for treemap
+      color: INCOME_COLORS[index % INCOME_COLORS.length]
     })); 
 
   // Calculate yearly averages
@@ -184,14 +206,14 @@ export const CategoryBreakdown: React.FC = () => {
           {/* Chart type selector */}
           <div className="flex space-x-2">
             <button
-              onClick={() => setChartType('pie')}
+              onClick={() => setChartType('treemap')}
               className={`px-2 py-1 text-xs rounded ${
-                chartType === 'pie' 
+                chartType === 'treemap' 
                   ? 'bg-blue-100 text-blue-700' 
                   : 'bg-gray-100 text-gray-600'
               }`}
             >
-              Pie Chart
+              Treemap
             </button>
             <button
               onClick={() => setChartType('bar')}
@@ -232,36 +254,33 @@ export const CategoryBreakdown: React.FC = () => {
         </Tabs.List>
 
         <div className="h-[400px]">
-          {chartType === 'pie' ? (
+          {chartType === 'treemap' ? (
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={activeTab === 'expenses' ? expenseData : incomeData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={150}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percentage }) => 
-                    `${name} ${percentage}%`
-                  }
-                >
-                  {(activeTab === 'expenses' ? expenseData : incomeData).map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={activeTab === 'expenses' 
-                        ? EXPENSE_COLORS[index % EXPENSE_COLORS.length]
-                        : INCOME_COLORS[index % INCOME_COLORS.length]
-                      }
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
+              <Treemap
+                data={activeTab === 'expenses' ? (expenseData.length > 0 ? expenseData : [{name: 'No Data', size: 1, value: 0, percentage: '0'}]) 
+                                             : (incomeData.length > 0 ? incomeData : [{name: 'No Data', size: 1, value: 0, percentage: '0'}])}
+                dataKey="size"
+                aspectRatio={4/3}
+                stroke="#fff"
+                fill={activeTab === 'expenses' ? '#EF4444' : '#10B981'}
+                isAnimationActive={false}
+              >
+                <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-white p-2 border rounded shadow-lg">
+                          <p className="font-medium">{payload[0].payload.name}</p>
+                          <p>{formatCurrency(payload[0].value as number)}</p>
+                          <p>{`${payload[0].payload.percentage}%`}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
-                <Legend />
-              </PieChart>
+              </Treemap>
             </ResponsiveContainer>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
