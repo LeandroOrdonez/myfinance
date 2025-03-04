@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 # Get the absolute path to the database file
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATABASE_PATH = os.path.join(BASE_DIR, "myfinance.db")
+DATABASE_PATH = os.path.join(BASE_DIR, "app" , "data", "myfinance.db")
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 logger.info(f"Database path: {DATABASE_PATH}")
