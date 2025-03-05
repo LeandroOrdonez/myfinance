@@ -20,7 +20,7 @@ docker-compose up -d
 ```
 
 3. The application will be available at:
-   - Frontend: http://localhost:80
+   - Frontend: http://localhost:8080
    - Backend API: http://localhost:8000
 
 ### Data Persistence
