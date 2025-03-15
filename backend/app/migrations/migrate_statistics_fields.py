@@ -3,7 +3,6 @@ from sqlalchemy.orm import sessionmaker
 import logging
 
 from app.database import SQLALCHEMY_DATABASE_URL
-from app.models.statistics import FinancialStatistics, StatisticsPeriod
 from app.services.statistics_service import StatisticsService
 
 logging.basicConfig(level=logging.INFO)
