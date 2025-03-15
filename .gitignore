@@ -29,3 +29,7 @@ venv/
 
 .vscode
 convs.md
+client_secrets.json
+mycreds.txt
+*.db
+backup/settings.yaml
