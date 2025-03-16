@@ -40,11 +40,7 @@ export const CategoryTrends: React.FC = () => {
   
   // Update category statistics API period when selectedPeriod changes
   useEffect(() => {
-    if (selectedPeriod === 'yearly') {
-      setPeriod('all_time');
-    } else {
-      setPeriod(selectedPeriod);
-    }
+    setPeriod(selectedPeriod);
   }, [selectedPeriod, setPeriod]);
 
   if (loading) return <Loading />;

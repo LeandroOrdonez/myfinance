@@ -64,7 +64,7 @@ export const api = {
   },
 
   getCategoryStatistics: async (
-    period: 'daily' | 'monthly' | 'all_time' = 'monthly',
+    period: 'monthly' | 'yearly' | 'all_time' = 'monthly',
     date?: string
   ) => {
     const params: Record<string, string> = { period };

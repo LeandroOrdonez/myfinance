@@ -121,13 +121,8 @@ export const CategoryBreakdown: React.FC = () => {
   const handlePeriodChange = (newPeriod: 'monthly' | 'yearly' | 'all_time') => {
     setSelectedPeriod(newPeriod);
     
-    // Map selected period to API period
-    if (newPeriod === 'yearly') {
-      setPeriod('all_time');
-      // Reset date filter since we'll use the statistics object for year filtering
-    } else {
-      setPeriod(newPeriod);
-    }
+    // Map selected period to API period - using the new backend values directly
+    setPeriod(newPeriod);
   };
 
   // Format currency

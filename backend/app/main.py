@@ -225,15 +225,15 @@ def update_transaction_category(
 @app.get("/statistics/by-category")
 def get_category_statistics(
     db: Session = Depends(get_db),
-    period: str = Query("monthly", description="Statistics period (daily, monthly, all_time)"),
-    date: str = Query(None, description="Target date in ISO format (YYYY-MM-DD). Required for daily/monthly periods.")
+    period: str = Query("monthly", description="Statistics period (monthly, yearly, all_time)"),
+    date: str = Query(None, description="Target date in ISO format (YYYY-MM-DD). Required for monthly/yearly periods.")
 ):
     try:
         # Convert period string to enum
         try:
             stat_period = StatisticsPeriod(period)
         except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid period: {period}. Must be one of: daily, monthly, all_time")
+            raise HTTPException(status_code=400, detail=f"Invalid period: {period}. Must be one of: monthly, yearly, all_time")
         
         # Get latest transaction date
         latest_transaction = db.query(models.Transaction).order_by(models.Transaction.transaction_date.desc()).first()
@@ -256,13 +256,17 @@ def get_category_statistics(
         elif stat_period == StatisticsPeriod.MONTHLY and not target_date:
             today = datetime.now().date()
             target_date = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-        # For DAILY and no date specified, use today
-        elif stat_period == StatisticsPeriod.DAILY and not target_date:
-            target_date = datetime.now().date()
+        # For YEARLY and no date specified, use last day of current year
+        elif stat_period == StatisticsPeriod.YEARLY and not target_date:
+            today = datetime.now().date()
+            target_date = datetime(today.year, 12, 31).date()
         
         # If it's monthly period, ensure we're using the last day of the month
         if stat_period == StatisticsPeriod.MONTHLY and target_date:
             target_date = target_date.replace(day=calendar.monthrange(target_date.year, target_date.month)[1])
+        # If it's yearly period, ensure we're using the last day of the year
+        elif stat_period == StatisticsPeriod.YEARLY and target_date:
+            target_date = datetime(target_date.year, 12, 31).date()
             
         # Query category statistics from the new model
         query = db.query(CategoryStatistics).filter(

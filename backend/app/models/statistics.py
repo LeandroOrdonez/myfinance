@@ -4,8 +4,8 @@ from .transaction import TransactionType, ExpenseCategory, IncomeCategory
 import enum
 
 class StatisticsPeriod(enum.Enum):
-    DAILY = "daily"
     MONTHLY = "monthly"
+    YEARLY = "yearly"
     ALL_TIME = "all_time"
 
 class FinancialStatistics(Base):

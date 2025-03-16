@@ -37,12 +37,12 @@ class StatisticsService:
                         day=calendar.monthrange(target_date.year, target_date.month)[1]
                     )
                 )
-            elif period == StatisticsPeriod.DAILY:
+            elif period == StatisticsPeriod.YEARLY:
                 period_query = period_query.filter(
-                    Transaction.transaction_date == target_date
+                    extract('year', Transaction.transaction_date) == target_date.year
                 )
                 cumulative_query = cumulative_query.filter(
-                    Transaction.transaction_date <= target_date
+                    Transaction.transaction_date <= date(target_date.year, 12, 31)
                 )
         
         # Calculate period-specific stats
@@ -109,7 +109,6 @@ class StatisticsService:
         # Base queries for different time periods
         period_query = db.query(Transaction)
         cumulative_query = db.query(Transaction)
-        yearly_query = db.query(Transaction)
         
         # Apply time filters
         if period != StatisticsPeriod.ALL_TIME:
@@ -121,18 +120,12 @@ class StatisticsService:
                 cumulative_query = cumulative_query.filter(
                     Transaction.transaction_date <= target_date.replace(day=calendar.monthrange(target_date.year, target_date.month)[1])
                 )
-                yearly_query = yearly_query.filter(
-                    extract('year', Transaction.transaction_date) == target_date.year,
-                    Transaction.transaction_date <= target_date.replace(
-                        day=calendar.monthrange(target_date.year, target_date.month)[1]
-                    )
-                )
-            elif period == StatisticsPeriod.DAILY:
+            elif period == StatisticsPeriod.YEARLY:
                 period_query = period_query.filter(
-                    Transaction.transaction_date == target_date
+                    extract('year', Transaction.transaction_date) == target_date.year
                 )
                 cumulative_query = cumulative_query.filter(
-                    Transaction.transaction_date <= target_date
+                    Transaction.transaction_date <= date(target_date.year, 12, 31)
                 )
         
         # Build filters based on period
@@ -143,8 +136,10 @@ class StatisticsService:
                     extract('year', Transaction.transaction_date) == target_date.year,
                     extract('month', Transaction.transaction_date) == target_date.month
                 ]
-            elif period == StatisticsPeriod.DAILY:
-                period_filters = [Transaction.transaction_date == target_date]
+            elif period == StatisticsPeriod.YEARLY:
+                period_filters = [
+                    extract('year', Transaction.transaction_date) == target_date.year
+                ]
                 
         # Get period totals for percentage calculations
         period_income_total = db.query(func.sum(Transaction.amount)).filter(
@@ -183,8 +178,10 @@ class StatisticsService:
                             day=calendar.monthrange(target_date.year, target_date.month)[1]
                         )
                     ]
-                elif period == StatisticsPeriod.DAILY:
-                    cumulative_filters = [Transaction.transaction_date <= target_date]
+                elif period == StatisticsPeriod.YEARLY:
+                    cumulative_filters = [
+                        Transaction.transaction_date <= date(target_date.year, 12, 31)
+                    ]
             
             # Cumulative stats
             total_amount = db.query(func.sum(func.abs(Transaction.amount))).filter(
@@ -199,8 +196,9 @@ class StatisticsService:
             
             # Build yearly filters
             yearly_filters = []
-            if period != StatisticsPeriod.ALL_TIME:
-                if period == StatisticsPeriod.MONTHLY or period == StatisticsPeriod.DAILY:
+            if period != StatisticsPeriod.ALL_TIME and period != StatisticsPeriod.YEARLY:
+                # For monthly, we still need yearly stats
+                if period == StatisticsPeriod.MONTHLY:
                     yearly_filters = [
                         extract('year', Transaction.transaction_date) == target_date.year,
                         Transaction.transaction_date <= target_date.replace(
@@ -231,8 +229,8 @@ class StatisticsService:
                 'total_amount': total_amount,
                 'total_transaction_count': total_count,
                 'average_transaction_amount': avg_amount,
-                'yearly_amount': yearly_amount,
-                'yearly_transaction_count': yearly_count
+                'yearly_amount': yearly_amount if StatisticsPeriod.MONTHLY else period_amount,
+                'yearly_transaction_count': yearly_count if StatisticsPeriod.MONTHLY else period_count
             })
         
         # Get all income categories
@@ -261,8 +259,10 @@ class StatisticsService:
                             day=calendar.monthrange(target_date.year, target_date.month)[1]
                         )
                     ]
-                elif period == StatisticsPeriod.DAILY:
-                    cumulative_filters = [Transaction.transaction_date <= target_date]
+                elif period == StatisticsPeriod.YEARLY:
+                    cumulative_filters = [
+                        Transaction.transaction_date <= date(target_date.year, 12, 31)
+                    ]
                     
             # Cumulative stats
             total_amount = db.query(func.sum(Transaction.amount)).filter(
@@ -277,8 +277,9 @@ class StatisticsService:
             
             # Build yearly filters (reusing from above)
             yearly_filters = []
-            if period != StatisticsPeriod.ALL_TIME:
-                if period == StatisticsPeriod.MONTHLY or period == StatisticsPeriod.DAILY:
+            if period != StatisticsPeriod.ALL_TIME and period != StatisticsPeriod.YEARLY:
+                # For monthly, we still need yearly stats
+                if period == StatisticsPeriod.MONTHLY:
                     yearly_filters = [
                         extract('year', Transaction.transaction_date) == target_date.year,
                         Transaction.transaction_date <= target_date.replace(
@@ -309,8 +310,8 @@ class StatisticsService:
                 'total_amount': total_amount,
                 'total_transaction_count': total_count,
                 'average_transaction_amount': avg_amount,
-                'yearly_amount': yearly_amount,
-                'yearly_transaction_count': yearly_count
+                'yearly_amount': yearly_amount if StatisticsPeriod.MONTHLY else period_amount,
+                'yearly_transaction_count': yearly_count if StatisticsPeriod.MONTHLY else period_count
             })
         
         return expense_categories + income_categories
@@ -323,20 +324,6 @@ class StatisticsService:
         """
         # Get all statistics that need updating with FOR UPDATE lock 
         # to prevent concurrent modifications
-        
-        # Update daily stats
-        daily_stats = db.query(FinancialStatistics).filter(
-            FinancialStatistics.period == StatisticsPeriod.DAILY,
-            FinancialStatistics.date == transaction_date
-        ).with_for_update().first()
-        
-        if not daily_stats:
-            daily_stats = FinancialStatistics(
-                period=StatisticsPeriod.DAILY,
-                date=transaction_date
-            )
-            db.add(daily_stats)
-            db.flush()  # Ensure it's in the DB before calculating
         
         # Update monthly stats
         monthly_date = transaction_date.replace(day=calendar.monthrange(transaction_date.year, transaction_date.month)[1])
@@ -353,6 +340,21 @@ class StatisticsService:
             db.add(monthly_stats)
             db.flush()  # Ensure it's in the DB before calculating
         
+        # Update yearly stats
+        yearly_date = date(transaction_date.year, 12, 31)
+        yearly_stats = db.query(FinancialStatistics).filter(
+            FinancialStatistics.period == StatisticsPeriod.YEARLY,
+            FinancialStatistics.date == yearly_date
+        ).with_for_update().first()
+        
+        if not yearly_stats:
+            yearly_stats = FinancialStatistics(
+                period=StatisticsPeriod.YEARLY,
+                date=yearly_date
+            )
+            db.add(yearly_stats)
+            db.flush()  # Ensure it's in the DB before calculating
+        
         # Update all-time stats
         all_time_stats = db.query(FinancialStatistics).filter(
             FinancialStatistics.period == StatisticsPeriod.ALL_TIME
@@ -367,12 +369,12 @@ class StatisticsService:
         
         # Now that we have locks on all relevant statistics rows,
         # calculate the updated values
-        daily_data = StatisticsService.calculate_statistics(
-            db, StatisticsPeriod.DAILY, transaction_date
-        )
-        
         monthly_data = StatisticsService.calculate_statistics(
             db, StatisticsPeriod.MONTHLY, transaction_date
+        )
+        
+        yearly_data = StatisticsService.calculate_statistics(
+            db, StatisticsPeriod.YEARLY, transaction_date
         )
         
         all_time_data = StatisticsService.calculate_statistics(
@@ -381,8 +383,8 @@ class StatisticsService:
         
         # Update all statistics objects
         for stats_obj, data in [
-            (daily_stats, daily_data),
             (monthly_stats, monthly_data),
+            (yearly_stats, yearly_data),
             (all_time_stats, all_time_data)
         ]:
             for key, value in data.items():
@@ -402,39 +404,33 @@ class StatisticsService:
             # Calculate end of month date for monthly stats
             monthly_date = transaction_date.replace(day=calendar.monthrange(transaction_date.year, transaction_date.month)[1])
             
-            # Clear existing category statistics for this date
-            db.query(CategoryStatistics).filter(
-                CategoryStatistics.period == StatisticsPeriod.DAILY,
-                CategoryStatistics.date == transaction_date
-            ).delete()
+            # Calculate end of year date for yearly stats
+            yearly_date = date(transaction_date.year, 12, 31)
             
+            # Clear existing category statistics for this month
             db.query(CategoryStatistics).filter(
                 CategoryStatistics.period == StatisticsPeriod.MONTHLY,
                 CategoryStatistics.date == monthly_date
             ).delete()
             
-            # Calculate new category statistics
-            daily_categories = StatisticsService.calculate_category_statistics(
-                db, StatisticsPeriod.DAILY, transaction_date
-            )
+            # Clear existing category statistics for this year
+            db.query(CategoryStatistics).filter(
+                CategoryStatistics.period == StatisticsPeriod.YEARLY,
+                CategoryStatistics.date == yearly_date
+            ).delete()
             
+            # Calculate new category statistics
             monthly_categories = StatisticsService.calculate_category_statistics(
                 db, StatisticsPeriod.MONTHLY, transaction_date
+            )
+            
+            yearly_categories = StatisticsService.calculate_category_statistics(
+                db, StatisticsPeriod.YEARLY, transaction_date
             )
             
             all_time_categories = StatisticsService.calculate_category_statistics(
                 db, StatisticsPeriod.ALL_TIME
             )
-            
-            # Create and save daily category statistics
-            for cat_data in daily_categories:
-                if cat_data['period_transaction_count'] > 0:
-                    cat_stat = CategoryStatistics(
-                        period=StatisticsPeriod.DAILY,
-                        date=transaction_date,
-                        **cat_data
-                    )
-                    db.add(cat_stat)
             
             # Create and save monthly category statistics
             for cat_data in monthly_categories:
@@ -442,6 +438,16 @@ class StatisticsService:
                     cat_stat = CategoryStatistics(
                         period=StatisticsPeriod.MONTHLY,
                         date=monthly_date,
+                        **cat_data
+                    )
+                    db.add(cat_stat)
+            
+            # Create and save yearly category statistics
+            for cat_data in yearly_categories:
+                if cat_data['period_transaction_count'] > 0:
+                    cat_stat = CategoryStatistics(
+                        period=StatisticsPeriod.YEARLY,
+                        date=yearly_date,
                         **cat_data
                     )
                     db.add(cat_stat)
@@ -477,26 +483,21 @@ class StatisticsService:
             db.query(FinancialStatistics).delete()
             db.flush()
             
-            # Get all unique dates from transactions
-            dates = db.query(
+            # Get all unique months from transactions
+            months = db.query(
                 extract('year', Transaction.transaction_date).label('year'),
                 extract('month', Transaction.transaction_date).label('month')
             ).distinct().all()
             
-            # Initialize monthly and daily statistics for each date
-            for year, month in dates:
+            # Get all unique years from transactions
+            years = db.query(
+                extract('year', Transaction.transaction_date).label('year')
+            ).distinct().all()
+            
+            # Initialize monthly statistics for each month
+            for year, month in months:
                 # set day to the last day of the month
                 date_obj = date(year=int(year), month=int(month), day=calendar.monthrange(int(year), int(month))[1])
-                
-                # Use a modified version of update_statistics that doesn't require locks
-                # since we already have an exclusive lock on the entire statistics table
-                
-                # Daily stats for the last day of month (representative)
-                daily_stats = FinancialStatistics(
-                    period=StatisticsPeriod.DAILY,
-                    date=date_obj
-                )
-                db.add(daily_stats)
                 
                 # Monthly stats
                 monthly_stats = FinancialStatistics(
@@ -506,13 +507,30 @@ class StatisticsService:
                 db.add(monthly_stats)
                 
                 # Calculate statistics
-                daily_data = StatisticsService.calculate_statistics(db, StatisticsPeriod.DAILY, date_obj)
                 monthly_data = StatisticsService.calculate_statistics(db, StatisticsPeriod.MONTHLY, date_obj)
                 
                 # Update the statistics objects
-                for stats_obj, data in [(daily_stats, daily_data), (monthly_stats, monthly_data)]:
-                    for key, value in data.items():
-                        setattr(stats_obj, key, value)
+                for key, value in monthly_data.items():
+                    setattr(monthly_stats, key, value)
+            
+            # Initialize yearly statistics for each year
+            for (year,) in years:
+                # set day to the last day of the year
+                date_obj = date(year=int(year), month=12, day=31)
+                
+                # Yearly stats
+                yearly_stats = FinancialStatistics(
+                    period=StatisticsPeriod.YEARLY,
+                    date=date_obj
+                )
+                db.add(yearly_stats)
+                
+                # Calculate statistics
+                yearly_data = StatisticsService.calculate_statistics(db, StatisticsPeriod.YEARLY, date_obj)
+                
+                # Update the statistics objects
+                for key, value in yearly_data.items():
+                    setattr(yearly_stats, key, value)
             
             # Initialize all-time statistics
             all_time_stats = FinancialStatistics(period=StatisticsPeriod.ALL_TIME)
@@ -540,41 +558,52 @@ class StatisticsService:
             db.query(CategoryStatistics).delete()
             db.flush()
             
-            # Get all unique dates from transactions
-            dates = db.query(
+            # Get all unique months from transactions
+            months = db.query(
                 extract('year', Transaction.transaction_date).label('year'),
                 extract('month', Transaction.transaction_date).label('month')
             ).distinct().all()
             
-            # Initialize monthly and daily category statistics for each date
-            for year, month in dates:
+            # Get all unique years from transactions
+            years = db.query(
+                extract('year', Transaction.transaction_date).label('year')
+            ).distinct().all()
+            
+            # Initialize monthly category statistics for each month
+            for year, month in months:
                 # set day to the last day of the month
                 date_obj = date(year=int(year), month=int(month), day=calendar.monthrange(int(year), int(month))[1])
                 
-                # Calculate category statistics
-                daily_categories = StatisticsService.calculate_category_statistics(
-                    db, StatisticsPeriod.DAILY, date_obj
-                )
-                
+                # Calculate category statistics for monthly
                 monthly_categories = StatisticsService.calculate_category_statistics(
                     db, StatisticsPeriod.MONTHLY, date_obj
                 )
-                
-                # Create and save daily category statistics
-                for cat_data in daily_categories:
-                    if cat_data['period_transaction_count'] > 0:
-                        cat_stat = CategoryStatistics(
-                            period=StatisticsPeriod.DAILY,
-                            date=date_obj,
-                            **cat_data
-                        )
-                        db.add(cat_stat)
                 
                 # Create and save monthly category statistics
                 for cat_data in monthly_categories:
                     if cat_data['period_transaction_count'] > 0:
                         cat_stat = CategoryStatistics(
                             period=StatisticsPeriod.MONTHLY,
+                            date=date_obj,
+                            **cat_data
+                        )
+                        db.add(cat_stat)
+            
+            # Initialize yearly category statistics for each year
+            for (year,) in years:
+                # set day to the last day of the year
+                date_obj = date(year=int(year), month=12, day=31)
+                
+                # Calculate category statistics for yearly
+                yearly_categories = StatisticsService.calculate_category_statistics(
+                    db, StatisticsPeriod.YEARLY, date_obj
+                )
+                
+                # Create and save yearly category statistics
+                for cat_data in yearly_categories:
+                    if cat_data['period_transaction_count'] > 0:
+                        cat_stat = CategoryStatistics(
+                            period=StatisticsPeriod.YEARLY,
                             date=date_obj,
                             **cat_data
                         )

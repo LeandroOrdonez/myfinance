@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { CategoryStatistics, TransactionType } from '../types/transaction';
 
-type StatisticsPeriod = 'daily' | 'monthly' | 'all_time';
+type StatisticsPeriod = 'monthly' | 'yearly' | 'all_time';
 
 export const useCategoryStatistics = (initialPeriod: StatisticsPeriod = 'monthly', initialDate?: string) => {
   const [categoryStats, setCategoryStats] = useState<CategoryStatistics[]>([]);
