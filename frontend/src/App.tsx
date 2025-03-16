@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
 import { TransactionList } from './components/TransactionList';
 import { TransactionFilters } from './components/TransactionFilters';
@@ -10,22 +11,31 @@ import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
 
-function App() {
-  // State to manage the active view
-  const [activeView, setActiveView] = useState('analytics');
+// Analytics Dashboard Component
+const AnalyticsDashboard = () => {
+  return (
+    <div className="space-y-6 mt-4">
+      <FinancialOverview />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategoryBreakdown />
+        <CategoryTrends />
+      </div>
+      <FinancialTrends />
+    </div>
+  );
+};
 
+// Transactions Component
+const TransactionsView = () => {
   const {
     transactions,
     loading,
     error,
-    refreshData,
     setSearchTerm,
     setCategoryFilter,
     setDateRange,
     handleCategoryUpdate,
     handleDeleteTransaction,
-    handleUndo,
-    canUndo,
     currentPage,
     totalPages,
     totalTransactions,
@@ -34,78 +44,76 @@ function App() {
     setSortParams,
   } = useTransactions();
 
+  if (loading) return <Loading />;
+  if (error) return <div className="text-red-500 text-center">{error}</div>;
+
+  return (
+    <div className="mt-4">
+      <TransactionFilters
+        onSearchChange={setSearchTerm}
+        onCategoryFilter={setCategoryFilter}
+        onDateRangeChange={setDateRange}
+      />
+      <div className="mt-6">
+        <TransactionList 
+          transactions={transactions}
+          totalTransactions={totalTransactions}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          sortParams={sortParams}
+          onSortChange={setSortParams}
+          onTransactionUpdate={handleCategoryUpdate}
+          onTransactionDelete={handleDeleteTransaction}
+        />
+      </div>
+    </div>
+  );
+};
+
+function App() {
   const handleUploadSuccess = async () => {
     try {
       await api.initializeStatistics();
-      refreshData();
+      // No need to explicitly refresh data as components will handle this with their hooks
     } catch (error) {
       console.error('Failed to initialize statistics:', error);
     }
   };
 
-  const handleNavigate = (view: string) => {
-    setActiveView(view);
-  };
-
-  if (error) {
-    return (
-      <MainLayout
-        activeView={activeView}
-        onNavigate={handleNavigate}
-      >
-        <div className="text-red-500 text-center">{error}</div>
-      </MainLayout>
-    );
-  }
-
   return (
-    <MainLayout 
-      onUploadSuccess={handleUploadSuccess}
-      onUndo={handleUndo}
-      canUndo={canUndo}
-      activeView={activeView}
-      onNavigate={handleNavigate}
-    >
-      {loading ? (
-        <Loading />
-      ) : (
-        <>
-          {activeView === 'analytics' && (
-            <div className="space-y-6 mt-4">
-              <FinancialOverview />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <CategoryBreakdown />
-                <CategoryTrends />
-              </div>
-              <FinancialTrends />
-            </div>
-          )}
-
-          {activeView === 'transactions' && (
-            <div className="mt-4">
-              <TransactionFilters
-                onSearchChange={setSearchTerm}
-                onCategoryFilter={setCategoryFilter}
-                onDateRangeChange={setDateRange}
-              />
-              <div className="mt-6">
-                <TransactionList 
-                  transactions={transactions}
-                  totalTransactions={totalTransactions}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                  sortParams={sortParams}
-                  onSortChange={setSortParams}
-                  onTransactionUpdate={handleCategoryUpdate}
-                  onTransactionDelete={handleDeleteTransaction}
-                />
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </MainLayout>
+    <BrowserRouter>
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            <MainLayout onUploadSuccess={handleUploadSuccess}>
+              <Navigate to="/analytics" replace />
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="/analytics" 
+          element={
+            <MainLayout onUploadSuccess={handleUploadSuccess}>
+              <AnalyticsDashboard />
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="/transactions" 
+          element={
+            <MainLayout 
+              onUploadSuccess={handleUploadSuccess}
+              showUndoButton={true}
+            >
+              <TransactionsView />
+            </MainLayout>
+          } 
+        />
+        <Route path="*" element={<Navigate to="/analytics" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

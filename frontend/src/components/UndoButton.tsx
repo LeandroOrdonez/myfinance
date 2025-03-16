@@ -50,8 +50,10 @@ export const UndoButton: React.FC<UndoButtonProps> = ({ onUndo, canUndo }) => {
           } ${isUndoing ? 'opacity-70 cursor-wait' : ''}
         `}
         title="Undo last action"
+        aria-label="Undo last action"
       >
         <ArrowUturnLeftIcon className="h-4 w-4 mr-1" />
+        <span>Undo</span>
       </button>
 
       <Toast.Provider swipeDirection="right">
