@@ -33,3 +33,4 @@ client_secrets.json
 mycreds.txt
 *.db
 backup/settings.yaml
+PRD*.md

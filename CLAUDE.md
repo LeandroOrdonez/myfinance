@@ -12,7 +12,6 @@
 ### Backend
 - Start server: `uvicorn app.main:app --reload` (in backend directory)
 - Install dependencies: `pip install -r requirements.txt`
-- Run migrations: `python -m app.migrations.run_migrations`
 
 ## Code Style
 
