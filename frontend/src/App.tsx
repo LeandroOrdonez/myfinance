@@ -34,6 +34,10 @@ const TransactionsView = () => {
     setSearchTerm,
     setCategoryFilter,
     setDateRange,
+    clearFilters,
+    searchTerm,
+    categoryFilter,
+    dateRange,
     handleCategoryUpdate,
     handleDeleteTransaction,
     currentPage,
@@ -50,9 +54,13 @@ const TransactionsView = () => {
   return (
     <div className="mt-4">
       <TransactionFilters
+        searchTerm={searchTerm}
+        categoryFilter={categoryFilter}
+        dateRange={dateRange}
         onSearchChange={setSearchTerm}
         onCategoryFilter={setCategoryFilter}
         onDateRangeChange={setDateRange}
+        onClearFilters={clearFilters}
       />
       <div className="mt-6">
         <TransactionList 

@@ -140,21 +140,77 @@ def get_transactions(
     page: int = Query(1, gt=0),
     page_size: int = Query(10, gt=0, le=100),
     sort_field: str = Query('date', regex='^(date|description|amount|type)$'),
-    sort_direction: str = Query('desc', regex='^(asc|desc)$')
+    sort_direction: str = Query('desc', regex='^(asc|desc)$'),
+    search: str = Query(None, description="Search term for description/counterparty"),
+    category: str = Query(None, description="Category filter (expense or income)"),
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
 ):
     try:
+        from sqlalchemy import or_, and_
+        from datetime import datetime
         # Map frontend field name to database field name
         db_sort_field = SORT_FIELD_MAPPING.get(sort_field, 'transaction_date')
         
         # Build the base query
         query = db.query(models.Transaction)
-        
+
+        # Apply search filter
+        if search:
+            ilike_str = f"%{search.lower()}%"
+            query = query.filter(
+                or_(
+                    func.lower(models.Transaction.description).ilike(ilike_str),
+                    func.lower(models.Transaction.counterparty_name).ilike(ilike_str)
+                )
+            )
+        # Apply category filter
+        if category and category != 'all':
+            # Try to match ExpenseCategory or IncomeCategory enums
+            from .models.transaction import ExpenseCategory, IncomeCategory
+            expense_enum = None
+            income_enum = None
+            try:
+                expense_enum = ExpenseCategory(category)
+            except Exception:
+                pass
+            try:
+                income_enum = IncomeCategory(category)
+            except Exception:
+                pass
+            if expense_enum and income_enum:
+                query = query.filter(
+                    or_(
+                        models.Transaction.expense_category == expense_enum,
+                        models.Transaction.income_category == income_enum
+                    )
+                )
+            elif expense_enum:
+                query = query.filter(models.Transaction.expense_category == expense_enum)
+            elif income_enum:
+                query = query.filter(models.Transaction.income_category == income_enum)
+            else:
+                query = query.filter(False)  # No match, return empty
+        # Apply date range filter
+        if start_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                query = query.filter(models.Transaction.transaction_date >= start)
+            except Exception:
+                pass
+        if end_date:
+            try:
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                query = query.filter(models.Transaction.transaction_date <= end)
+            except Exception:
+                pass
+
         # Add sorting
         if sort_direction == 'asc':
             sort_column = getattr(models.Transaction, db_sort_field).asc()
         else:
             sort_column = getattr(models.Transaction, db_sort_field).desc()
-            
+        
         query = query.order_by(sort_column)
         
         # Get total count before pagination

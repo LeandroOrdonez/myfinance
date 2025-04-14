@@ -22,7 +22,14 @@ export const useTransactions = () => {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | IncomeCategory | 'all'>('all');
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
+
+  // Debounce for filters
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -34,22 +41,44 @@ export const useTransactions = () => {
     direction: 'desc'
   });
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const transactionsResponse = await api.getTransactions(currentPage, PAGE_SIZE, sortParams);
-      
-      setTransactions(transactionsResponse.items);
-      setTotalTransactions(transactionsResponse.total);
-      setTotalPages(transactionsResponse.total_pages);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch data');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Helper to format date to YYYY-MM-DD
+const formatDate = (date: Date | string | undefined) => {
+  if (!date) return undefined;
+  if (typeof date === 'string') return date;
+  return date.toISOString().split('T')[0];
+};
+
+const fetchData = async (filtersOverride?: {
+  search?: string;
+  category?: string;
+  start_date?: string;
+  end_date?: string;
+}) => {
+  setLoading(true);
+  try {
+    const filters = filtersOverride || {
+      search: debouncedSearch || undefined,
+      category: categoryFilter !== 'all' ? categoryFilter : undefined,
+      start_date: dateRange.start ? dateRange.start : undefined,
+      end_date: dateRange.end ? dateRange.end : undefined,
+    };
+    const transactionsResponse = await api.getTransactions(
+      currentPage,
+      PAGE_SIZE,
+      sortParams,
+      filters
+    );
+    setTransactions(transactionsResponse.items);
+    setTotalTransactions(transactionsResponse.total);
+    setTotalPages(transactionsResponse.total_pages);
+    setError(null);
+  } catch (err) {
+    setError('Failed to fetch data');
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCategoryUpdate = async (
     transactionId: number,
@@ -146,33 +175,11 @@ export const useTransactions = () => {
     }
   };
 
+  // Fetch when filters or pagination change
   useEffect(() => {
     fetchData();
-  }, [currentPage, sortParams]);
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter(transaction => {
-      // Search filter
-      const matchesSearch = searchTerm === '' || 
-        transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Category filter
-      const matchesCategory = categoryFilter === 'all' || (
-        transaction.transaction_type === TransactionType.EXPENSE
-          ? transaction.expense_category === categoryFilter
-          : transaction.income_category === categoryFilter
-      );
-
-      // Date range filter
-      const matchesDateRange = !dateRange || 
-        isWithinInterval(new Date(transaction.transaction_date), {
-          start: dateRange.start,
-          end: dateRange.end,
-        });
-
-      return matchesSearch && matchesCategory && matchesDateRange;
-    });
-  }, [transactions, searchTerm, categoryFilter, dateRange]);
+    // eslint-disable-next-line
+  }, [currentPage, sortParams, debouncedSearch, categoryFilter, dateRange]);
 
   const handleUndo = async () => {
     const success = await undoLastAction();
@@ -183,8 +190,16 @@ export const useTransactions = () => {
     return success;
   };
 
+  // Handler to clear all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setDateRange({ start: '', end: '' });
+    setCurrentPage(1);
+  };
+
   return {
-    transactions: filteredTransactions,
+    transactions,
     statistics,
     loading,
     error,
@@ -196,6 +211,10 @@ export const useTransactions = () => {
     setSearchTerm,
     setCategoryFilter,
     setDateRange,
+    clearFilters,
+    searchTerm,
+    categoryFilter,
+    dateRange,
     handleCategoryUpdate,
     handleDeleteTransaction,
     handleUndo,

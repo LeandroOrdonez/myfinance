@@ -26,7 +26,13 @@ export const api = {
   getTransactions: async (
     page: number, 
     pageSize: number,
-    sortParams: SortParams
+    sortParams: SortParams,
+    filters: {
+      search?: string;
+      category?: string;
+      start_date?: string;
+      end_date?: string;
+    } = {}
   ): Promise<{
     items: Transaction[];
     total: number;
@@ -34,14 +40,14 @@ export const api = {
     page_size: number;
     total_pages: number;
   }> => {
-    const response = await axios.get(`${API_BASE_URL}/transactions/`, {
-      params: {
-        page,
-        page_size: pageSize,
-        sort_field: sortParams.field,
-        sort_direction: sortParams.direction
-      }
-    });
+    const params: Record<string, any> = {
+      page,
+      page_size: pageSize,
+      sort_field: sortParams.field,
+      sort_direction: sortParams.direction,
+      ...filters
+    };
+    const response = await axios.get(`${API_BASE_URL}/transactions/`, { params });
     return response.data;
   },
 

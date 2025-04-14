@@ -3,40 +3,27 @@ import * as Select from '@radix-ui/react-select';
 import { ExpenseCategory, IncomeCategory } from '../types/transaction';
 
 interface TransactionFiltersProps {
+  searchTerm: string;
+  categoryFilter: ExpenseCategory | IncomeCategory | 'all';
+  dateRange: { start: string; end: string };
   onSearchChange: (search: string) => void;
   onCategoryFilter: (category: ExpenseCategory | IncomeCategory | 'all') => void;
-  onDateRangeChange: (range: { start: Date; end: Date } | null) => void;
+  onDateRangeChange: (range: { start: string; end: string }) => void;
+  onClearFilters: () => void;
 }
 
 export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
+  searchTerm,
+  categoryFilter,
+  dateRange,
   onSearchChange,
   onCategoryFilter,
   onDateRangeChange,
+  onClearFilters,
 }) => {
-  const [dateRange, setDateRange] = React.useState<{
-    start: string;
-    end: string;
-  }>({
-    start: '',
-    end: '',
-  });
-
   const handleDateRangeChange = (type: 'start' | 'end', value: string) => {
     const newRange = { ...dateRange, [type]: value };
-    setDateRange(newRange);
-
-    if (newRange.start && newRange.end) {
-      onDateRangeChange({
-        start: new Date(newRange.start),
-        end: new Date(newRange.end),
-      });
-    }
-  };
-
-  const clearFilters = () => {
-    onCategoryFilter('all');
-    onDateRangeChange(null);
-    onSearchChange('');
+    onDateRangeChange(newRange);
   };
 
   return (
@@ -45,11 +32,12 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         <input
           type="text"
           placeholder="Search transactions..."
+          value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 flex-1"
         />
 
-        <Select.Root onValueChange={(value) => onCategoryFilter(value as ExpenseCategory | IncomeCategory | 'all')}>
+        <Select.Root value={categoryFilter} onValueChange={(value) => onCategoryFilter(value as ExpenseCategory | IncomeCategory | 'all')}>
           <Select.Trigger className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <Select.Value placeholder="Filter by category" />
           </Select.Trigger>
@@ -115,7 +103,7 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         </div>
 
         <button
-          onClick={clearFilters}
+          onClick={onClearFilters}
           className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           Clear Filters
@@ -123,4 +111,4 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       </div>
     </div>
   );
-}; 
+};
