@@ -117,8 +117,11 @@ export const api = {
     return response.data;
   },
 
-  getStatisticsTimeseries: async () => {
-    const response = await axios.get(`${API_BASE_URL}/statistics/timeseries`);
+  getStatisticsTimeseries: async (start_date?: string, end_date?: string) => {
+    const params: Record<string, string> = {};
+    if (start_date) params.start_date = start_date;
+    if (end_date) params.end_date = end_date;
+    const response = await axios.get(`${API_BASE_URL}/statistics/timeseries`, { params });
     return response.data;
   },
 

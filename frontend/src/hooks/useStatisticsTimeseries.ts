@@ -12,7 +12,7 @@ interface TimeseriesData {
     total_net_savings: number;
 }
 
-export const useStatisticsTimeseries = () => {
+export const useStatisticsTimeseries = (start_date?: string, end_date?: string) => {
     const [timeseriesData, setTimeseriesData] = useState<TimeseriesData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -20,7 +20,7 @@ export const useStatisticsTimeseries = () => {
     const fetchTimeseriesData = async () => {
         setLoading(true);
         try {
-            const data = await api.getStatisticsTimeseries();
+            const data = await api.getStatisticsTimeseries(start_date, end_date);
             const transformedData = data.map((item: any) => ({
                 date: item.date,
                 period_income: Number(item.period_income) || 0,
@@ -31,7 +31,6 @@ export const useStatisticsTimeseries = () => {
                 total_expenses: Number(item.total_expenses) || 0,
                 total_net_savings: Number(item.total_net_savings) || 0
             }));
-            // console.log('Transformed timeseries data:', transformedData);
             setTimeseriesData(transformedData);
             setError(null);
         } catch (err) {
@@ -44,7 +43,8 @@ export const useStatisticsTimeseries = () => {
 
     useEffect(() => {
         fetchTimeseriesData();
-    }, []);
+        // eslint-disable-next-line
+    }, [start_date, end_date]);
 
     return {
         timeseriesData,

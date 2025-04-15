@@ -27,9 +27,12 @@ interface TimeseriesData {
 
 interface TimeseriesChartProps {
     data: TimeseriesData[];
+    period: string;
+    setPeriod: (period: string) => void;
+    PERIODS: { label: string; value: string }[];
 }
 
-export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data }) => {
+export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, setPeriod, PERIODS }) => {
     const [activeMetric, setActiveMetric] = useState('income_expenses');
     const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({});
 
@@ -116,21 +119,34 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data }) => {
     return (
         <div className="w-full" style={{ height: '400px' }}>
             <Tabs.Root value={activeMetric} onValueChange={setActiveMetric}>
-                <Tabs.List className="flex space-x-4 mb-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Tabs.List className="flex gap-2">
                     {Object.entries(metrics).map(([key, { title }]) => (
                         <Tabs.Trigger
                             key={key}
                             value={key}
-                            className={`px-4 py-2 rounded-md ${
-                                activeMetric === key
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-gray-100 text-gray-700'
-                            }`}
+                            className={`px-3 py-1 rounded text-sm border transition-colors data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600`}
                         >
                             {title}
                         </Tabs.Trigger>
                     ))}
-                </Tabs.List>
+                  </Tabs.List>
+                  <div className="flex gap-2 ml-auto">
+                    {PERIODS.map((p) => (
+                      <button
+                        key={p.value}
+                        className={`px-3 py-1 rounded text-sm border transition-colors ${
+                          period === p.value
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
+                        }`}
+                        onClick={() => setPeriod(p.value)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">

@@ -486,13 +486,28 @@ def initialize_statistics(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/statistics/timeseries")
-def get_statistics_timeseries(db: Session = Depends(get_db)):
+def get_statistics_timeseries(
+    db: Session = Depends(get_db),
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+):
     try:
-        # Get monthly statistics ordered by date
-        monthly_stats = db.query(FinancialStatistics).filter(
+        query = db.query(FinancialStatistics).filter(
             FinancialStatistics.period == StatisticsPeriod.MONTHLY
-        ).order_by(FinancialStatistics.date).all()
-        
+        )
+        if start_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                query = query.filter(FinancialStatistics.date >= start)
+            except Exception:
+                pass
+        if end_date:
+            try:
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                query = query.filter(FinancialStatistics.date <= end)
+            except Exception:
+                pass
+        monthly_stats = query.order_by(FinancialStatistics.date).all()
         return monthly_stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
