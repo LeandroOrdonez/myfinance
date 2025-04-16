@@ -9,8 +9,8 @@ import { Loading } from '../common/Loading';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 export const CategoryTrends: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('monthly');
-  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly' | 'all_time'>('monthly');
+  const [activeTab, setActiveTab] = useState('periods');
+  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly'>('monthly');
   
   const { 
     expenseCategories, 
@@ -77,6 +77,9 @@ export const CategoryTrends: React.FC = () => {
   const yearlyIncomeAverage = statistics.current_month.yearly_income / currentMonthNumber;
   const yearlyExpenseAverage = statistics.current_month.yearly_expenses / currentMonthNumber;
 
+  const previousYearlyIncomeAverage = (statistics.previous_year_last_month?.yearly_income ?? 0) / 12;
+  const previousYearlyExpenseAverage = (statistics.previous_year_last_month?.yearly_expenses ?? 0) / 12;
+
   // Prepare monthly vs yearly data
   const monthlyData = [
     {
@@ -94,10 +97,29 @@ export const CategoryTrends: React.FC = () => {
       Monthly: statistics.current_month.period_net_savings,
       'Monthly Average': yearlyIncomeAverage - yearlyExpenseAverage
     }
-  ]; 
+  ];
+
+  // Prepare current year vs previous year data
+  const yearlyData = [
+    {
+      name: 'Income',
+      Yearly: yearlyIncomeAverage,
+      'Previous Year': previousYearlyIncomeAverage
+    },
+    {
+      name: 'Expenses',
+      Yearly: yearlyExpenseAverage,
+      'Previous Year': previousYearlyExpenseAverage
+    },
+    {
+      name: 'Net Savings',
+      Yearly: yearlyIncomeAverage - yearlyExpenseAverage,
+      'Previous Year': previousYearlyIncomeAverage - previousYearlyExpenseAverage
+    }
+  ];
 
   // Handle period change
-  const handlePeriodChange = (newPeriod: 'monthly' | 'yearly' | 'all_time') => {
+  const handlePeriodChange = (newPeriod: 'monthly' | 'yearly') => {
     setSelectedPeriod(newPeriod);
   };
 
@@ -112,7 +134,6 @@ export const CategoryTrends: React.FC = () => {
               <span>
                 {selectedPeriod === 'monthly' && 'Monthly'}
                 {selectedPeriod === 'yearly' && 'Yearly'}
-                {selectedPeriod === 'all_time' && 'All Time'}
               </span>
               <ChevronDownIcon className="h-4 w-4 ml-1" />
             </button>
@@ -142,14 +163,6 @@ export const CategoryTrends: React.FC = () => {
                   <span className="flex-grow">Yearly</span>
                   {selectedPeriod === 'yearly' && <CheckIcon className="h-4 w-4 text-blue-600" />}
                 </DropdownMenu.RadioItem>
-                
-                <DropdownMenu.RadioItem 
-                  value="all_time"
-                  className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                >
-                  <span className="flex-grow">All Time</span>
-                  {selectedPeriod === 'all_time' && <CheckIcon className="h-4 w-4 text-blue-600" />}
-                </DropdownMenu.RadioItem>
               </DropdownMenu.RadioGroup>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
@@ -159,16 +172,15 @@ export const CategoryTrends: React.FC = () => {
       <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
         <Tabs.List className="flex space-x-4 mb-6">
           <Tabs.Trigger
-            value="monthly"
+            value="periods"
             className={`px-4 py-2 rounded-md ${
-              activeTab === 'monthly'
+              activeTab === 'periods'
                 ? 'bg-blue-100 text-blue-700'
                 : 'bg-gray-100 text-gray-700'
             }`}
           >
             {selectedPeriod === 'monthly' && 'Monthly vs Yearly Average'}
             {selectedPeriod === 'yearly' && 'Yearly Comparison'}
-            {selectedPeriod === 'all_time' && 'All-time Comparison'}
           </Tabs.Trigger>
           <Tabs.Trigger
             value="categories"
@@ -182,13 +194,14 @@ export const CategoryTrends: React.FC = () => {
           </Tabs.Trigger>
         </Tabs.List>
 
-        <Tabs.Content value="monthly" className="h-[400px]">
+        <Tabs.Content value="periods" className="h-[400px]">
           <div className="mb-3 text-sm text-gray-600">
-            Comparing {currentMonth} {currentYear} with monthly average for the year
+            {selectedPeriod === 'monthly' && `Comparing ${currentMonth} ${currentYear} with monthly average for the year`}
+            {selectedPeriod === 'yearly' && `Comparing yearly averages for ${currentYear} with last year's averages`}
           </div>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={monthlyData}
+              data={selectedPeriod === 'monthly' ? monthlyData : yearlyData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -196,8 +209,8 @@ export const CategoryTrends: React.FC = () => {
               <YAxis tickFormatter={(value) => formatCurrency(value)} />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
               <Legend />
-              <Bar dataKey="Monthly" fill="#6366F1" name={`${currentMonth} ${currentYear}`} />
-              <Bar dataKey="Monthly Average" fill="#9CA3AF" name={`Monthly Average (${currentYear})`} />
+              <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly' : 'Yearly'} fill="#6366F1" name={selectedPeriod === 'monthly' ? `${currentMonth} ${currentYear}` : `${currentYear}`} />
+              <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly Average' : 'Previous Year'} fill="#9CA3AF" name={selectedPeriod === 'monthly' ? `Monthly Average (${currentYear})` : `${currentYear - 1}`} />
             </BarChart>
           </ResponsiveContainer>
         </Tabs.Content>
@@ -207,7 +220,6 @@ export const CategoryTrends: React.FC = () => {
             <h4 className="text-md font-medium">
               {selectedPeriod === 'monthly' && `Top 5 Categories (${currentMonth} ${currentYear})`}
               {selectedPeriod === 'yearly' && `Top 5 Categories (${currentYear})`}
-              {selectedPeriod === 'all_time' && 'Top 5 Categories (All Time)'}
             </h4>
             <div className="flex flex-col space-y-4 mt-4">
               {/* Expense Categories */}
