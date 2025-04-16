@@ -125,7 +125,11 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
                         <Tabs.Trigger
                             key={key}
                             value={key}
-                            className={`px-3 py-1 rounded text-sm border transition-colors data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600`}
+                            className={`px-3 py-1 rounded-md ${
+                                activeMetric === key
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}
                         >
                             {title}
                         </Tabs.Trigger>
