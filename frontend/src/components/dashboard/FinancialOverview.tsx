@@ -31,9 +31,9 @@ export const FinancialOverview: React.FC = () => {
   const previousYearlyExpenseAverage = (statistics.previous_year_last_month?.yearly_expenses ?? 0) / 12;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Top row - Total metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <BaseMetricCard
           title="Total Net Savings"
           Icon={Euro}
@@ -82,7 +82,7 @@ export const FinancialOverview: React.FC = () => {
       </div>
 
       {/* Bottom row - Modified for yearly averages */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <BaseMetricCard
           title={`${currentMonth} Income`}
           Icon={ArrowDown}

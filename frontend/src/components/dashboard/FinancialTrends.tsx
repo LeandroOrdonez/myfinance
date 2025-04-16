@@ -38,9 +38,16 @@ export const FinancialTrends: React.FC = () => {
   const { timeseriesData, loading, error } = useStatisticsTimeseries(start_date, end_date);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-
-      <h3 className="text-lg font-medium mb-4">Financial Trends</h3>
+    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-lg font-medium text-gray-700">Financial Trends</h3>
+        <div className="p-2 rounded-full bg-blue-100 bg-opacity-70">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 3a1 1 0 000 2h10a1 1 0 100-2H3zm0 4a1 1 0 000 2h6a1 1 0 100-2H3zm0 4a1 1 0 100 2h12a1 1 0 100-2H3z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </div>
+      
       {loading ? (
         <Loading />
       ) : timeseriesData && timeseriesData.length > 0 ? (

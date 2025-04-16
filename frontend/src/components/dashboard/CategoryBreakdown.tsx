@@ -144,8 +144,8 @@ export const CategoryBreakdown: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <div className="flex justify-between items-center mb-5">
         <h3 className="text-lg font-medium">{getChartTitle()}</h3>
         <div className="flex space-x-4">
           {/* Period selector */}
@@ -265,7 +265,7 @@ export const CategoryBreakdown: React.FC = () => {
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white p-2 border rounded shadow-lg">
+                        <div className="bg-white p-3 rounded-lg shadow border border-gray-200">
                           <p className="font-medium">{payload[0].payload.name}</p>
                           <p>{formatCurrency(payload[0].value as number)}</p>
                           <p>{`${payload[0].payload.percentage}%`}</p>
@@ -311,10 +311,10 @@ export const CategoryBreakdown: React.FC = () => {
           </p>
           
           <div className="flex items-center mt-2">
-            <div className="w-full bg-gray-200 rounded-full h-4">
+            <div className="w-full bg-gray-200 rounded-full h-2.5 shadow-inner">
               <div 
-                className={`h-4 rounded-full ${
-                  activeTab === 'expenses' ? 'bg-red-500' : 'bg-green-500'
+                className={`h-2.5 rounded-full ${
+                  activeTab === 'expenses' ? 'bg-rose-500' : 'bg-emerald-500'
                 }`}
                 style={{ 
                   width: `${Math.min(
@@ -358,13 +358,13 @@ export const CategoryBreakdown: React.FC = () => {
 
       {/* Total Summary */}
       <div className="mt-6 grid grid-cols-2 gap-4">
-        <div className={`p-4 rounded-lg ${activeTab === 'expenses' ? 'bg-red-50' : 'bg-green-50'}`}>
-          <h4 className="text-sm font-medium mb-1">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+          <h5 className="text-sm font-medium text-emerald-600 mb-3">
             {selectedPeriod === 'monthly' && (activeTab === 'expenses' ? 'Monthly Expenses' : 'Monthly Income')}
             {selectedPeriod === 'yearly' && (activeTab === 'expenses' ? 'Yearly Expenses' : 'Yearly Income')}
             {selectedPeriod === 'all_time' && (activeTab === 'expenses' ? 'All-time Expenses' : 'All-time Income')}
-          </h4>
-          <p className={`text-xl font-bold ${activeTab === 'expenses' ? 'text-red-700' : 'text-green-700'}`}>
+          </h5>
+          <p className={`text-xl font-bold tracking-tight ${activeTab === 'expenses' ? 'text-rose-600' : 'text-emerald-600'}`}>
             {formatCurrency(
               activeTab === 'expenses' 
                 ? (selectedPeriod === 'yearly' ? statistics.current_month.yearly_expenses : 
@@ -376,13 +376,13 @@ export const CategoryBreakdown: React.FC = () => {
             )}
           </p>
         </div>
-        <div className={`p-4 rounded-lg ${activeTab === 'expenses' ? 'bg-red-50' : 'bg-green-50'}`}>
-          <h4 className="text-sm font-medium mb-1">Top Category</h4>
-          <p className={`text-xl font-bold ${activeTab === 'expenses' ? 'text-red-700' : 'text-green-700'}`}>
-          {activeTab === 'expenses' 
-            ? (expenseData.length > 0 ? expenseData[0].name : 'None')
-            : (incomeData.length > 0 ? incomeData[0].name : 'None')
-          }
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+          <h5 className="text-sm font-medium text-emerald-600 mb-3">Top Category</h5>
+          <p className={`text-xl font-bold tracking-tight ${activeTab === 'expenses' ? 'text-rose-600' : 'text-emerald-600'}`}>
+            {activeTab === 'expenses' 
+              ? (expenseData.length > 0 ? expenseData[0].name : 'None')
+              : (incomeData.length > 0 ? incomeData[0].name : 'None')
+            }
           </p>
           {(activeTab === 'expenses' && expenseData.length > 0) || (activeTab === 'income' && incomeData.length > 0) ? (
             <p className="text-sm text-gray-600 mt-1">

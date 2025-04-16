@@ -124,8 +124,8 @@ export const CategoryTrends: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <div className="flex justify-between items-center mb-5">
         <h3 className="text-lg font-medium">Financial Comparison</h3>
         
         <DropdownMenu.Root>
@@ -223,8 +223,8 @@ export const CategoryTrends: React.FC = () => {
             </h4>
             <div className="flex flex-col space-y-4 mt-4">
               {/* Expense Categories */}
-              <div className="bg-red-50 p-4 rounded-lg">
-                <h5 className="text-sm font-medium text-red-700 mb-3">Expense Categories</h5>
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h5 className="text-sm font-medium text-rose-600 mb-3">Expense Categories</h5>
                 <div className="space-y-2">
                   {topExpenseCategories.map((category, index) => {
                     const catData = expenseCategories.find(c => c.category === category);
@@ -248,7 +248,7 @@ export const CategoryTrends: React.FC = () => {
                         <div className="flex-1 mx-2">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
-                              className="bg-red-600 h-2.5 rounded-full" 
+                              className="bg-rose-600 h-2.5 rounded-full shadow-inner" 
                               style={{ width: `${Math.min(percentage, 100)}%` }}
                             ></div>
                           </div>
@@ -263,8 +263,8 @@ export const CategoryTrends: React.FC = () => {
               </div>
               
               {/* Income Categories */}
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h5 className="text-sm font-medium text-green-700 mb-3">Income Categories</h5>
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h5 className="text-sm font-medium text-emerald-600 mb-3">Income Categories</h5>
                 <div className="space-y-2">
                   {topIncomeCategories.map((category, index) => {
                     const catData = incomeCategories.find(c => c.category === category);
@@ -288,7 +288,7 @@ export const CategoryTrends: React.FC = () => {
                         <div className="flex-1 mx-2">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
-                              className="bg-green-600 h-2.5 rounded-full" 
+                              className="bg-emerald-600 h-2.5 rounded-full shadow-inner" 
                               style={{ width: `${Math.min(percentage, 100)}%` }}
                             ></div>
                           </div>
