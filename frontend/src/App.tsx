@@ -10,6 +10,7 @@ import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
@@ -90,8 +91,9 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
         <Route 
           path="/" 
           element={
@@ -120,8 +122,9 @@ function App() {
           } 
         />
         <Route path="*" element={<Navigate to="/analytics" replace />} />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

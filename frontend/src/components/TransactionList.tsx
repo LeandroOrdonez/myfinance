@@ -59,7 +59,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   const TableHeader = ({ field, label }: { field: SortField; label: string }) => (
     <th
-      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center space-x-1">
@@ -71,29 +71,29 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <TableHeader field="date" label="Date" />
               <TableHeader field="description" label="Description" />
               <TableHeader field="amount" label="Amount" />
               <TableHeader field="type" label="Type" />
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {transactions.map((transaction) => (
               <tr key={transaction.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-200">
                   {format(new Date(transaction.transaction_date), 'dd/MM/yyyy')}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-gray-900 dark:text-gray-200">
                   {transaction.description}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap ${
@@ -106,7 +106,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     currency: transaction.currency,
                   }).format(Math.abs(transaction.amount))}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-200">
                   {transaction.transaction_type}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -122,19 +122,19 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       )
                     }
                   >
-                    <Select.Trigger className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <Select.Trigger className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                       <Select.Value placeholder="Select category" />
                     </Select.Trigger>
 
                     <Select.Portal>
-                      <Select.Content className="overflow-hidden bg-white rounded-md shadow-lg">
+                      <Select.Content className="overflow-hidden bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700">
                         <Select.Viewport className="p-1">
                           {transaction.transaction_type === TransactionType.EXPENSE
                             ? Object.values(ExpenseCategory).map((category) => (
                                 <Select.Item
                                   key={category}
                                   value={category}
-                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
+                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
                                 >
                                   <Select.ItemText>{category}</Select.ItemText>
                                 </Select.Item>
@@ -143,7 +143,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                 <Select.Item
                                   key={category}
                                   value={category}
-                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
+                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
                                 >
                                   <Select.ItemText>{category}</Select.ItemText>
                                 </Select.Item>
@@ -157,7 +157,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => onTransactionDelete(transaction.id)}
-                    className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-100 transition-colors"
+                    className="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>

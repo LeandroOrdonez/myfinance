@@ -124,9 +124,9 @@ export const CategoryTrends: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
       <div className="flex justify-between items-center mb-5">
-        <h3 className="text-lg font-medium">Financial Comparison</h3>
+        <h3 className="text-lg font-medium dark:text-gray-200">Financial Comparison</h3>
         
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -223,8 +223,8 @@ export const CategoryTrends: React.FC = () => {
             </h4>
             <div className="flex flex-col space-y-4 mt-4">
               {/* Expense Categories */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h5 className="text-sm font-medium text-rose-600 mb-3">Expense Categories</h5>
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h5 className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-3">Expense Categories</h5>
                 <div className="space-y-2">
                   {topExpenseCategories.map((category, index) => {
                     const catData = expenseCategories.find(c => c.category === category);
@@ -244,7 +244,7 @@ export const CategoryTrends: React.FC = () => {
                     
                     return (
                       <div key={index} className="flex items-center">
-                        <span className="w-32 text-sm truncate">{category}</span>
+                        <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
                         <div className="flex-1 mx-2">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
@@ -253,7 +253,7 @@ export const CategoryTrends: React.FC = () => {
                             ></div>
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {formatCurrency(amount)}
                         </span>
                       </div>
@@ -263,8 +263,8 @@ export const CategoryTrends: React.FC = () => {
               </div>
               
               {/* Income Categories */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h5 className="text-sm font-medium text-emerald-600 mb-3">Income Categories</h5>
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">Income Categories</h5>
                 <div className="space-y-2">
                   {topIncomeCategories.map((category, index) => {
                     const catData = incomeCategories.find(c => c.category === category);
@@ -284,7 +284,7 @@ export const CategoryTrends: React.FC = () => {
                     
                     return (
                       <div key={index} className="flex items-center">
-                        <span className="w-32 text-sm truncate">{category}</span>
+                        <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
                         <div className="flex-1 mx-2">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
@@ -293,7 +293,7 @@ export const CategoryTrends: React.FC = () => {
                             ></div>
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {formatCurrency(amount)}
                         </span>
                       </div>

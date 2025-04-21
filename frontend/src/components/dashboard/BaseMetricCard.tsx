@@ -58,10 +58,10 @@ export const BaseMetricCard: React.FC<BaseMetricCardProps> = ({
   const isPositiveChange = changeValue >= 0;
   
   return (
-    <div className={`bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 border-b-4 ${getBorderColor(colorType)}`}>
+    <div className={`bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700 border-b-4 ${getBorderColor(colorType)}`}>
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
-          <span className="text-gray-700 font-medium">{title}</span>
+          <span className="text-gray-700 dark:text-gray-300 font-medium">{title}</span>
         </div>
         <div className={`p-2 rounded-full ${colorType === 'income' ? 'bg-emerald-100' : colorType === 'expense' ? 'bg-rose-100' : 'bg-blue-100'}`}>
           <Icon className={`w-5 h-5 ${colorType === 'income' ? 'text-emerald-500' : colorType === 'expense' ? 'text-rose-500' : 'text-blue-500'}`} />
@@ -79,12 +79,12 @@ export const BaseMetricCard: React.FC<BaseMetricCardProps> = ({
             <TrendingDown className={`w-4 h-4 mr-1 ${getColorClass(colorType, changeValue)}`} />
           }
           <p className={`text-sm font-medium ${getColorClass(colorType, changeValue)}`}>
-            {change} <span className="text-gray-500 font-normal">vs prev. ({formatValue(previousAmount)})</span>
+            {change} <span className="text-gray-500 dark:text-gray-400 font-normal">vs prev. ({formatValue(previousAmount)})</span>
           </p>
         </div>
         
         {period !== undefined && (
-          <p className="text-xs text-gray-500 mt-2 italic">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
             Up to {period}
           </p>
         )}

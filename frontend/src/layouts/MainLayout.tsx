@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FileUpload } from '../components/FileUpload';
 import { UndoButton } from '../components/UndoButton';
 import { Sidebar } from '../components/common/Sidebar';
+import { ThemeToggle } from '../components/common/ThemeToggle';
 import { useTransactions } from '../hooks/useTransactions';
 
 interface MainLayoutProps {
@@ -69,7 +70,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   };
   
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
       {/* Sidebar */}
       <Sidebar 
         activeView={currentView} 
@@ -82,13 +83,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <div 
         className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}
       >
-        <div className="py-6">
+        <div className="py-6 dark:text-gray-100">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {getPageTitle()}
               </h1>
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 items-center">
+                <ThemeToggle />
                 {showUndoButton && (
                   <UndoButton onUndo={handleUndo} canUndo={canUndo} />
                 )}
