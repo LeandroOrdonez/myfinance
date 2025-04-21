@@ -1,0 +1,234 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number
+NL08999102722515;Transaction;My KBC Account;EUR;04/03/2025;27,49;Interest Income;KBC Bank;
+NL38150172369201;Transaction;My KBC Account;EUR;03/03/2025;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL12848772424438;Transaction;My KBC Account;EUR;02/03/2025;-74,11;Dinner at Restaurant Blue;Restaurant Blue;BE09329149173073
+NL20300036093259;Transaction;My KBC Account;EUR;01/03/2025;-59,15;Monthly Public Transport Pass;Local Transport Auth.;BE93863406283057
+NL64020061191604;Transaction;My KBC Account;EUR;28/02/2025;3100,00;Salary February 2025;My Employer Inc.;BE05177199667427
+NL88803031397935;Transaction;My KBC Account;EUR;27/02/2025;-68,37;Grocery Shopping;SuperMart Gamma;BE00367700697790
+NL91234567890123;Transaction;My KBC Account;EUR;26/02/2025;-1100,00;Rent Payment March;Landlord Properties;BE12312312312312
+NL45678901234567;Transaction;My KBC Account;EUR;25/02/2025;-85,60;Electricity Bill Jan;PowerGen Corp;BE45645645645645
+NL78901234567890;Transaction;My KBC Account;EUR;24/02/2025;-42,95;Gas Bill Jan;GasSupply Co;BE78978978978978
+NL01234567890123;Transaction;My KBC Account;EUR;22/02/2025;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL11122233344455;Transaction;My KBC Account;EUR;20/02/2025;-55,80;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL22233344455566;Transaction;My KBC Account;EUR;18/02/2025;-92,10;Groceries;SuperMart Gamma;BE00367700697790
+NL33344455566677;Transaction;My KBC Account;EUR;15/02/2025;-38,50;Lunch with colleagues;Corner Cafe;BE33333333333333
+NL44455566677788;Transaction;My KBC Account;EUR;12/02/2025;60,00;Refund for returned shoes;Online Fashion Store;BE44444444444444
+NL55566677788899;Transaction;My KBC Account;EUR;10/02/2025;-40,00;ATM Withdrawal;;
+NL66677788899900;Transaction;My KBC Account;EUR;05/02/2025;-1100,00;Rent Payment February;Landlord Properties;BE12312312312312
+NL77788899900011;Transaction;My KBC Account;EUR;03/02/2025;25,15;Interest Payment;KBC Bank;
+NL88899900011122;Transaction;My KBC Account;EUR;30/01/2025;-45,50;Gas Bill Dec;GasSupply Co;BE78978978978978
+NL99900011122233;Transaction;My KBC Account;EUR;28/01/2025;3100,00;Salary January 2025;My Employer Inc.;BE05177199667427
+NL00011122233344;Transaction;My KBC Account;EUR;27/01/2025;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL12121212121212;Transaction;My KBC Account;EUR;25/01/2025;-88,20;Electricity Bill Dec;PowerGen Corp;BE45645645645645
+NL23232323232323;Transaction;My KBC Account;EUR;22/01/2025;-115,60;Online Shopping - Electronics;Gadget World;BE23232323232323
+NL34343434343434;Transaction;My KBC Account;EUR;19/01/2025;-101,85;Groceries;SuperMart Gamma;BE00367700697790
+NL45454545454545;Transaction;My KBC Account;EUR;15/01/2025;-62,00;Dinner Out;Pizza Palace;BE45454545454545
+NL56565656565656;Transaction;My KBC Account;EUR;12/01/2025;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL67676767676767;Transaction;My KBC Account;EUR;05/01/2025;-1100,00;Rent Payment January;Landlord Properties;BE12312312312312
+NL78787878787878;Transaction;My KBC Account;EUR;03/01/2025;24,90;Interest Payment;KBC Bank;
+NL89898989898989;Transaction;My KBC Account;EUR;30/12/2024;-49,10;Gas Bill Nov;GasSupply Co;BE78978978978978
+NL90909090909090;Transaction;My KBC Account;EUR;28/12/2024;3100,00;Salary December 2024;My Employer Inc.;BE05177199667427
+NL01010101010101;Transaction;My KBC Account;EUR;27/12/2024;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL13131313131313;Transaction;My KBC Account;EUR;24/12/2024;-175,50;Holiday Gift Shopping;Various Retailers;
+NL24242424242424;Transaction;My KBC Account;EUR;22/12/2024;-130,00;Holiday Groceries;SuperMart Gamma;BE00367700697790
+NL35353535353535;Transaction;My KBC Account;EUR;20/12/2024;-90,30;Electricity Bill Nov;PowerGen Corp;BE45645645645645
+NL46464646464646;Transaction;My KBC Account;EUR;18/12/2024;-100,00;ATM Withdrawal - Holiday Cash;;
+NL57575757575757;Transaction;My KBC Account;EUR;12/12/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL68686868686868;Transaction;My KBC Account;EUR;05/12/2024;-1100,00;Rent Payment December;Landlord Properties;BE12312312312312
+NL79797979797979;Transaction;My KBC Account;EUR;03/12/2024;24,50;Interest Payment;KBC Bank;
+NL80808080808080;Transaction;My KBC Account;EUR;29/11/2024;-44,70;Gas Bill Oct;GasSupply Co;BE78978978978978
+NL91919191919191;Transaction;My KBC Account;EUR;28/11/2024;3050,00;Salary November 2024;My Employer Inc.;BE05177199667427
+NL02020202020202;Transaction;My KBC Account;EUR;27/11/2024;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL14141414141414;Transaction;My KBC Account;EUR;25/11/2024;-86,90;Electricity Bill Oct;PowerGen Corp;BE45645645645645
+NL25252525252525;Transaction;My KBC Account;EUR;22/11/2024;-61,20;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL36363636363636;Transaction;My KBC Account;EUR;19/11/2024;-79,40;Groceries;SuperMart Gamma;BE00367700697790
+NL47474747474747;Transaction;My KBC Account;EUR;15/11/2024;-22,80;Coffee Shop;Daily Grind;BE47474747474747
+NL58585858585858;Transaction;My KBC Account;EUR;12/11/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL69696969696969;Transaction;My KBC Account;EUR;05/11/2024;-1100,00;Rent Payment November;Landlord Properties;BE12312312312312
+NL70707070707070;Transaction;My KBC Account;EUR;03/11/2024;24,10;Interest Payment;KBC Bank;
+NL81818181818181;Transaction;My KBC Account;EUR;30/10/2024;-41,30;Gas Bill Sep;GasSupply Co;BE78978978978978
+NL92929292929292;Transaction;My KBC Account;EUR;28/10/2024;3050,00;Salary October 2024;My Employer Inc.;BE05177199667427
+NL03030303030303;Transaction;My KBC Account;EUR;27/10/2024;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL15151515151515;Transaction;My KBC Account;EUR;25/10/2024;-82,50;Electricity Bill Sep;PowerGen Corp;BE45645645645645
+NL26262626262626;Transaction;My KBC Account;EUR;22/10/2024;-95,00;Clothing Purchase;Fashion Hub;BE26262626262626
+NL37373737373737;Transaction;My KBC Account;EUR;19/10/2024;-88,60;Groceries;SuperMart Gamma;BE00367700697790
+NL48484848484848;Transaction;My KBC Account;EUR;16/10/2024;-50,00;ATM Withdrawal;;
+NL59595959595959;Transaction;My KBC Account;EUR;12/10/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL60606060606060;Transaction;My KBC Account;EUR;05/10/2024;-1100,00;Rent Payment October;Landlord Properties;BE12312312312312
+NL71717171717171;Transaction;My KBC Account;EUR;03/10/2024;23,85;Interest Payment;KBC Bank;
+NL82828282828282;Transaction;My KBC Account;EUR;29/09/2024;-38,90;Gas Bill Aug;GasSupply Co;BE78978978978978
+NL93939393939393;Transaction;My KBC Account;EUR;27/09/2024;3050,00;Salary September 2024;My Employer Inc.;BE05177199667427
+NL04040404040404;Transaction;My KBC Account;EUR;26/09/2024;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL16161616161616;Transaction;My KBC Account;EUR;24/09/2024;-79,10;Electricity Bill Aug;PowerGen Corp;BE45645645645645
+NL27272727272727;Transaction;My KBC Account;EUR;21/09/2024;-75,30;Groceries;SuperMart Gamma;BE00367700697790
+NL38383838383838;Transaction;My KBC Account;EUR;18/09/2024;-45,50;Train Ticket;National Rail;BE38383838383838
+NL49494949494949;Transaction;My KBC Account;EUR;12/09/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL50505050505050;Transaction;My KBC Account;EUR;05/09/2024;-1100,00;Rent Payment September;Landlord Properties;BE12312312312312
+NL61616161616161;Transaction;My KBC Account;EUR;03/09/2024;23,40;Interest Payment;KBC Bank;
+NL72727272727272;Transaction;My KBC Account;EUR;30/08/2024;-36,20;Gas Bill Jul;GasSupply Co;BE78978978978978
+NL83838383838383;Transaction;My KBC Account;EUR;28/08/2024;3050,00;Salary August 2024;My Employer Inc.;BE05177199667427
+NL94949494949494;Transaction;My KBC Account;EUR;27/08/2024;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL05050505050505;Transaction;My KBC Account;EUR;25/08/2024;-77,80;Electricity Bill Jul;PowerGen Corp;BE45645645645645
+NL17171717171717;Transaction;My KBC Account;EUR;22/08/2024;-58,90;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL28282828282828;Transaction;My KBC Account;EUR;19/08/2024;-99,15;Groceries;SuperMart Gamma;BE00367700697790
+NL39393939393939;Transaction;My KBC Account;EUR;15/08/2024;-70,00;Restaurant Visit;Tapas Bar;BE39393939393939
+NL40404040404040;Transaction;My KBC Account;EUR;12/08/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL51515151515151;Transaction;My KBC Account;EUR;05/08/2024;-1100,00;Rent Payment August;Landlord Properties;BE12312312312312
+NL62626262626262;Transaction;My KBC Account;EUR;03/08/2024;23,10;Interest Payment;KBC Bank;
+NL73737373737373;Transaction;My KBC Account;EUR;29/07/2024;-34,90;Gas Bill Jun;GasSupply Co;BE78978978978978
+NL84848484848484;Transaction;My KBC Account;EUR;27/07/2024;3050,00;Salary July 2024;My Employer Inc.;BE05177199667427
+NL95959595959595;Transaction;My KBC Account;EUR;26/07/2024;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL06060606060606;Transaction;My KBC Account;EUR;24/07/2024;-75,60;Electricity Bill Jun;PowerGen Corp;BE45645645645645
+NL18181818181818;Transaction;My KBC Account;EUR;21/07/2024;-83,70;Groceries;SuperMart Gamma;BE00367700697790
+NL29292929292929;Transaction;My KBC Account;EUR;17/07/2024;35,00;Refund Transport Ticket;Local Transport Auth.;BE93863406283057
+NL30303030303030;Transaction;My KBC Account;EUR;12/07/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL41414141414141;Transaction;My KBC Account;EUR;05/07/2024;-1100,00;Rent Payment July;Landlord Properties;BE12312312312312
+NL52525252525252;Transaction;My KBC Account;EUR;03/07/2024;22,75;Interest Payment;KBC Bank;
+NL63636363636363;Transaction;My KBC Account;EUR;29/06/2024;-37,10;Gas Bill May;GasSupply Co;BE78978978978978
+NL74747474747474;Transaction;My KBC Account;EUR;28/06/2024;3000,00;Salary June 2024;My Employer Inc.;BE05177199667427
+NL85858585858585;Transaction;My KBC Account;EUR;27/06/2024;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL96969696969696;Transaction;My KBC Account;EUR;25/06/2024;-78,30;Electricity Bill May;PowerGen Corp;BE45645645645645
+NL07070707070707;Transaction;My KBC Account;EUR;22/06/2024;-102,40;Groceries;SuperMart Gamma;BE00367700697790
+NL19191919191919;Transaction;My KBC Account;EUR;18/06/2024;-65,00;Shopping - Books;Book Haven Store;BE19191919191919
+NL20202020202020;Transaction;My KBC Account;EUR;12/06/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL31313131313131;Transaction;My KBC Account;EUR;05/06/2024;-1050,00;Rent Payment June;Landlord Properties;BE12312312312312
+NL42424242424242;Transaction;My KBC Account;EUR;03/06/2024;22,50;Interest Payment;KBC Bank;
+NL53535353535353;Transaction;My KBC Account;EUR;30/05/2024;-40,80;Gas Bill Apr;GasSupply Co;BE78978978978978
+NL64646464646464;Transaction;My KBC Account;EUR;28/05/2024;3000,00;Salary May 2024;My Employer Inc.;BE05177199667427
+NL75757575757575;Transaction;My KBC Account;EUR;27/05/2024;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL86868686868686;Transaction;My KBC Account;EUR;25/05/2024;-81,90;Electricity Bill Apr;PowerGen Corp;BE45645645645645
+NL97979797979797;Transaction;My KBC Account;EUR;22/05/2024;-57,70;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL08080808080808;Transaction;My KBC Account;EUR;19/05/2024;-93,20;Groceries;SuperMart Gamma;BE00367700697790
+NL10101010101010;Transaction;My KBC Account;EUR;15/05/2024;-50,00;ATM Withdrawal;;
+NL21212121212121;Transaction;My KBC Account;EUR;12/05/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL32323232323232;Transaction;My KBC Account;EUR;05/05/2024;-1050,00;Rent Payment May;Landlord Properties;BE12312312312312
+NL43434343434343;Transaction;My KBC Account;EUR;03/05/2024;22,10;Interest Payment;KBC Bank;
+NL54545454545454;Transaction;My KBC Account;EUR;29/04/2024;-44,60;Gas Bill Mar;GasSupply Co;BE78978978978978
+NL65656565656565;Transaction;My KBC Account;EUR;27/04/2024;3000,00;Salary April 2024;My Employer Inc.;BE05177199667427
+NL76767676767676;Transaction;My KBC Account;EUR;26/04/2024;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL87878787878787;Transaction;My KBC Account;EUR;24/04/2024;-86,30;Electricity Bill Mar;PowerGen Corp;BE45645645645645
+NL98989898989898;Transaction;My KBC Account;EUR;21/04/2024;-80,90;Groceries;SuperMart Gamma;BE00367700697790
+NL09090909090909;Transaction;My KBC Account;EUR;17/04/2024;-35,00;Cinema Ticket;Multiplex Movies;BE09090909090909
+NL11111111111111;Transaction;My KBC Account;EUR;12/04/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL22222222222222;Transaction;My KBC Account;EUR;05/04/2024;-1050,00;Rent Payment April;Landlord Properties;BE12312312312312
+NL33333333333333;Transaction;My KBC Account;EUR;03/04/2024;21,80;Interest Payment;KBC Bank;
+NL44444444444444;Transaction;My KBC Account;EUR;30/03/2024;-48,10;Gas Bill Feb;GasSupply Co;BE78978978978978
+NL55555555555555;Transaction;My KBC Account;EUR;28/03/2024;3000,00;Salary March 2024;My Employer Inc.;BE05177199667427
+NL66666666666666;Transaction;My KBC Account;EUR;27/03/2024;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL77777777777777;Transaction;My KBC Account;EUR;25/03/2024;-89,70;Electricity Bill Feb;PowerGen Corp;BE45645645645645
+NL88888888888888;Transaction;My KBC Account;EUR;22/03/2024;-105,25;Groceries;SuperMart Gamma;BE00367700697790
+NL99999999999999;Transaction;My KBC Account;EUR;18/03/2024;-63,40;Dinner with friends;Italian Pasta Place;BE99999999999999
+NL10101010101011;Transaction;My KBC Account;EUR;12/03/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL21212121212122;Transaction;My KBC Account;EUR;05/03/2024;-1050,00;Rent Payment March;Landlord Properties;BE12312312312312
+NL32323232323233;Transaction;My KBC Account;EUR;03/03/2024;21,50;Interest Payment;KBC Bank;
+NL43434343434344;Transaction;My KBC Account;EUR;29/02/2024;-50,50;Gas Bill Jan;GasSupply Co;BE78978978978978
+NL54545454545455;Transaction;My KBC Account;EUR;28/02/2024;3000,00;Salary February 2024;My Employer Inc.;BE05177199667427
+NL65656565656566;Transaction;My KBC Account;EUR;27/02/2024;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL76767676767677;Transaction;My KBC Account;EUR;25/02/2024;-92,10;Electricity Bill Jan;PowerGen Corp;BE45645645645645
+NL87878787878788;Transaction;My KBC Account;EUR;22/02/2024;-60,00;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL98989898989899;Transaction;My KBC Account;EUR;19/02/2024;-88,00;Groceries;SuperMart Gamma;BE00367700697790
+NL09090909090910;Transaction;My KBC Account;EUR;15/02/2024;75,00;Payment Received;Freelance Client A;BE09090909090910
+NL10101010101011;Transaction;My KBC Account;EUR;12/02/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL21212121212122;Transaction;My KBC Account;EUR;05/02/2024;-1050,00;Rent Payment February;Landlord Properties;BE12312312312312
+NL32323232323233;Transaction;My KBC Account;EUR;03/02/2024;21,00;Interest Payment;KBC Bank;
+NL43434343434344;Transaction;My KBC Account;EUR;30/01/2024;-52,80;Gas Bill Dec;GasSupply Co;BE78978978978978
+NL54545454545455;Transaction;My KBC Account;EUR;28/01/2024;3000,00;Salary January 2024;My Employer Inc.;BE05177199667427
+NL65656565656566;Transaction;My KBC Account;EUR;27/01/2024;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL76767676767677;Transaction;My KBC Account;EUR;25/01/2024;-94,60;Electricity Bill Dec;PowerGen Corp;BE45645645645645
+NL87878787878788;Transaction;My KBC Account;EUR;22/01/2024;-70,00;ATM Withdrawal;;
+NL98989898989899;Transaction;My KBC Account;EUR;19/01/2024;-110,50;Groceries;SuperMart Gamma;BE00367700697790
+NL09090909090910;Transaction;My KBC Account;EUR;15/01/2024;-48,20;Lunch;City Bistro;BE09090909090910
+NL10101010101011;Transaction;My KBC Account;EUR;12/01/2024;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL21212121212122;Transaction;My KBC Account;EUR;05/01/2024;-1050,00;Rent Payment January;Landlord Properties;BE12312312312312
+NL32323232323233;Transaction;My KBC Account;EUR;03/01/2024;20,90;Interest Payment;KBC Bank;
+NL43434343434344;Transaction;My KBC Account;EUR;29/12/2023;-50,10;Gas Bill Nov;GasSupply Co;BE78978978978978
+NL54545454545455;Transaction;My KBC Account;EUR;28/12/2023;3000,00;Salary December 2023;My Employer Inc.;BE05177199667427
+NL65656565656566;Transaction;My KBC Account;EUR;27/12/2023;-450,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL76767676767677;Transaction;My KBC Account;EUR;24/12/2023;-210,00;Holiday Gifts;Department Store Lux;BE76767676767677
+NL87878787878788;Transaction;My KBC Account;EUR;22/12/2023;-155,80;Holiday Food Shopping;SuperMart Gamma;BE00367700697790
+NL98989898989899;Transaction;My KBC Account;EUR;20/12/2023;-93,30;Electricity Bill Nov;PowerGen Corp;BE45645645645645
+NL09090909090910;Transaction;My KBC Account;EUR;12/12/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL10101010101011;Transaction;My KBC Account;EUR;05/12/2023;-1050,00;Rent Payment December;Landlord Properties;BE12312312312312
+NL21212121212122;Transaction;My KBC Account;EUR;03/12/2023;20,50;Interest Payment;KBC Bank;
+NL32323232323233;Transaction;My KBC Account;EUR;30/11/2023;-47,40;Gas Bill Oct;GasSupply Co;BE78978978978978
+NL43434343434344;Transaction;My KBC Account;EUR;28/11/2023;2950,00;Salary November 2023;My Employer Inc.;BE05177199667427
+NL54545454545455;Transaction;My KBC Account;EUR;27/11/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL65656565656566;Transaction;My KBC Account;EUR;25/11/2023;-89,10;Electricity Bill Oct;PowerGen Corp;BE45645645645645
+NL76767676767677;Transaction;My KBC Account;EUR;22/11/2023;-53,00;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL87878787878788;Transaction;My KBC Account;EUR;19/11/2023;-85,60;Groceries;SuperMart Gamma;BE00367700697790
+NL98989898989899;Transaction;My KBC Account;EUR;12/11/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL09090909090910;Transaction;My KBC Account;EUR;05/11/2023;-1050,00;Rent Payment November;Landlord Properties;BE12312312312312
+NL10101010101011;Transaction;My KBC Account;EUR;03/11/2023;20,15;Interest Payment;KBC Bank;
+NL21212121212122;Transaction;My KBC Account;EUR;30/10/2023;-43,90;Gas Bill Sep;GasSupply Co;BE78978978978978
+NL32323232323233;Transaction;My KBC Account;EUR;28/10/2023;2950,00;Salary October 2023;My Employer Inc.;BE05177199667427
+NL43434343434344;Transaction;My KBC Account;EUR;27/10/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL54545454545455;Transaction;My KBC Account;EUR;25/10/2023;-84,70;Electricity Bill Sep;PowerGen Corp;BE45645645645645
+NL65656565656566;Transaction;My KBC Account;EUR;22/10/2023;-98,20;Groceries;SuperMart Gamma;BE00367700697790
+NL76767676767677;Transaction;My KBC Account;EUR;18/10/2023;-77,00;Online Shopping - Home Goods;HomeStyle Webstore;BE76767676767677
+NL87878787878788;Transaction;My KBC Account;EUR;12/10/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL98989898989899;Transaction;My KBC Account;EUR;05/10/2023;-1050,00;Rent Payment October;Landlord Properties;BE12312312312312
+NL09090909090910;Transaction;My KBC Account;EUR;03/10/2023;19,80;Interest Payment;KBC Bank;
+NL10101010101011;Transaction;My KBC Account;EUR;29/09/2023;-40,50;Gas Bill Aug;GasSupply Co;BE78978978978978
+NL21212121212122;Transaction;My KBC Account;EUR;28/09/2023;2950,00;Salary September 2023;My Employer Inc.;BE05177199667427
+NL32323232323233;Transaction;My KBC Account;EUR;27/09/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL43434343434344;Transaction;My KBC Account;EUR;25/09/2023;-80,30;Electricity Bill Aug;PowerGen Corp;BE45645645645645
+NL54545454545455;Transaction;My KBC Account;EUR;21/09/2023;-79,90;Groceries;SuperMart Gamma;BE00367700697790
+NL65656565656566;Transaction;My KBC Account;EUR;17/09/2023;-50,00;ATM Withdrawal;;
+NL76767676767677;Transaction;My KBC Account;EUR;12/09/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL87878787878788;Transaction;My KBC Account;EUR;05/09/2023;-1050,00;Rent Payment September;Landlord Properties;BE12312312312312
+NL98989898989899;Transaction;My KBC Account;EUR;03/09/2023;19,55;Interest Payment;KBC Bank;
+NL09090909090910;Transaction;My KBC Account;EUR;30/08/2023;-38,10;Gas Bill Jul;GasSupply Co;BE78978978978978
+NL10101010101011;Transaction;My KBC Account;EUR;28/08/2023;2950,00;Salary August 2023;My Employer Inc.;BE05177199667427
+NL21212121212122;Transaction;My KBC Account;EUR;27/08/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL32323232323233;Transaction;My KBC Account;EUR;25/08/2023;-78,60;Electricity Bill Jul;PowerGen Corp;BE45645645645645
+NL43434343434344;Transaction;My KBC Account;EUR;22/08/2023;-55,20;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL54545454545455;Transaction;My KBC Account;EUR;19/08/2023;-94,70;Groceries;SuperMart Gamma;BE00367700697790
+NL65656565656566;Transaction;My KBC Account;EUR;15/08/2023;-42,00;Lunch Meeting;Business Cafe;BE65656565656566
+NL76767676767677;Transaction;My KBC Account;EUR;12/08/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL87878787878788;Transaction;My KBC Account;EUR;05/08/2023;-1050,00;Rent Payment August;Landlord Properties;BE12312312312312
+NL98989898989899;Transaction;My KBC Account;EUR;03/08/2023;19,10;Interest Payment;KBC Bank;
+NL09090909090910;Transaction;My KBC Account;EUR;29/07/2023;-36,60;Gas Bill Jun;GasSupply Co;BE78978978978978
+NL10101010101011;Transaction;My KBC Account;EUR;28/07/2023;2950,00;Salary July 2023;My Employer Inc.;BE05177199667427
+NL21212121212122;Transaction;My KBC Account;EUR;27/07/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL32323232323233;Transaction;My KBC Account;EUR;25/07/2023;-76,20;Electricity Bill Jun;PowerGen Corp;BE45645645645645
+NL43434343434344;Transaction;My KBC Account;EUR;21/07/2023;-81,50;Groceries;SuperMart Gamma;BE00367700697790
+NL54545454545455;Transaction;My KBC Account;EUR;17/07/2023;25.99;Refund from Clothing Store;Fashion Hub;BE26262626262626
+NL65656565656566;Transaction;My KBC Account;EUR;12/07/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL76767676767677;Transaction;My KBC Account;EUR;05/07/2023;-1050,00;Rent Payment July;Landlord Properties;BE12312312312312
+NL87878787878788;Transaction;My KBC Account;EUR;03/07/2023;18,95;Interest Payment;KBC Bank;
+NL98989898989899;Transaction;My KBC Account;EUR;30/06/2023;-39,00;Gas Bill May;GasSupply Co;BE78978978978978
+NL09090909090910;Transaction;My KBC Account;EUR;28/06/2023;2900,00;Salary June 2023;My Employer Inc.;BE05177199667427
+NL10101010101011;Transaction;My KBC Account;EUR;27/06/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL21212121212122;Transaction;My KBC Account;EUR;25/06/2023;-79,80;Electricity Bill May;PowerGen Corp;BE45645645645645
+NL32323232323233;Transaction;My KBC Account;EUR;22/06/2023;-92,30;Groceries;SuperMart Gamma;BE00367700697790
+NL43434343434344;Transaction;My KBC Account;EUR;18/06/2023;-85,00;Shopping - Summer Sale;Mall Stores;
+NL54545454545455;Transaction;My KBC Account;EUR;12/06/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL65656565656566;Transaction;My KBC Account;EUR;05/06/2023;-1000,00;Rent Payment June;Landlord Properties;BE12312312312312
+NL76767676767677;Transaction;My KBC Account;EUR;03/06/2023;18,60;Interest Payment;KBC Bank;
+NL87878787878788;Transaction;My KBC Account;EUR;30/05/2023;-41,50;Gas Bill Apr;GasSupply Co;BE78978978978978
+NL98989898989899;Transaction;My KBC Account;EUR;28/05/2023;2900,00;Salary May 2023;My Employer Inc.;BE05177199667427
+NL09090909090910;Transaction;My KBC Account;EUR;27/05/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL10101010101011;Transaction;My KBC Account;EUR;25/05/2023;-82,20;Electricity Bill Apr;PowerGen Corp;BE45645645645645
+NL21212121212122;Transaction;My KBC Account;EUR;22/05/2023;-59,10;Fuel Purchase;Petrol Station Plus;BE11111111111111
+NL32323232323233;Transaction;My KBC Account;EUR;19/05/2023;-88,90;Groceries;SuperMart Gamma;BE00367700697790
+NL43434343434344;Transaction;My KBC Account;EUR;15/05/2023;-60,00;ATM Withdrawal;;
+NL54545454545455;Transaction;My KBC Account;EUR;12/05/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL65656565656566;Transaction;My KBC Account;EUR;05/05/2023;-1000,00;Rent Payment May;Landlord Properties;BE12312312312312
+NL76767676767677;Transaction;My KBC Account;EUR;03/05/2023;18,35;Interest Payment;KBC Bank;
+NL87878787878788;Transaction;My KBC Account;EUR;29/04/2023;-45,00;Gas Bill Mar;GasSupply Co;BE78978978978978
+NL98989898989899;Transaction;My KBC Account;EUR;28/04/2023;2900,00;Salary April 2023;My Employer Inc.;BE05177199667427
+NL09090909090910;Transaction;My KBC Account;EUR;27/04/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL10101010101011;Transaction;My KBC Account;EUR;25/04/2023;-86,70;Electricity Bill Mar;PowerGen Corp;BE45645645645645
+NL21212121212122;Transaction;My KBC Account;EUR;22/04/2023;-103,60;Groceries;SuperMart Gamma;BE00367700697790
+NL32323232323233;Transaction;My KBC Account;EUR;18/04/2023;-55,90;Dinner Out;Sushi Express;BE32323232323233
+NL43434343434344;Transaction;My KBC Account;EUR;12/04/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL54545454545455;Transaction;My KBC Account;EUR;05/04/2023;-1000,00;Rent Payment April;Landlord Properties;BE12312312312312
+NL65656565656566;Transaction;My KBC Account;EUR;03/04/2023;18,10;Interest Payment;KBC Bank;
+NL76767676767677;Transaction;My KBC Account;EUR;30/03/2023;-48,20;Gas Bill Feb;GasSupply Co;BE78978978978978
+NL87878787878788;Transaction;My KBC Account;EUR;28/03/2023;2900,00;Salary March 2023;My Employer Inc.;BE05177199667427
+NL98989898989899;Transaction;My KBC Account;EUR;27/03/2023;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789
+NL09090909090910;Transaction;My KBC Account;EUR;25/03/2023;-90,10;Electricity Bill Feb;PowerGen Corp;BE45645645645645
+NL10101010101011;Transaction;My KBC Account;EUR;22/03/2023;-91,00;Groceries;SuperMart Gamma;BE00367700697790
+NL21212121212122;Transaction;My KBC Account;EUR;18/03/2023;-38,75;Pharmacy Purchase;HealthPlus Pharmacy;BE21212121212122
+NL32323232323233;Transaction;My KBC Account;EUR;12/03/2023;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201
+NL43434343434344;Transaction;My KBC Account;EUR;05/03/2023;-1000,00;Rent Payment March;Landlord Properties;BE12312312312312

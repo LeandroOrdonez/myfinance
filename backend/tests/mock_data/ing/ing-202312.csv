@@ -1,0 +1,10 @@
+Account Number;Account Name;Counterparty account;Booking date;Amount;Currency;Description;YearMonth
+NL55667788990011;My Personal Account;BE72138092603194;2023-12-29;-51,30;EUR;Gas Bill Dec;202312
+NL88776655443322;My Personal Account;BE72889555265505;2023-12-28;3150,00;EUR;Salary December 2023;202312
+NL12345678901234;My Personal Account;BE67906568378206;2023-12-27;-400,00;EUR;Transfer to Savings Account;202312
+NL66554433221100;My Personal Account;BE11223344556677;2023-12-24;-180,50;EUR;Holiday Shopping Spree;202312
+NL77889900112233;My Personal Account;BE77795426445291;2023-12-21;-145,00;EUR;Grocery Shopping - Holiday Items;202312
+NL11223344556677;My Personal Account;;2023-12-18;-120,00;EUR;ATM Withdrawal - Holiday Cash;202312
+NL99887766554433;My Personal Account;BE99887766554433;2023-12-12;-15,99;EUR;Streaming Service Subscription;202312
+NL55667788990011;My Personal Account;BE98467903639605;2023-12-05;-1100,00;EUR;Monthly Rent Payment December;202312
+NL12345678901234;My Personal Account;BE67873685153698;2023-12-03;-92,10;EUR;Electricity Bill Nov;202312

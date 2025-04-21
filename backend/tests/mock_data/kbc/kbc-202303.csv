@@ -1,0 +1,9 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number;YearMonth
+NL76767676767677;Transaction;My KBC Account;EUR;2023-03-30;-48,20;Gas Bill Feb;GasSupply Co;BE78978978978978;202303
+NL87878787878788;Transaction;My KBC Account;EUR;2023-03-28;2900,00;Salary March 2023;My Employer Inc.;BE05177199667427;202303
+NL98989898989899;Transaction;My KBC Account;EUR;2023-03-27;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789;202303
+NL09090909090910;Transaction;My KBC Account;EUR;2023-03-25;-90,10;Electricity Bill Feb;PowerGen Corp;BE45645645645645;202303
+NL10101010101011;Transaction;My KBC Account;EUR;2023-03-22;-91,00;Groceries;SuperMart Gamma;BE00367700697790;202303
+NL21212121212122;Transaction;My KBC Account;EUR;2023-03-18;-38,75;Pharmacy Purchase;HealthPlus Pharmacy;BE21212121212122;202303
+NL32323232323233;Transaction;My KBC Account;EUR;2023-03-12;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201;202303
+NL43434343434344;Transaction;My KBC Account;EUR;2023-03-05;-1000,00;Rent Payment March;Landlord Properties;BE12312312312312;202303

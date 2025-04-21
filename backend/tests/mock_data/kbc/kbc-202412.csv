@@ -1,0 +1,11 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number;YearMonth
+NL89898989898989;Transaction;My KBC Account;EUR;2024-12-30;-49,10;Gas Bill Nov;GasSupply Co;BE78978978978978;202412
+NL90909090909090;Transaction;My KBC Account;EUR;2024-12-28;3100,00;Salary December 2024;My Employer Inc.;BE05177199667427;202412
+NL01010101010101;Transaction;My KBC Account;EUR;2024-12-27;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789;202412
+NL13131313131313;Transaction;My KBC Account;EUR;2024-12-24;-175,50;Holiday Gift Shopping;Various Retailers;;202412
+NL24242424242424;Transaction;My KBC Account;EUR;2024-12-22;-130,00;Holiday Groceries;SuperMart Gamma;BE00367700697790;202412
+NL35353535353535;Transaction;My KBC Account;EUR;2024-12-20;-90,30;Electricity Bill Nov;PowerGen Corp;BE45645645645645;202412
+NL46464646464646;Transaction;My KBC Account;EUR;2024-12-18;-100,00;ATM Withdrawal - Holiday Cash;;;202412
+NL57575757575757;Transaction;My KBC Account;EUR;2024-12-12;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201;202412
+NL68686868686868;Transaction;My KBC Account;EUR;2024-12-05;-1100,00;Rent Payment December;Landlord Properties;BE12312312312312;202412
+NL79797979797979;Transaction;My KBC Account;EUR;2024-12-03;24,50;Interest Payment;KBC Bank;;202412

@@ -1,0 +1,11 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number;YearMonth
+NL88899900011122;Transaction;My KBC Account;EUR;2025-01-30;-45,50;Gas Bill Dec;GasSupply Co;BE78978978978978;202501
+NL99900011122233;Transaction;My KBC Account;EUR;2025-01-28;3100,00;Salary January 2025;My Employer Inc.;BE05177199667427;202501
+NL00011122233344;Transaction;My KBC Account;EUR;2025-01-27;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789;202501
+NL12121212121212;Transaction;My KBC Account;EUR;2025-01-25;-88,20;Electricity Bill Dec;PowerGen Corp;BE45645645645645;202501
+NL23232323232323;Transaction;My KBC Account;EUR;2025-01-22;-115,60;Online Shopping - Electronics;Gadget World;BE23232323232323;202501
+NL34343434343434;Transaction;My KBC Account;EUR;2025-01-19;-101,85;Groceries;SuperMart Gamma;BE00367700697790;202501
+NL45454545454545;Transaction;My KBC Account;EUR;2025-01-15;-62,00;Dinner Out;Pizza Palace;BE45454545454545;202501
+NL56565656565656;Transaction;My KBC Account;EUR;2025-01-12;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201;202501
+NL67676767676767;Transaction;My KBC Account;EUR;2025-01-05;-1100,00;Rent Payment January;Landlord Properties;BE12312312312312;202501
+NL78787878787878;Transaction;My KBC Account;EUR;2025-01-03;24,90;Interest Payment;KBC Bank;;202501

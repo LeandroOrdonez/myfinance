@@ -1,0 +1,11 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number;YearMonth
+NL09090909090910;Transaction;My KBC Account;EUR;2023-08-30;-38,10;Gas Bill Jul;GasSupply Co;BE78978978978978;202308
+NL10101010101011;Transaction;My KBC Account;EUR;2023-08-28;2950,00;Salary August 2023;My Employer Inc.;BE05177199667427;202308
+NL21212121212122;Transaction;My KBC Account;EUR;2023-08-27;-400,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789;202308
+NL32323232323233;Transaction;My KBC Account;EUR;2023-08-25;-78,60;Electricity Bill Jul;PowerGen Corp;BE45645645645645;202308
+NL43434343434344;Transaction;My KBC Account;EUR;2023-08-22;-55,20;Fuel Purchase;Petrol Station Plus;BE11111111111111;202308
+NL54545454545455;Transaction;My KBC Account;EUR;2023-08-19;-94,70;Groceries;SuperMart Gamma;BE00367700697790;202308
+NL65656565656566;Transaction;My KBC Account;EUR;2023-08-15;-42,00;Lunch Meeting;Business Cafe;BE65656565656566;202308
+NL76767676767677;Transaction;My KBC Account;EUR;2023-08-12;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201;202308
+NL87878787878788;Transaction;My KBC Account;EUR;2023-08-05;-1050,00;Rent Payment August;Landlord Properties;BE12312312312312;202308
+NL98989898989899;Transaction;My KBC Account;EUR;2023-08-03;19,10;Interest Payment;KBC Bank;;202308

@@ -1,0 +1,14 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number;YearMonth
+NL64020061191604;Transaction;My KBC Account;EUR;2025-02-28;3100,00;Salary February 2025;My Employer Inc.;BE05177199667427;202502
+NL88803031397935;Transaction;My KBC Account;EUR;2025-02-27;-68,37;Grocery Shopping;SuperMart Gamma;BE00367700697790;202502
+NL91234567890123;Transaction;My KBC Account;EUR;2025-02-26;-1100,00;Rent Payment March;Landlord Properties;BE12312312312312;202502
+NL45678901234567;Transaction;My KBC Account;EUR;2025-02-25;-85,60;Electricity Bill Jan;PowerGen Corp;BE45645645645645;202502
+NL78901234567890;Transaction;My KBC Account;EUR;2025-02-24;-42,95;Gas Bill Jan;GasSupply Co;BE78978978978978;202502
+NL01234567890123;Transaction;My KBC Account;EUR;2025-02-22;-14,99;Streaming Service Fee;StreamFlix;BE01201201201201;202502
+NL11122233344455;Transaction;My KBC Account;EUR;2025-02-20;-55,80;Fuel Purchase;Petrol Station Plus;BE11111111111111;202502
+NL22233344455566;Transaction;My KBC Account;EUR;2025-02-18;-92,10;Groceries;SuperMart Gamma;BE00367700697790;202502
+NL33344455566677;Transaction;My KBC Account;EUR;2025-02-15;-38,50;Lunch with colleagues;Corner Cafe;BE33333333333333;202502
+NL44455566677788;Transaction;My KBC Account;EUR;2025-02-12;60,00;Refund for returned shoes;Online Fashion Store;BE44444444444444;202502
+NL55566677788899;Transaction;My KBC Account;EUR;2025-02-10;-40,00;ATM Withdrawal;;;202502
+NL66677788899900;Transaction;My KBC Account;EUR;2025-02-05;-1100,00;Rent Payment February;Landlord Properties;BE12312312312312;202502
+NL77788899900011;Transaction;My KBC Account;EUR;2025-02-03;25,15;Interest Payment;KBC Bank;;202502

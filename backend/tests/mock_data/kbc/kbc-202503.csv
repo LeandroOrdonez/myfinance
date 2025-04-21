@@ -1,0 +1,5 @@
+Account number;Heading;Name;Currency;Date;Amount;Description;Counterparty name;counterparty's account number;YearMonth
+NL08999102722515;Transaction;My KBC Account;EUR;2025-03-04;27,49;Interest Income;KBC Bank;;202503
+NL38150172369201;Transaction;My KBC Account;EUR;2025-03-03;-500,00;Transfer to Savings Account;My Savings;NLXXKBCA0123456789;202503
+NL12848772424438;Transaction;My KBC Account;EUR;2025-03-02;-74,11;Dinner at Restaurant Blue;Restaurant Blue;BE09329149173073;202503
+NL20300036093259;Transaction;My KBC Account;EUR;2025-03-01;-59,15;Monthly Public Transport Pass;Local Transport Auth.;BE93863406283057;202503
