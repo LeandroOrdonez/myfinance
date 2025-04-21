@@ -147,76 +147,58 @@ export const CategoryBreakdown: React.FC = () => {
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
       <div className="flex justify-between items-center mb-5">
         <h3 className="text-lg font-medium dark:text-gray-200">{getChartTitle()}</h3>
-        <div className="flex space-x-4">
+        <div className="flex items-center space-x-4">
           {/* Period selector */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center px-3 py-1 text-sm rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <button className="flex items-center space-x-1 px-3 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <span>
                   {selectedPeriod === 'monthly' && 'Monthly'}
                   {selectedPeriod === 'yearly' && 'Yearly'}
                   {selectedPeriod === 'all_time' && 'All Time'}
                 </span>
-                <ChevronDownIcon className="h-4 w-4 ml-1" />
+                <ChevronDownIcon className="h-4 w-4" />
               </button>
             </DropdownMenu.Trigger>
             
             <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                className="z-50 min-w-[220px] bg-white rounded-md p-1 shadow-lg"
-                sideOffset={5}
-              >
-                <DropdownMenu.RadioGroup 
-                  value={selectedPeriod} 
-                  onValueChange={(value) => handlePeriodChange(value as any)}
+              <DropdownMenu.Content className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-1 min-w-[150px] z-50 border dark:border-gray-700" sideOffset={5}>
+                <DropdownMenu.Item
+                  className="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded cursor-pointer"
+                  onClick={() => handlePeriodChange('monthly')}
                 >
-                  <DropdownMenu.RadioItem 
-                    value="monthly"
-                    className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                  >
-                    <span className="flex-grow">Monthly</span>
-                    {selectedPeriod === 'monthly' && <CheckIcon className="h-4 w-4 text-blue-600" />}
-                  </DropdownMenu.RadioItem>
-                  
-                  <DropdownMenu.RadioItem 
-                    value="yearly"
-                    className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                  >
-                    <span className="flex-grow">Yearly</span>
-                    {selectedPeriod === 'yearly' && <CheckIcon className="h-4 w-4 text-blue-600" />}
-                  </DropdownMenu.RadioItem>
-                  
-                  <DropdownMenu.RadioItem 
-                    value="all_time"
-                    className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                  >
-                    <span className="flex-grow">All Time</span>
-                    {selectedPeriod === 'all_time' && <CheckIcon className="h-4 w-4 text-blue-600" />}
-                  </DropdownMenu.RadioItem>
-                </DropdownMenu.RadioGroup>
+                  <span className="flex-1">Monthly</span>
+                  {selectedPeriod === 'monthly' && <CheckIcon className="h-4 w-4" />}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded cursor-pointer"
+                  onClick={() => handlePeriodChange('yearly')}
+                >
+                  <span className="flex-1">Yearly</span>
+                  {selectedPeriod === 'yearly' && <CheckIcon className="h-4 w-4" />}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded cursor-pointer"
+                  onClick={() => handlePeriodChange('all_time')}
+                >
+                  <span className="flex-1">All Time</span>
+                  {selectedPeriod === 'all_time' && <CheckIcon className="h-4 w-4" />}
+                </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
 
           {/* Chart type selector */}
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             <button
               onClick={() => setChartType('treemap')}
-              className={`px-3 py-1 text-sm rounded-md cursor-pointer dark:text-gray-300 ${
-                chartType === 'treemap' 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}
+              className={`px-3 py-1 text-sm ${chartType === 'treemap' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
             >
               Treemap
             </button>
             <button
               onClick={() => setChartType('bar')}
-              className={`px-3 py-1 text-sm rounded-md cursor-pointer dark:text-gray-300 ${
-                chartType === 'bar' 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}
+              className={`px-3 py-1 text-sm ${chartType === 'bar' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
             >
               Bar Chart
             </button>
@@ -224,25 +206,17 @@ export const CategoryBreakdown: React.FC = () => {
         </div>
       </div>
       
-      <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-        <Tabs.List className="flex space-x-4 mb-4">
+      <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="mt-4">
+        <Tabs.List className="flex space-x-2 mb-4">
           <Tabs.Trigger
             value="expenses"
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'expenses'
-                ? 'bg-red-100 text-red-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'expenses' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
           >
             Expenses
           </Tabs.Trigger>
           <Tabs.Trigger
             value="income"
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'income'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'income' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
           >
             Income
           </Tabs.Trigger>
@@ -284,13 +258,31 @@ export const CategoryBreakdown: React.FC = () => {
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 90, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" 
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
+                <XAxis 
+                  type="number" 
                   tickFormatter={(value) => formatCurrency(value)}
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                  stroke="#9ca3af"
+                  className="dark:text-gray-400"
                 />
-                <YAxis type="category" dataKey="name" width={80} />
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  width={80} 
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                  stroke="#9ca3af"
+                  className="dark:text-gray-400"
+                />
                 <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-tooltip-bg)', 
+                    borderColor: 'var(--color-tooltip-border)',
+                    color: 'var(--color-tooltip-text)'
+                  }}
+                  itemStyle={{ color: 'inherit' }}
+                  wrapperClassName="tooltip-wrapper"
                 />
                 <Bar 
                   dataKey="value" 
@@ -332,9 +324,9 @@ export const CategoryBreakdown: React.FC = () => {
           </div>
           
           <div className="flex justify-between mt-2 text-sm">
-            <div className="text-gray-600">
+            <div className="text-gray-600 dark:text-gray-400">
               {activeTab === 'expenses' ? 'This Month:' : 'This Month:'} {' '}
-              <span className="font-medium">
+              <span className="font-medium dark:text-gray-300">
                 {formatCurrency(
                   activeTab === 'expenses' 
                     ? statistics.current_month.period_expenses 
@@ -342,9 +334,9 @@ export const CategoryBreakdown: React.FC = () => {
                 )}
               </span>
             </div>
-            <div className="text-gray-600">
+            <div className="text-gray-600 dark:text-gray-400">
               {activeTab === 'expenses' ? 'Monthly Average:' : 'Monthly Average:'} {' '}
-              <span className="font-medium">
+              <span className="font-medium dark:text-gray-300">
                 {formatCurrency(
                   activeTab === 'expenses' 
                     ? yearlyExpenseAverage

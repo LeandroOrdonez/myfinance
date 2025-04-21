@@ -125,77 +125,58 @@ export const CategoryTrends: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-5">
-        <h3 className="text-lg font-medium dark:text-gray-200">Financial Comparison</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold dark:text-gray-100">Category Trends</h2>
         
+        {/* Period Dropdown */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <button className="flex items-center px-3 py-1 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors">
+            <button className="flex items-center space-x-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
               <span>
-                {selectedPeriod === 'monthly' && 'Monthly'}
-                {selectedPeriod === 'yearly' && 'Yearly'}
+                {selectedPeriod === 'monthly' ? 'Monthly' : 'Yearly'}
               </span>
-              <ChevronDownIcon className="h-4 w-4 ml-1" />
+              <ChevronDownIcon className="h-4 w-4" />
             </button>
           </DropdownMenu.Trigger>
-          
           <DropdownMenu.Portal>
-            <DropdownMenu.Content
-              className="z-50 min-w-[220px] bg-white rounded-md p-1 shadow-lg"
-              sideOffset={5}
-            >
-              <DropdownMenu.RadioGroup 
-                value={selectedPeriod} 
-                onValueChange={(value) => handlePeriodChange(value as any)}
+            <DropdownMenu.Content className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-1 min-w-[150px] z-50 border dark:border-gray-700" sideOffset={5}>
+              <DropdownMenu.Item
+                className="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded cursor-pointer"
+                onClick={() => handlePeriodChange('monthly')}
               >
-                <DropdownMenu.RadioItem 
-                  value="monthly"
-                  className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                >
-                  <span className="flex-grow">Monthly</span>
-                  {selectedPeriod === 'monthly' && <CheckIcon className="h-4 w-4 text-blue-600" />}
-                </DropdownMenu.RadioItem>
-                
-                <DropdownMenu.RadioItem 
-                  value="yearly"
-                  className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                >
-                  <span className="flex-grow">Yearly</span>
-                  {selectedPeriod === 'yearly' && <CheckIcon className="h-4 w-4 text-blue-600" />}
-                </DropdownMenu.RadioItem>
-              </DropdownMenu.RadioGroup>
+                <span className="flex-1">Monthly</span>
+                {selectedPeriod === 'monthly' && <CheckIcon className="h-4 w-4" />}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                className="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded cursor-pointer"
+                onClick={() => handlePeriodChange('yearly')}
+              >
+                <span className="flex-1">Yearly</span>
+                {selectedPeriod === 'yearly' && <CheckIcon className="h-4 w-4" />}
+              </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
       </div>
       
       <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-        <Tabs.List className="flex space-x-4 mb-6">
+        <Tabs.List className="flex space-x-4 mb-4">
           <Tabs.Trigger
             value="periods"
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'periods'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}
+            className={`px-4 py-2 rounded-md ${activeTab === 'periods' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
-            {selectedPeriod === 'monthly' && 'Monthly vs Yearly Average'}
-            {selectedPeriod === 'yearly' && 'Yearly Comparison'}
+            Period Comparison
           </Tabs.Trigger>
           <Tabs.Trigger
             value="categories"
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'categories'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}
+            className={`px-4 py-2 rounded-md ${activeTab === 'categories' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             Top Categories
           </Tabs.Trigger>
         </Tabs.List>
 
         <Tabs.Content value="periods" className="h-[400px]">
-          <div className="mb-3 text-sm text-gray-600">
+          <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
             {selectedPeriod === 'monthly' && `Comparing ${currentMonth} ${currentYear} with monthly average for the year`}
             {selectedPeriod === 'yearly' && `Comparing yearly averages for ${currentYear} with last year's averages`}
           </div>
@@ -204,11 +185,32 @@ export const CategoryTrends: React.FC = () => {
               data={selectedPeriod === 'monthly' ? monthlyData : yearlyData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis tickFormatter={(value) => formatCurrency(value)} />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 12, fill: 'currentColor' }}
+                stroke="#9ca3af"
+                className="dark:text-gray-400"
+              />
+              <YAxis 
+                tickFormatter={(value) => formatCurrency(value)} 
+                tick={{ fontSize: 12, fill: 'currentColor' }}
+                stroke="#9ca3af"
+                className="dark:text-gray-400"
+              />
+              <Tooltip 
+                formatter={(value: number) => formatCurrency(value)} 
+                contentStyle={{ 
+                  backgroundColor: 'var(--color-tooltip-bg)', 
+                  borderColor: 'var(--color-tooltip-border)',
+                  color: 'var(--color-tooltip-text)'
+                }}
+                itemStyle={{ color: 'inherit' }}
+                wrapperClassName="tooltip-wrapper"
+              />
+              <Legend 
+                wrapperStyle={{ paddingTop: 10 }}
+              />
               <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly' : 'Yearly'} fill="#6366F1" name={selectedPeriod === 'monthly' ? `${currentMonth} ${currentYear}` : `${currentYear}`} />
               <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly Average' : 'Previous Year'} fill="#9CA3AF" name={selectedPeriod === 'monthly' ? `Monthly Average (${currentYear})` : `${currentYear - 1}`} />
             </BarChart>
@@ -217,7 +219,7 @@ export const CategoryTrends: React.FC = () => {
 
         <Tabs.Content value="categories" className="h-[400px]">
           <div className="mb-4">
-            <h4 className="text-md font-medium">
+            <h4 className="text-md font-medium dark:text-gray-200">
               {selectedPeriod === 'monthly' && `Top 5 Categories (${currentMonth} ${currentYear})`}
               {selectedPeriod === 'yearly' && `Top 5 Categories (${currentYear})`}
             </h4>
@@ -246,9 +248,9 @@ export const CategoryTrends: React.FC = () => {
                       <div key={index} className="flex items-center">
                         <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
                         <div className="flex-1 mx-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
                             <div 
-                              className="bg-rose-600 h-2.5 rounded-full shadow-inner" 
+                              className="bg-rose-600 dark:bg-rose-500 h-2.5 rounded-full shadow-inner" 
                               style={{ width: `${Math.min(percentage, 100)}%` }}
                             ></div>
                           </div>
@@ -286,9 +288,9 @@ export const CategoryTrends: React.FC = () => {
                       <div key={index} className="flex items-center">
                         <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
                         <div className="flex-1 mx-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
                             <div 
-                              className="bg-emerald-600 h-2.5 rounded-full shadow-inner" 
+                              className="bg-emerald-600 dark:bg-emerald-500 h-2.5 rounded-full shadow-inner" 
                               style={{ width: `${Math.min(percentage, 100)}%` }}
                             ></div>
                           </div>

@@ -190,6 +190,13 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
                                     formatValue(value, activeMetric),
                                     metrics[activeMetric as keyof typeof metrics].series.find(series => series.name === name)?.name || 'Amount'
                                 ]}
+                                contentStyle={{ 
+                                backgroundColor: 'var(--color-tooltip-bg)', 
+                                borderColor: 'var(--color-tooltip-border)',
+                                color: 'var(--color-tooltip-text)'
+                                }}
+                                itemStyle={{ color: 'inherit' }}
+                                wrapperClassName="tooltip-wrapper"
                             />
                             <Legend 
                                 onClick={handleLegendClick}

@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-tooltip-bg: white;
+  --color-tooltip-border: #e5e7eb;
+  --color-tooltip-text: #1f2937;
+}
+
+.dark {
+  --color-tooltip-bg: #1f2937;
+  --color-tooltip-border: #374151;
+  --color-tooltip-text: #f3f4f6;
+}
+
+/* Ensure tooltip text is visible in dark mode */
+.tooltip-wrapper .recharts-tooltip-item-name,
+.tooltip-wrapper .recharts-tooltip-item-value,
+.tooltip-wrapper .recharts-tooltip-label {
+  color: var(--color-tooltip-text) !important;
+}
