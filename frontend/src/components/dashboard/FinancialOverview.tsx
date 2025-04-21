@@ -73,9 +73,9 @@ export const FinancialOverview: React.FC = () => {
           amount={statistics.all_time.savings_rate}
           change={calculateChange(
             statistics.all_time.savings_rate,
-            statistics.last_month.savings_rate
+            (statistics.last_month.total_net_savings / statistics.last_month.total_income) * 100.0
           )}
-          previousAmount={statistics.last_month.savings_rate}
+          previousAmount={(statistics.last_month.total_net_savings / statistics.last_month.total_income) * 100.0}
           isPercentage={true}
           colorType="neutral"
         />

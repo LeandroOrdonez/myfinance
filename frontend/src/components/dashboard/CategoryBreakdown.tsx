@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ResponsiveContainer, Tooltip, Legend, 
+  ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, 
   Treemap, 
 } from 'recharts';
@@ -9,8 +9,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useCategoryStatistics } from '../../hooks/useCategoryStatistics';
 import { useStatistics } from '../../hooks/useStatistics';
 import { Loading } from '../common/Loading';
-import { TransactionType } from '../../types/transaction';
-import { CalendarIcon, CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 const EXPENSE_COLORS = [
   '#EF4444', '#DC2626', '#B91C1C', '#991B1B', '#7F1D1D',
@@ -34,19 +33,9 @@ export const CategoryBreakdown: React.FC = () => {
   const { 
     expenseCategoriesWithPercentage, 
     incomeCategoriesWithPercentage, 
-    totalExpenses, 
-    totalIncome,
-    yearlyTotalExpenses,
-    yearlyTotalIncome,
-    cumulativeTotalExpenses,
-    cumulativeTotalIncome,
     loading: categoryLoading, 
     error: categoryError,
-    period,
-    date,
-    setPeriod,
-    setDate,
-    refreshCategoryStatistics
+    setPeriod
   } = useCategoryStatistics();
   
   const { statistics, loading: statsLoading, error: statsError } = useStatistics();
