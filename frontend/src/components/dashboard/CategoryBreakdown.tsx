@@ -339,7 +339,7 @@ export const CategoryBreakdown: React.FC = () => {
 
       {/* Total Summary */}
       <div className="mt-6 grid grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-gray-50 rounded-md dark:bg-gray-800 p-4 shadow-sm">
           <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">
             {selectedPeriod === 'monthly' && (activeTab === 'expenses' ? 'Monthly Expenses' : 'Monthly Income')}
             {selectedPeriod === 'yearly' && (activeTab === 'expenses' ? 'Yearly Expenses' : 'Yearly Income')}
@@ -357,7 +357,7 @@ export const CategoryBreakdown: React.FC = () => {
             )}
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-gray-50 rounded-md dark:bg-gray-800 p-4 shadow-sm">
           <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">Top Category</h5>
           <p className={`text-xl font-bold tracking-tight ${activeTab === 'expenses' ? 'text-rose-600' : 'text-emerald-600'}`}>
             {activeTab === 'expenses' 

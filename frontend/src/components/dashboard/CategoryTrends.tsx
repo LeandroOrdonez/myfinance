@@ -183,7 +183,7 @@ export const CategoryTrends: React.FC = () => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={selectedPeriod === 'monthly' ? monthlyData : yearlyData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
               <XAxis 
@@ -199,7 +199,8 @@ export const CategoryTrends: React.FC = () => {
                 className="dark:text-gray-400"
               />
               <Tooltip 
-                formatter={(value: number) => formatCurrency(value)} 
+                formatter={(value: number) => formatCurrency(value)}
+                labelFormatter={(value) => value}
                 contentStyle={{ 
                   backgroundColor: 'var(--color-tooltip-bg)', 
                   borderColor: 'var(--color-tooltip-border)',
@@ -209,7 +210,10 @@ export const CategoryTrends: React.FC = () => {
                 wrapperClassName="tooltip-wrapper"
               />
               <Legend 
+                align="center" 
+                verticalAlign="bottom"
                 wrapperStyle={{ paddingTop: 10 }}
+                height={50}
               />
               <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly' : 'Yearly'} fill="#6366F1" name={selectedPeriod === 'monthly' ? `${currentMonth} ${currentYear}` : `${currentYear}`} />
               <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly Average' : 'Previous Year'} fill="#9CA3AF" name={selectedPeriod === 'monthly' ? `Monthly Average (${currentYear})` : `${currentYear - 1}`} />
@@ -218,90 +222,88 @@ export const CategoryTrends: React.FC = () => {
         </Tabs.Content>
 
         <Tabs.Content value="categories" className="h-[400px]">
-          <div className="mb-4">
-            <h4 className="text-md font-medium dark:text-gray-200">
-              {selectedPeriod === 'monthly' && `Top 5 Categories (${currentMonth} ${currentYear})`}
-              {selectedPeriod === 'yearly' && `Top 5 Categories (${currentYear})`}
-            </h4>
-            <div className="flex flex-col space-y-4 mt-4">
-              {/* Expense Categories */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                <h5 className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-3">Expense Categories</h5>
-                <div className="space-y-2">
-                  {topExpenseCategories.map((category, index) => {
-                    const catData = expenseCategories.find(c => c.category === category);
-                    if (!catData) return null;
-                    
-                    // Get the appropriate amount based on the selected period
-                    const amount = 
-                      catData.period_amount !== undefined ? catData.period_amount : 
-                      catData.total_amount;
-                    
-                    // Use the API-provided percentage if available
-                    const percentage = 
-                      catData.period_percentage !== undefined ? catData.period_percentage :
-                      (amount / (selectedPeriod === 'monthly' ? statistics.current_month.period_expenses : 
-                               selectedPeriod === 'yearly' ? statistics.current_month.yearly_expenses :
-                               statistics.all_time.total_expenses)) * 100;
-                    
-                    return (
-                      <div key={index} className="flex items-center">
-                        <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
-                        <div className="flex-1 mx-2">
-                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
-                            <div 
-                              className="bg-rose-600 dark:bg-rose-500 h-2.5 rounded-full shadow-inner" 
-                              style={{ width: `${Math.min(percentage, 100)}%` }}
-                            ></div>
-                          </div>
+          <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+            {selectedPeriod === 'monthly' && `Top categories breakdown for ${currentMonth} ${currentYear}`}
+            {selectedPeriod === 'yearly' && `Top categories breakdown for ${currentYear}`}
+          </div>
+          <div className="flex flex-col space-y-4 mt-4 overflow-y-auto h-[calc(100%-2rem)]">
+            {/* Expense Categories */}
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+              <h5 className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-3">Expense Categories</h5>
+              <div className="space-y-2">
+                {topExpenseCategories.map((category, index) => {
+                  const catData = expenseCategories.find(c => c.category === category);
+                  if (!catData) return null;
+                  
+                  // Get the appropriate amount based on the selected period
+                  const amount = 
+                    catData.period_amount !== undefined ? catData.period_amount : 
+                    catData.total_amount;
+                  
+                  // Use the API-provided percentage if available
+                  const percentage = 
+                    catData.period_percentage !== undefined ? catData.period_percentage :
+                    (amount / (selectedPeriod === 'monthly' ? statistics.current_month.period_expenses : 
+                             selectedPeriod === 'yearly' ? statistics.current_month.yearly_expenses :
+                             statistics.all_time.total_expenses)) * 100;
+                  
+                  return (
+                    <div key={index} className="flex items-center">
+                      <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
+                      <div className="flex-1 mx-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                          <div 
+                            className="bg-rose-600 dark:bg-rose-500 h-2.5 rounded-full shadow-inner" 
+                            style={{ width: `${Math.min(percentage, 100)}%` }}
+                          ></div>
                         </div>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {formatCurrency(amount)}
-                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {formatCurrency(amount)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
               
-              {/* Income Categories */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">Income Categories</h5>
-                <div className="space-y-2">
-                  {topIncomeCategories.map((category, index) => {
-                    const catData = incomeCategories.find(c => c.category === category);
-                    if (!catData) return null;
+            {/* Income Categories */}
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+              <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">Income Categories</h5>
+              <div className="space-y-2">
+                {topIncomeCategories.map((category, index) => {
+                  const catData = incomeCategories.find(c => c.category === category);
+                  if (!catData) return null;
+                  
+                  // Get the appropriate amount based on the selected period
+                  const amount = 
+                    catData.period_amount !== undefined ? catData.period_amount : 
+                    catData.total_amount;
                     
-                    // Get the appropriate amount based on the selected period
-                    const amount = 
-                      catData.period_amount !== undefined ? catData.period_amount : 
-                      catData.total_amount;
-                      
-                    // Use the API-provided percentage if available
-                    const percentage = 
-                      catData.period_percentage !== undefined ? catData.period_percentage :
-                      (amount / (selectedPeriod === 'monthly' ? statistics.current_month.period_income :
-                               selectedPeriod === 'yearly' ? statistics.current_month.yearly_income :
-                               statistics.all_time.total_income)) * 100;
-                    
-                    return (
-                      <div key={index} className="flex items-center">
-                        <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
-                        <div className="flex-1 mx-2">
-                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
-                            <div 
-                              className="bg-emerald-600 dark:bg-emerald-500 h-2.5 rounded-full shadow-inner" 
-                              style={{ width: `${Math.min(percentage, 100)}%` }}
-                            ></div>
-                          </div>
+                  // Use the API-provided percentage if available
+                  const percentage = 
+                    catData.period_percentage !== undefined ? catData.period_percentage :
+                    (amount / (selectedPeriod === 'monthly' ? statistics.current_month.period_income :
+                             selectedPeriod === 'yearly' ? statistics.current_month.yearly_income :
+                             statistics.all_time.total_income)) * 100;
+                  
+                  return (
+                    <div key={index} className="flex items-center">
+                      <span className="w-32 text-sm truncate dark:text-gray-300">{category}</span>
+                      <div className="flex-1 mx-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                          <div 
+                            className="bg-emerald-600 dark:bg-emerald-500 h-2.5 rounded-full shadow-inner" 
+                            style={{ width: `${Math.min(percentage, 100)}%` }}
+                          ></div>
                         </div>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {formatCurrency(amount)}
-                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {formatCurrency(amount)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { FinancialOverview } from './components/dashboard/FinancialOverview';
 import { FinancialTrends } from './components/dashboard/FinancialTrends';
 import { CategoryBreakdown } from './components/dashboard/CategoryBreakdown';
 import { CategoryTrends } from './components/dashboard/CategoryTrends';
+import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
@@ -19,7 +20,10 @@ const AnalyticsDashboard = () => {
       <FinancialOverview />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CategoryBreakdown />
-        <CategoryTrends />
+        <div className="space-y-6">
+          <CategoryTrends />
+          <MonthlyHeatmap />
+        </div>
       </div>
       <FinancialTrends />
     </div>
