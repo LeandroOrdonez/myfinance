@@ -66,16 +66,8 @@ async def upload_csv(
         temp_file.seek(0)
         
         try:
-            # Read CSV headers to detect format
-            df = CSVParser.read_csv_with_fallback(temp_file.name)
-            print(df.columns.tolist())
-            bank_format = CSVParser.detect_bank_format(df.columns.tolist())
-            
             # Parse based on detected format
-            if bank_format == "ING":
-                transactions = CSVParser.parse_ing_csv(temp_file.name)
-            else:
-                transactions = CSVParser.parse_kbc_csv(temp_file.name)
+            transactions = CSVParser.parse_csv(temp_file.name)
             
             # Save to database with category suggestions
             db_transactions = []
