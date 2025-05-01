@@ -136,10 +136,7 @@ const fetchData = async (filtersOverride?: {
       
       await api.deleteTransaction(transactionId);
       
-      // Remove from local transactions
-      setTransactions(prev => prev.filter(t => t.id !== transactionId));
-
-      // Update local statistics
+      // Update local statistics before refetching
       const category = transaction.transaction_type === TransactionType.EXPENSE 
         ? transaction.expense_category 
         : transaction.income_category;
@@ -170,6 +167,10 @@ const fetchData = async (filtersOverride?: {
 
         return newStats;
       });
+      
+      // Instead of just removing the transaction from local state,
+      // refetch the current page data to avoid empty table rows
+      await fetchData();
     } catch (error) {
       console.error('Failed to delete transaction:', error);
     }
