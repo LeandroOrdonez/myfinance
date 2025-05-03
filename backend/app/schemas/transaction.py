@@ -58,3 +58,13 @@ class TransactionRestore(TransactionBase):
 
     class Config:
         orm_mode = True
+
+class TransactionPage(BaseModel):
+    items: list[Transaction]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+    class Config:
+        orm_mode = True

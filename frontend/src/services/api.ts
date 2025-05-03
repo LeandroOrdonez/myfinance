@@ -128,7 +128,7 @@ export const api = {
     amount: number,
     transactionType: TransactionType
   ): Promise<SuggestCategoryResponse> => {
-    const response = await axios.post(`${API_BASE_URL}/suggest-category`, {
+    const response = await axios.post(`${API_BASE_URL}/suggestions/category`, {
       description,
       amount,
       transaction_type: transactionType

@@ -65,12 +65,19 @@ def init_database():
     else:
         logger.info("All required database tables already exist")
 
-def reset_database():
+def reset_database(reset_type: str = "all"):
     """Drop all tables and recreate them"""
     logger.info("Resetting database...")
     try:
-        Base.metadata.drop_all(bind=engine)
-        Base.metadata.create_all(bind=engine)
+        if reset_type == "all":
+            Base.metadata.drop_all(bind=engine)
+            Base.metadata.create_all(bind=engine)
+        elif reset_type == "transactions":
+            Base.metadata.drop_all(bind=engine, tables=[Transaction.__table__])
+            Base.metadata.create_all(bind=engine, tables=[Transaction.__table__])
+        elif reset_type == "statistics":
+            Base.metadata.drop_all(bind=engine, tables=[FinancialStatistics.__table__, CategoryStatistics.__table__])
+            Base.metadata.create_all(bind=engine, tables=[FinancialStatistics.__table__, CategoryStatistics.__table__])
         logger.info("Database reset successfully!")
     except Exception as e:
         logger.error(f"Error resetting database: {str(e)}")
