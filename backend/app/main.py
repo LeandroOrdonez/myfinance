@@ -234,10 +234,12 @@ async def delete_transaction(transaction_id: int, db: Session = Depends(get_db))
     # Delete the transaction
     db.delete(transaction)
     
+    # Commit deletion before updating statistics
+    db.commit()
+    
     # Update statistics for the affected period
     StatisticsService.update_statistics(db, transaction_date)
     
-    db.commit()
     return {"message": "Transaction deleted successfully"}
 
 @app.patch("/transactions/{transaction_id}/category")

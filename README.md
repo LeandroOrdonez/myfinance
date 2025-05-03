@@ -1,85 +1,106 @@
 # MyFinance
 
-A personal finance management application designed to help users track, categorize, and analyze their financial transactions. MyFinance provides a comprehensive dashboard for visualizing spending patterns, income sources, and savings trends, enabling users to make informed financial decisions.
+A personal finance manager for tracking, categorizing, and analyzing your financial transactions. Built as a monorepo with a FastAPI backend and a React + TypeScript frontend, MyFinance helps you import, view, and analyze your spending and income.
+
+## Table of Contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Docker Setup](#docker-setup)
+  - [Running Locally Without Docker](#running-locally-without-docker)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
 
 ## Features
 
 ### Transaction Management
-- Import bank transaction data from CSV files (supports ING and KBC formats)
-- View, filter, and search transactions
-- Update transaction categories and details
-- Delete transactions with undo capability
+- Import transactions via CSV (supports ING & KBC formats)
+- List, filter, search, and sort transactions
+- Edit transaction details and categories
+- Delete transactions with undo functionality
+- Pagination support for large data sets
 
 ### Automatic Categorization
-- Smart category suggestions based on transaction descriptions and amounts
-- System learns and improves suggestions over time
-- Predefined categories for both expenses and income
+- ML-powered category suggestions based on history
+- Learns from manual corrections to improve accuracy
 
 ### Financial Analytics
-- Dashboard showing key financial metrics (savings, income, expenses)
-- Visual breakdown of spending by category
-- Charts showing financial trends over time
-- Analysis of spending patterns by category
+- Dashboard showing savings, expenses, and income
+- Interactive charts over time and by category
+- Monthly and yearly summary views
 
-### Data Management
-- Local storage of financial data
-- Data persistence through Docker volumes
-- All data stored locally for privacy
+## Architecture
 
-## Docker Setup
+- **Monorepo** layout with separate `backend` and `frontend` directories
+- **Backend**: FastAPI, SQLAlchemy (SQLite), Pandas for CSV parsing, simple ML service for categorization
+- **Frontend**: React + TypeScript, Tailwind CSS, React Router
 
-This project is fully dockerized for easy deployment.
+## Tech Stack
+
+| Layer     | Technology                          |
+|-----------|-------------------------------------|
+| Backend   | Python, FastAPI, SQLAlchemy, Pandas |
+| Frontend  | React, TypeScript, Tailwind CSS     |
+| Database  | SQLite (persistent via Docker volume)|
+| Dev Ops   | Docker, Docker Compose              |
+
+## Getting Started
 
 ### Prerequisites
 
-- Docker and Docker Compose installed on your system
+- Node.js (>=14.x) & npm or Yarn
+- Python 3.8+
+- Docker & Docker Compose (optional but recommended)
 
-### Running the Application
-
-1. Clone this repository
-2. From the project root directory, run:
-
-```bash
-docker-compose up -d
-```
-
-3. The application will be available at:
-   - Frontend: http://localhost:8080
-   - Backend API: http://localhost:8000
-
-### Data Persistence
-
-The database file is stored in a Docker volume that maps to `./backend/app/data` on your host system. This ensures that your data persists even if you remove and recreate the containers.
-
-### Rebuilding the Application
-
-If you make changes to the code, you can rebuild the containers with:
+### Docker Setup
 
 ```bash
 docker-compose up -d --build
 ```
 
-### Stopping the Application
+- Frontend: http://localhost:8080
+- Backend API & docs: http://localhost:8000/docs
+
+### Running Locally Without Docker
+
+#### Backend
 
 ```bash
-docker-compose down
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-## Development without Docker
+#### Frontend
 
-Refer to CLAUDE.md for development commands when working outside of Docker.
+```bash
+cd frontend
+npm install
+npm run start
+```
 
-## Technical Stack
+## Usage
 
-### Frontend
-- React with TypeScript
-- Functional components with hooks
-- Tailwind CSS for responsive design
-- React Router for navigation
+- Browse the API endpoints via Swagger UI at `/docs`
+- Import transactions using the CSV uploader in the frontend
+- Navigate between the Dashboard and Transactions list
 
-### Backend
-- FastAPI (Python)
-- SQLAlchemy ORM with SQLite database
-- RESTful API endpoints
-- Pandas for CSV parsing and data manipulation
-- Simple ML model for category suggestions
+## Project Structure
+
+```
+myfinance/
+├── backend/         # FastAPI server, models, services
+├── frontend/        # React app (TSX, hooks, components)
+├── docker-compose.yaml
+└── README.md        # Project overview and setup
+```
+
+## Contributing
+
+Contributions are welcome! Please open issues or pull requests to improve features, fix bugs, or enhance documentation.

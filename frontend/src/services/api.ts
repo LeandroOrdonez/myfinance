@@ -85,11 +85,9 @@ export const api = {
   },
 
   async deleteTransaction(transactionId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
-      method: 'DELETE',
-    });
+    const response = await axios.delete(`${API_BASE_URL}/transactions/${transactionId}`);
 
-    if (!response.ok) {
+    if (!response.data) {
       throw new Error('Failed to delete transaction');
     }
   },
