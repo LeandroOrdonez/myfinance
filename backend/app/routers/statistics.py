@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract
-from typing import List
+from sqlalchemy import func, extract, case, and_
+from typing import List, Dict
 import logging
 from datetime import date, datetime, timedelta
 import calendar
+import numpy as np
+from enum import Enum
 
 from ..database import get_db
 from ..models import transaction as models
@@ -227,6 +229,122 @@ def initialize_statistics(db: Session = Depends(get_db)):
         return {"message": "Statistics initialized successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/weekday-distribution")
+def get_weekday_distribution(
+    db: Session = Depends(get_db),
+    transaction_type: models.TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+):
+    try:
+        # Build base query
+        query = db.query(
+            # Extract weekday (0=Monday, 6=Sunday in PostgreSQL)
+            extract('dow', models.Transaction.transaction_date).label('weekday'),
+            models.Transaction.amount,
+            models.Transaction.transaction_type
+        )
+        
+        # Apply date filters if provided
+        if start_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                query = query.filter(models.Transaction.transaction_date >= start)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid start date format. Use YYYY-MM-DD")
+        
+        if end_date:
+            try:
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                query = query.filter(models.Transaction.transaction_date <= end)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid end date format. Use YYYY-MM-DD")
+        
+        # Apply transaction type filter if provided
+        if transaction_type:
+            if transaction_type == models.TransactionType.EXPENSE:
+                query = query.filter(models.Transaction.transaction_type == models.TransactionType.EXPENSE)
+            elif transaction_type == models.TransactionType.INCOME:
+                query = query.filter(models.Transaction.transaction_type == models.TransactionType.INCOME)
+        
+        # Execute query to get all transactions with weekday
+        transactions = query.all()
+        
+        if not transactions:
+            return {
+                "weekdays": [],
+                "message": "No transactions found for the specified criteria"
+            }
+        
+        # Process results by weekday
+        weekday_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        
+        # Initialize results structure
+        results = {}
+        for i, day in enumerate(weekday_names):
+            results[day] = {
+                "expense": {
+                    "count": 0,
+                    "total": 0,
+                    "average": 0,
+                    "median": 0,
+                    "min": 0,
+                    "max": 0,
+                    "amounts": []
+                },
+                "income": {
+                    "count": 0,
+                    "total": 0,
+                    "average": 0,
+                    "median": 0,
+                    "min": 0,
+                    "max": 0,
+                    "amounts": []
+                }
+            }
+        
+        # Group transactions by weekday and type
+        for t in transactions:
+            # Convert PostgreSQL's Sunday=0 to Monday=0 format
+            weekday_idx = (int(t.weekday) + 6) % 7
+            weekday = weekday_names[weekday_idx]
+            
+            # Determine transaction type and amount
+            t_type = "expense" if t.transaction_type == models.TransactionType.EXPENSE else "income"
+            amount = abs(t.amount)  # Use absolute value for calculations
+            
+            # Add to appropriate category
+            results[weekday][t_type]["count"] += 1
+            results[weekday][t_type]["total"] += amount
+            results[weekday][t_type]["amounts"].append(amount)
+        
+        # Calculate statistics for each weekday and type
+        for day in weekday_names:
+            for t_type in ["expense", "income"]:
+                amounts = results[day][t_type]["amounts"]
+                count = results[day][t_type]["count"]
+                
+                if count > 0:
+                    results[day][t_type]["average"] = round(results[day][t_type]["total"] / count, 2)
+                    results[day][t_type]["median"] = round(float(np.median(amounts)), 2) if amounts else 0
+                    results[day][t_type]["min"] = round(min(amounts), 2) if amounts else 0
+                    results[day][t_type]["max"] = round(max(amounts), 2) if amounts else 0
+                
+                # Remove the raw amounts array from the response
+                del results[day][t_type]["amounts"]
+                
+                # Round total for better display
+                results[day][t_type]["total"] = round(results[day][t_type]["total"], 2)
+        
+        return {
+            "weekdays": results,
+            "transaction_count": len(transactions)
+        }
+    except Exception as e:
+        logger.error(f"Error in get_weekday_distribution: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/timeseries")
 def get_statistics_timeseries(

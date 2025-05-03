@@ -5,7 +5,8 @@ import {
   IncomeCategory, 
   TransactionType,
   SortParams,
-  SuggestCategoryResponse
+  SuggestCategoryResponse,
+  WeekdayDistribution
 } from '../types/transaction';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -133,6 +134,20 @@ export const api = {
       amount,
       transaction_type: transactionType
     });
+    return response.data;
+  },
+
+  getWeekdayDistribution: async (
+    transactionType?: TransactionType,
+    startDate?: string,
+    endDate?: string
+  ): Promise<WeekdayDistribution> => {
+    const params: Record<string, string> = {};
+    if (transactionType) params.transaction_type = transactionType;
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    
+    const response = await axios.get(`${API_BASE_URL}/statistics/weekday-distribution`, { params });
     return response.data;
   },
 }; 

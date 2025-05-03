@@ -109,3 +109,24 @@ export interface UpdateCategoryAction {
 }
 
 export type UndoableAction = DeleteTransactionAction | UpdateCategoryAction;
+
+export interface WeekdayStats {
+  count: number;
+  total: number;
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+}
+
+export interface WeekdayTypeStats {
+  expense: WeekdayStats;
+  income: WeekdayStats;
+}
+
+export interface WeekdayDistribution {
+  weekdays: {
+    [key: string]: WeekdayTypeStats;
+  };
+  transaction_count: number;
+}
