@@ -10,10 +10,8 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import * as Tabs from '@radix-ui/react-tabs';
-import * as Select from '@radix-ui/react-select';
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { api } from '../../services/api';
-import { TransactionType, WeekdayDistribution as WeekdayDistributionType } from '../../types/transaction';
+import { WeekdayDistribution as WeekdayDistributionType } from '../../types/transaction';
 import { subMonths, startOfYear, format as formatDate } from 'date-fns';
 
 // Format currency values
@@ -31,15 +29,19 @@ const PERIODS = [
   { label: '6m', value: '6m' },
   { label: 'YTD', value: 'ytd' },
   { label: '1y', value: '1y' },
+  { label: '2y', value: '2y' },
   { label: 'All', value: 'all' },
 ];
 
 const WeekdayDistribution: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<WeekdayDistributionType | null>(null);
-  const [transactionType, setTransactionType] = useState<TransactionType | 'all'>('all');
   const [period, setPeriod] = useState('all');
   const [activeTab, setActiveTab] = useState('average');
+  const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({
+    Expenses: true,
+    Income: true
+  });
   
   // Compute start_date and end_date based on selected period
   const now = new Date();
@@ -58,6 +60,9 @@ const WeekdayDistribution: React.FC = () => {
   } else if (period === '1y') {
     startDate = formatDate(subMonths(now, 12), 'yyyy-MM-dd');
     endDate = formatDate(now, 'yyyy-MM-dd');
+  } else if (period === '2y') {
+    startDate = formatDate(subMonths(now, 24), 'yyyy-MM-dd');
+    endDate = formatDate(now, 'yyyy-MM-dd');
   }
 
   // Fetch data when filters change
@@ -66,7 +71,7 @@ const WeekdayDistribution: React.FC = () => {
       setLoading(true);
       try {
         const result = await api.getWeekdayDistribution(
-          transactionType === 'all' ? undefined : transactionType as TransactionType,
+          undefined,
           startDate,
           endDate
         );
@@ -79,7 +84,21 @@ const WeekdayDistribution: React.FC = () => {
     };
 
     fetchData();
-  }, [transactionType, startDate, endDate]);
+  }, [startDate, endDate]);
+
+  // Handle legend click to toggle series visibility
+  const handleLegendClick = (entry: any) => {
+    // Prevent the default Recharts toggle behavior
+    entry.payload.preventDefault = true;
+    
+    setVisibleSeries(prev => ({
+      ...prev,
+      [entry.dataKey]: !prev[entry.dataKey]
+    }));
+    
+    // Return false to prevent Recharts' default toggle behavior
+    return false;
+  };
 
   // Transform data for charts
   const transformDataForChart = (type: 'count' | 'total' | 'average' | 'median') => {
@@ -132,107 +151,57 @@ const WeekdayDistribution: React.FC = () => {
           </svg>
         </div>
       </div>
-      
-      <div className="flex flex-col md:flex-row justify-between items-end mb-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Transaction Type
-          </label>
-          <Select.Root 
-            value={transactionType} 
-            onValueChange={(value) => setTransactionType(value as TransactionType | 'all')}
-          >
-            <Select.Trigger className="inline-flex items-center justify-between w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
-              <Select.Value placeholder="Select transaction type" />
-              <Select.Icon>
-                <ChevronDownIcon className="h-4 w-4 text-gray-500" />
-              </Select.Icon>
-            </Select.Trigger>
-
-            <Select.Portal>
-              <Select.Content className="overflow-hidden bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 z-50">
-                <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-default">
-                  <ChevronUpIcon className="h-4 w-4" />
-                </Select.ScrollUpButton>
-                <Select.Viewport className="p-1">
-                  <Select.Item value="all" className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default">
-                    <Select.ItemText>All</Select.ItemText>
-                    <Select.ItemIndicator className="absolute left-2 inline-flex items-center">
-                      <CheckIcon className="h-4 w-4" />
-                    </Select.ItemIndicator>
-                  </Select.Item>
-                  <Select.Item value={TransactionType.EXPENSE} className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default">
-                    <Select.ItemText>Expenses</Select.ItemText>
-                    <Select.ItemIndicator className="absolute left-2 inline-flex items-center">
-                      <CheckIcon className="h-4 w-4" />
-                    </Select.ItemIndicator>
-                  </Select.Item>
-                  <Select.Item value={TransactionType.INCOME} className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default">
-                    <Select.ItemText>Income</Select.ItemText>
-                    <Select.ItemIndicator className="absolute left-2 inline-flex items-center">
-                      <CheckIcon className="h-4 w-4" />
-                    </Select.ItemIndicator>
-                  </Select.Item>
-                </Select.Viewport>
-                <Select.ScrollDownButton className="flex items-center justify-center h-6 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-default">
-                  <ChevronDownIcon className="h-4 w-4" />
-                </Select.ScrollDownButton>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </div>
-
-        <div>
-          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`px-3 py-1 text-sm ${period === p.value 
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-                  : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
 
       <Tabs.Root 
         value={activeTab} 
         onValueChange={setActiveTab}
-        className="flex flex-col"
       >
-        <Tabs.List 
-          aria-label="Weekday distribution statistics" 
-          className="flex border-b border-gray-200 dark:border-gray-700 mb-4"
-        >
-          <Tabs.Trigger 
-            value="average" 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === 'average' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <Tabs.List 
+            aria-label="Weekday distribution statistics" 
+            className="flex gap-2"
           >
-            Average Amount
-          </Tabs.Trigger>
-          <Tabs.Trigger 
-            value="median" 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === 'median' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-          >
-            Median Amount
-          </Tabs.Trigger>
-          <Tabs.Trigger 
-            value="count" 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === 'count' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-          >
-            Transaction Count
-          </Tabs.Trigger>
-          <Tabs.Trigger 
-            value="total" 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === 'total' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-          >
-            Total Amount
-          </Tabs.Trigger>
-        </Tabs.List>
+            <Tabs.Trigger 
+              value="average" 
+              className={`px-3 py-1 rounded-md ${activeTab === 'average' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            >
+              Average Amount
+            </Tabs.Trigger>
+            <Tabs.Trigger 
+              value="median" 
+              className={`px-3 py-1 rounded-md ${activeTab === 'median' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            >
+              Median Amount
+            </Tabs.Trigger>
+            <Tabs.Trigger 
+              value="count" 
+              className={`px-3 py-1 rounded-md ${activeTab === 'count' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            >
+              Transaction Count
+            </Tabs.Trigger>
+            <Tabs.Trigger 
+              value="total" 
+              className={`px-3 py-1 rounded-md ${activeTab === 'total' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            >
+              Total Amount
+            </Tabs.Trigger>
+          </Tabs.List>
+          <div>
+            <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriod(p.value)}
+                  className={`px-3 py-1 text-sm ${period === p.value 
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+                    : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {loading ? (
           <div className="h-80 flex items-center justify-center">
@@ -249,11 +218,22 @@ const WeekdayDistribution: React.FC = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `$${value}`} />
+                    <YAxis tickFormatter={(value) => `€${value}`} />
                     <RechartsTooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} />
-                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} />
+                    <Legend 
+                      onClick={handleLegendClick}
+                      wrapperStyle={{ cursor: 'pointer' }}
+                      formatter={(value, entry: any) => (
+                        <span style={{ 
+                          color: visibleSeries[entry.dataKey] ? entry.color : '#999',
+                          cursor: 'pointer'
+                        }}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} hide={!visibleSeries['Expenses']} />
+                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} hide={!visibleSeries['Income']} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -270,9 +250,20 @@ const WeekdayDistribution: React.FC = () => {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <RechartsTooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} />
-                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} />
+                    <Legend 
+                      onClick={handleLegendClick}
+                      wrapperStyle={{ cursor: 'pointer' }}
+                      formatter={(value, entry: any) => (
+                        <span style={{ 
+                          color: visibleSeries[entry.dataKey] ? entry.color : '#999',
+                          cursor: 'pointer'
+                        }}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} hide={!visibleSeries['Expenses']} />
+                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} hide={!visibleSeries['Income']} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -287,11 +278,22 @@ const WeekdayDistribution: React.FC = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `$${value}`} />
+                    <YAxis tickFormatter={(value) => `€${value}`} />
                     <RechartsTooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} />
-                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} />
+                    <Legend 
+                      onClick={handleLegendClick}
+                      wrapperStyle={{ cursor: 'pointer' }}
+                      formatter={(value, entry: any) => (
+                        <span style={{ 
+                          color: visibleSeries[entry.dataKey] ? entry.color : '#999',
+                          cursor: 'pointer'
+                        }}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} hide={!visibleSeries['Expenses']} />
+                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} hide={!visibleSeries['Income']} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -306,11 +308,22 @@ const WeekdayDistribution: React.FC = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `$${value}`} />
+                    <YAxis tickFormatter={(value) => `€${value}`} />
                     <RechartsTooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} />
-                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} />
+                    <Legend 
+                      onClick={handleLegendClick}
+                      wrapperStyle={{ cursor: 'pointer' }}
+                      formatter={(value, entry: any) => (
+                        <span style={{ 
+                          color: visibleSeries[entry.dataKey] ? entry.color : '#999',
+                          cursor: 'pointer'
+                        }}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} hide={!visibleSeries['Expenses']} />
+                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} hide={!visibleSeries['Income']} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

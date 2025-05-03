@@ -10,6 +10,7 @@ const PERIODS = [
   { label: '6m', value: '6m' },
   { label: 'YTD', value: 'ytd' },
   { label: '1y', value: '1y' },
+  { label: '2y', value: '2y' },
   { label: 'All', value: 'all' },
 ];
 
@@ -32,6 +33,9 @@ export const FinancialTrends: React.FC = () => {
     end_date = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '1y') {
     start_date = formatDate(subMonths(now, 12), 'yyyy-MM-01');
+    end_date = formatDate(now, 'yyyy-MM-dd');
+  } else if (period === '2y') {
+    start_date = formatDate(subMonths(now, 24), 'yyyy-MM-01');
     end_date = formatDate(now, 'yyyy-MM-dd');
   }
 
