@@ -4,6 +4,7 @@ import { FileUpload } from '../components/FileUpload';
 import { UndoButton } from '../components/UndoButton';
 import { Sidebar } from '../components/common/Sidebar';
 import { ThemeToggle } from '../components/common/ThemeToggle';
+import { LogoutButton } from '../components/auth/LogoutButton';
 import { useTransactions } from '../hooks/useTransactions';
 
 interface MainLayoutProps {
@@ -95,6 +96,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   <UndoButton onUndo={handleUndo} canUndo={canUndo} />
                 )}
                 <FileUpload onUploadSuccess={onUploadSuccess} />
+                <LogoutButton />
               </div>
             </div>
             {children}

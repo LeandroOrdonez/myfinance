@@ -13,6 +13,8 @@ import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { AuthWrapper } from './components/auth/AuthWrapper';
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
@@ -98,38 +100,42 @@ function App() {
 
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-        <Route 
-          path="/" 
-          element={
-            <MainLayout onUploadSuccess={handleUploadSuccess}>
-              <Navigate to="/analytics" replace />
-            </MainLayout>
-          } 
-        />
-        <Route 
-          path="/analytics" 
-          element={
-            <MainLayout onUploadSuccess={handleUploadSuccess}>
-              <AnalyticsDashboard />
-            </MainLayout>
-          } 
-        />
-        <Route 
-          path="/transactions" 
-          element={
-            <MainLayout 
-              onUploadSuccess={handleUploadSuccess}
-              showUndoButton={true}
-            >
-              <TransactionsView />
-            </MainLayout>
-          } 
-        />
-        <Route path="*" element={<Navigate to="/analytics" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <AuthWrapper>
+          <BrowserRouter>
+            <Routes>
+            <Route 
+              path="/" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <Navigate to="/analytics" replace />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <AnalyticsDashboard />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/transactions" 
+              element={
+                <MainLayout 
+                  onUploadSuccess={handleUploadSuccess}
+                  showUndoButton={true}
+                >
+                  <TransactionsView />
+                </MainLayout>
+              } 
+            />
+            <Route path="*" element={<Navigate to="/analytics" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthWrapper>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
