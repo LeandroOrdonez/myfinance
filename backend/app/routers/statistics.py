@@ -9,7 +9,7 @@ import numpy as np
 from enum import Enum
 
 from ..database import get_db
-from ..models import transaction as models
+from ..models.transaction import Transaction, TransactionType
 from ..models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from ..services.statistics_service import StatisticsService
 
@@ -36,7 +36,7 @@ def get_category_statistics(
             raise HTTPException(status_code=400, detail=f"Invalid period: {period}. Must be one of: monthly, yearly, all_time")
         
         # Get latest transaction date
-        latest_transaction = db.query(models.Transaction).order_by(models.Transaction.transaction_date.desc()).first()
+        latest_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
         
         # Parse date if provided and needed
         target_date = None
@@ -124,7 +124,7 @@ def get_category_statistics(
 def get_statistics_overview(db: Session = Depends(get_db)):
     try:
         # Get latest transaction date
-        latest_transaction = db.query(models.Transaction).order_by(models.Transaction.transaction_date.desc()).first()
+        latest_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
         
         if not latest_transaction:
             # Return empty/zero statistics if no transactions exist
@@ -233,7 +233,7 @@ def initialize_statistics(db: Session = Depends(get_db)):
 @router.get("/weekday-distribution")
 def get_weekday_distribution(
     db: Session = Depends(get_db),
-    transaction_type: models.TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
+    transaction_type: TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: str = Query(None, description="End date (YYYY-MM-DD)")
 ):
@@ -241,32 +241,32 @@ def get_weekday_distribution(
         # Build base query
         query = db.query(
             # Extract weekday (0=Monday, 6=Sunday in PostgreSQL)
-            extract('dow', models.Transaction.transaction_date).label('weekday'),
-            models.Transaction.amount,
-            models.Transaction.transaction_type
+            extract('dow', Transaction.transaction_date).label('weekday'),
+            Transaction.amount,
+            Transaction.transaction_type
         )
         
         # Apply date filters if provided
         if start_date:
             try:
                 start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                query = query.filter(models.Transaction.transaction_date >= start)
+                query = query.filter(Transaction.transaction_date >= start)
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid start date format. Use YYYY-MM-DD")
         
         if end_date:
             try:
                 end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                query = query.filter(models.Transaction.transaction_date <= end)
+                query = query.filter(Transaction.transaction_date <= end)
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid end date format. Use YYYY-MM-DD")
         
         # Apply transaction type filter if provided
         if transaction_type:
-            if transaction_type == models.TransactionType.EXPENSE:
-                query = query.filter(models.Transaction.transaction_type == models.TransactionType.EXPENSE)
-            elif transaction_type == models.TransactionType.INCOME:
-                query = query.filter(models.Transaction.transaction_type == models.TransactionType.INCOME)
+            if transaction_type == TransactionType.EXPENSE:
+                query = query.filter(Transaction.transaction_type == TransactionType.EXPENSE)
+            elif transaction_type == TransactionType.INCOME:
+                query = query.filter(Transaction.transaction_type == TransactionType.INCOME)
         
         # Execute query to get all transactions with weekday
         transactions = query.all()
@@ -311,7 +311,7 @@ def get_weekday_distribution(
             weekday = weekday_names[weekday_idx]
             
             # Determine transaction type and amount
-            t_type = "expense" if t.transaction_type == models.TransactionType.EXPENSE else "income"
+            t_type = "expense" if t.transaction_type == TransactionType.EXPENSE else "income"
             amount = abs(t.amount)  # Use absolute value for calculations
             
             # Add to appropriate category

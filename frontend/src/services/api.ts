@@ -8,6 +8,7 @@ import {
   SuggestCategoryResponse,
   WeekdayDistribution
 } from '../types/transaction';
+import { FinancialHealthScore } from '../types/financialHealth';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -148,6 +149,28 @@ export const api = {
     if (endDate) params.end_date = endDate;
     
     const response = await axios.get(`${API_BASE_URL}/statistics/weekday-distribution`, { params });
+    return response.data;
+  },
+
+  getHealthScore: async (
+    period: 'monthly' | 'yearly',
+    date?: string
+  ): Promise<FinancialHealthScore> => {
+    const params: Record<string, string> = { period };
+    if (date) params.date_str = date;
+    const response = await axios.get(`${API_BASE_URL}/health/score`, { params });
+    return response.data;
+  },
+
+  getHealthHistory: async (
+    period: 'monthly' | 'yearly',
+    start?: string,
+    end?: string
+  ): Promise<FinancialHealthScore[]> => {
+    const params: Record<string, string> = { period };
+    if (start) params.start = start;
+    if (end) params.end = end;
+    const response = await axios.get(`${API_BASE_URL}/health/history`, { params });
     return response.data;
   },
 }; 

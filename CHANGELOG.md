@@ -20,3 +20,17 @@
 - Implemented authentication system with persistent state
 - Added security features like lockout after failed attempts
 - Created logout button for easy app locking
+
+## 2025-05-05
+
+### Financial Health Feature
+- Added `FinancialHealthScore`, `Recommendation`, and `HealthGoal` models.
+- Implemented `FinancialHealthService.compute_health_score` with metrics: budget adherence, debt-to-income ratio, emergency fund ratio, spending stability.
+- Added router endpoints: `/health/score`, `/health/history`, `/health/recommendations`, `/health/goals`.
+- Registered `financial_health` router in `main.py`.
+
+### Frontend Financial Health
+- New `FinancialHealthDashboard` component under `src/components/dashboard`.
+- Extended API service with `getHealthScore` and `getHealthHistory`.
+- Updated sidebar to include “Health” menu item.
+- Registered `/health` route in `App.tsx`.

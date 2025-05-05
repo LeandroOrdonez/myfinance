@@ -1,6 +1,7 @@
 from ..database import Base
 from .statistics import FinancialStatistics, StatisticsPeriod, CategoryStatistics
 from .transaction import Transaction, TransactionType
+from .financial_health import FinancialHealthScore, Recommendation, HealthGoal
 
 # Export all models
 __all__ = [
@@ -9,5 +10,8 @@ __all__ = [
     'CategoryStatistics',
     'StatisticsPeriod',
     'Transaction',
-    'TransactionType'
+    'TransactionType',
+    'FinancialHealthScore',
+    'Recommendation',
+    'HealthGoal'
 ]

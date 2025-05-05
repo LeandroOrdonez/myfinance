@@ -15,6 +15,7 @@ import { api } from './services/api';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
+import FinancialHealthDashboard from './components/dashboard/FinancialHealthDashboard';
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
@@ -128,6 +129,14 @@ function App() {
                   showUndoButton={true}
                 >
                   <TransactionsView />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/health" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <FinancialHealthDashboard />
                 </MainLayout>
               } 
             />
