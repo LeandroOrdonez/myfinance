@@ -130,3 +130,60 @@ export interface WeekdayDistribution {
   };
   transaction_count: number;
 }
+
+// Financial Health Types
+export interface FinancialHealthScore {
+  id: number;
+  date: string;
+  overall_score: number;
+  savings_rate_score: number;
+  expense_ratio_score: number;
+  budget_adherence_score: number;
+  debt_to_income_score: number;
+  emergency_fund_score: number;
+  spending_stability_score: number;
+  
+  // Raw metrics
+  savings_rate: number;
+  expense_ratio: number;
+  budget_adherence: number;
+  debt_to_income: number;
+  emergency_fund_months: number;
+  spending_stability: number;
+  
+  // Recommendations
+  recommendations?: RecommendationData[];
+}
+
+export interface FinancialHealthHistory {
+  dates: string[];
+  overall_scores: number[];
+  savings_rate_scores: number[];
+  expense_ratio_scores: number[];
+  budget_adherence_scores: number[];
+  debt_to_income_scores: number[];
+  emergency_fund_scores: number[];
+  spending_stability_scores: number[];
+}
+
+export interface RecommendationData {
+  title: string;
+  description: string;
+  category: string;
+  impact_area: string;
+  priority: number;
+  estimated_score_improvement: number;
+}
+
+export interface Recommendation {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  impact_area: string;
+  priority: number;
+  estimated_score_improvement: number;
+  is_completed: boolean;
+  date_completed: string | null;
+  date_created: string;
+}

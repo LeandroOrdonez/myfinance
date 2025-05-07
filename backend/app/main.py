@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
 import logging
 
 logging.basicConfig(
@@ -10,7 +9,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from .database import get_db
-from .database_manager import init_database, reset_database, EntityGroup
+from .database_manager import init_database, reset_database
 from .services.category_suggestion_service import CategorySuggestionService
 
 # Import routers
@@ -43,7 +42,7 @@ app.include_router(financial_health.router)
 # Add a debug endpoint to reset the database
 # pass statistics or transactions to reset only statistics or transactions  
 @app.post("/debug/reset-database")
-def debug_reset_database(reset_type: Optional[EntityGroup] = Query(None)):
+def debug_reset_database(reset_type: str = "all"):
     try:
         reset_database(reset_type)
         return {"message": "Database reset successfully"}

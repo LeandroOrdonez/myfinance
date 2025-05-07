@@ -9,13 +9,13 @@ import { CategoryBreakdown } from './components/dashboard/CategoryBreakdown';
 import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
+import FinancialHealth from './components/dashboard/FinancialHealth';
 import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
-import FinancialHealthDashboard from './components/dashboard/FinancialHealthDashboard';
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
@@ -133,10 +133,10 @@ function App() {
               } 
             />
             <Route 
-              path="/health" 
+              path="/financial-health" 
               element={
                 <MainLayout onUploadSuccess={handleUploadSuccess}>
-                  <FinancialHealthDashboard />
+                  <FinancialHealth />
                 </MainLayout>
               } 
             />

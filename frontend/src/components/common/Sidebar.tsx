@@ -29,14 +29,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: <ChartBarIcon className="h-5 w-5" />
     },
     {
+      id: 'financial-health',
+      label: 'Financial Health',
+      icon: <HeartIcon className="h-5 w-5" />
+    },
+    {
       id: 'transactions',
       label: 'Transactions',
       icon: <ListBulletIcon className="h-5 w-5" />
-    },
-    {
-      id: 'health',
-      label: 'Health',
-      icon: <HeartIcon className="h-5 w-5" />
     }
   ];
 

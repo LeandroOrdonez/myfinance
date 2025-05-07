@@ -1,47 +1,75 @@
-from pydantic import BaseModel, ConfigDict
-from datetime import date, datetime
-from typing import Optional, List
-from ..models.statistics import StatisticsPeriod
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+from datetime import date
 
-class FinancialHealthScoreBase(BaseModel):
-    period: StatisticsPeriod
-    date: Optional[date] = None
 
-class FinancialHealthScoreOut(FinancialHealthScoreBase):
-    model_config = ConfigDict(from_attributes=True)
-    # Override date to accept actual date values
+class FinancialHealthBase(BaseModel):
     date: date
-    id: int
     overall_score: float
+    savings_rate_score: float
+    expense_ratio_score: float
+    budget_adherence_score: float
+    debt_to_income_score: float
+    emergency_fund_score: float
+    spending_stability_score: float
+    
+    # Raw metrics
     savings_rate: float
     expense_ratio: float
     budget_adherence: float
-    dti_ratio: float
-    emergency_fund_ratio: float
+    debt_to_income: float
+    emergency_fund_months: float
     spending_stability: float
+    
+    # Recommendations
+    recommendations: Optional[List[Dict[str, Any]]] = None
 
-class RecommendationBase(BaseModel):
-    metric: str
-    description: str
 
-class RecommendationOut(RecommendationBase):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    status: str
-    progress: float
-    created_at: datetime
-
-class RecommendationProgressUpdate(BaseModel):
-    progress: float
-
-class HealthGoalBase(BaseModel):
-    metric: str
-    target_value: float
-
-class HealthGoalCreate(HealthGoalBase):
+class FinancialHealthCreate(FinancialHealthBase):
     pass
 
-class HealthGoalOut(HealthGoalBase):
-    model_config = ConfigDict(from_attributes=True)
+
+class FinancialHealth(FinancialHealthBase):
     id: int
-    created_at: datetime
+    
+    class Config:
+        orm_mode = True
+
+
+class FinancialHealthHistory(BaseModel):
+    dates: List[date]
+    overall_scores: List[float]
+    savings_rate_scores: List[float]
+    expense_ratio_scores: List[float]
+    budget_adherence_scores: List[float]
+    debt_to_income_scores: List[float]
+    emergency_fund_scores: List[float]
+    spending_stability_scores: List[float]
+
+
+class RecommendationBase(BaseModel):
+    title: str
+    description: str
+    category: str
+    impact_area: str
+    priority: int
+    estimated_score_improvement: float
+
+
+class RecommendationCreate(RecommendationBase):
+    pass
+
+
+class Recommendation(RecommendationBase):
+    id: int
+    date_created: date
+    is_completed: bool
+    date_completed: Optional[date] = None
+    
+    class Config:
+        orm_mode = True
+
+
+class RecommendationUpdate(BaseModel):
+    is_completed: bool
+    date_completed: Optional[date] = None

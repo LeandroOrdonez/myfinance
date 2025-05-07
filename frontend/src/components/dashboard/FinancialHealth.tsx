@@ -1,0 +1,145 @@
+import React, { useState, useEffect } from 'react';
+import { api } from '../../services/api';
+import { FinancialHealthScore, FinancialHealthHistory, Recommendation } from '../../types/transaction';
+import { format } from 'date-fns';
+import HealthScoreGauge from './health/HealthScoreGauge';
+import ComponentScores from './health/ComponentScores';
+import HealthTrends from './health/HealthTrends';
+import Recommendations from './health/Recommendations';
+import PeriodSelector from '../common/PeriodSelector';
+
+interface FinancialHealthProps {
+  className?: string;
+}
+
+const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
+  const [healthData, setHealthData] = useState<FinancialHealthScore | null>(null);
+  const [historyData, setHistoryData] = useState<FinancialHealthHistory | null>(null);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<string>('6m');
+
+  const fetchHealthData = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getFinancialHealthScore();
+      setHealthData(data);
+    } catch (err) {
+      console.error('Error fetching health score:', err);
+      setError('Failed to load financial health data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchHistoryData = async () => {
+    try {
+      const months = period === '3m' ? 3 : 
+                    period === '6m' ? 6 : 
+                    period === 'ytd' ? new Date().getMonth() + 1 : 
+                    period === '1y' ? 12 : 
+                    period === '2y' ? 24 : 36;
+                    
+      const data = await api.getFinancialHealthHistory(months);
+      setHistoryData(data);
+    } catch (err) {
+      console.error('Error fetching health history:', err);
+      setError('Failed to load financial health history');
+    }
+  };
+
+  const fetchRecommendations = async () => {
+    try {
+      const data = await api.getRecommendations();
+      setRecommendations(data);
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+      setError('Failed to load recommendations');
+    }
+  };
+
+  const handleRecommendationUpdate = async (id: number, isCompleted: boolean) => {
+    try {
+      await api.updateRecommendation(id, isCompleted);
+      
+      // Refresh recommendations
+      fetchRecommendations();
+    } catch (err) {
+      console.error('Error updating recommendation:', err);
+      setError('Failed to update recommendation');
+    }
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    setPeriod(newPeriod);
+  };
+
+  useEffect(() => {
+    fetchHealthData();
+    fetchRecommendations();
+  }, []);
+
+  useEffect(() => {
+    fetchHistoryData();
+  }, [period]);
+
+  if (loading && !healthData) {
+    return (
+      <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
+        <h2 className="text-xl font-semibold mb-4">Financial Health</h2>
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500">Loading financial health data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !healthData) {
+    return (
+      <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
+        <h2 className="text-xl font-semibold mb-4">Financial Health</h2>
+        <div className="flex justify-center items-center h-64">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Financial Health</h2>
+        <PeriodSelector 
+          selectedPeriod={period} 
+          onChange={handlePeriodChange} 
+        />
+      </div>
+
+      {healthData && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Left column - Score gauge and component breakdown */}
+          <div className="lg:col-span-1">
+            <HealthScoreGauge score={healthData.overall_score} />
+            <ComponentScores healthData={healthData} />
+          </div>
+
+          {/* Right columns - Trends and recommendations */}
+          <div className="lg:col-span-2">
+            <div className="mb-4">
+              <HealthTrends historyData={historyData} />
+            </div>
+            <div>
+              <Recommendations 
+                recommendations={recommendations} 
+                onUpdate={handleRecommendationUpdate} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FinancialHealth;

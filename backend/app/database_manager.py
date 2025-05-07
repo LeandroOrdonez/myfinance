@@ -1,22 +1,15 @@
 from sqlalchemy import inspect
 import logging
-from enum import Enum
-from typing import Optional
 from .database import engine, Base
 from .models.transaction import Transaction
 from .models.statistics import FinancialStatistics, CategoryStatistics
-from .models.financial_health import FinancialHealthScore, Recommendation, HealthGoal
+from .models.financial_health import FinancialHealth, FinancialRecommendation
 from .services.statistics_service import StatisticsService
+from .services.financial_health_service import FinancialHealthService
 from sqlalchemy.orm import Session
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Entity groups
-class EntityGroup(Enum):
-    TRANSACTIONS = "transactions"
-    STATISTICS = "statistics"
-    FINANCIAL_HEALTH = "financial_health"
 
 def init_database():
     """Initialize the database and create all tables"""
@@ -27,7 +20,7 @@ def init_database():
     existing_tables = inspector.get_table_names()
     logger.info(f"Existing tables: {existing_tables}")
 
-    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health_scores", "recommendations", "health_goals"]
+    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations"]
     missing_tables = [table for table in tables_to_check if table not in existing_tables]
 
     if missing_tables:
@@ -50,15 +43,18 @@ def init_database():
             # Initialize statistics if transactions table already existed
             need_stats_init = False
             need_category_stats_init = False
+            need_financial_health_init = False
             
             if "transactions" in existing_tables:
                 if "financial_statistics" in missing_tables:
                     need_stats_init = True
                 if "category_statistics" in missing_tables:
                     need_category_stats_init = True
+                if "financial_health" in missing_tables:
+                    need_financial_health_init = True
             
-            if need_stats_init or need_category_stats_init:
-                logger.info("Initializing statistics for existing transactions...")
+            if need_stats_init or need_category_stats_init or need_financial_health_init:
+                logger.info("Initializing statistics and financial health for existing transactions...")
                 with Session(engine) as db:
                     if need_stats_init:
                         logger.info("Initializing financial statistics...")
@@ -66,7 +62,10 @@ def init_database():
                     if need_category_stats_init:
                         logger.info("Initializing category statistics...")
                         StatisticsService.initialize_category_statistics(db)
-                logger.info("Statistics initialized successfully!")
+                    if need_financial_health_init:
+                        logger.info("Initializing financial health scores...")
+                        FinancialHealthService.initialize_financial_health(db)
+                logger.info("Statistics and financial health initialized successfully!")
             
         except Exception as e:
             logger.error(f"Error creating database tables: {str(e)}")
@@ -74,22 +73,22 @@ def init_database():
     else:
         logger.info("All required database tables already exist")
 
-def reset_database(reset_type: Optional[EntityGroup] = None):
+def reset_database(reset_type: str = "all"):
     """Drop all tables and recreate them"""
     logger.info("Resetting database...")
     try:
-        if reset_type == EntityGroup.TRANSACTIONS:
-            Base.metadata.drop_all(bind=engine, tables=[Transaction.__table__])
-            Base.metadata.create_all(bind=engine, tables=[Transaction.__table__])
-        elif reset_type == EntityGroup.STATISTICS:
-            Base.metadata.drop_all(bind=engine, tables=[FinancialStatistics.__table__, CategoryStatistics.__table__])
-            Base.metadata.create_all(bind=engine, tables=[FinancialStatistics.__table__, CategoryStatistics.__table__])
-        elif reset_type == EntityGroup.FINANCIAL_HEALTH:
-            Base.metadata.drop_all(bind=engine, tables=[FinancialHealthScore.__table__, Recommendation.__table__, HealthGoal.__table__])
-            Base.metadata.create_all(bind=engine, tables=[FinancialHealthScore.__table__, Recommendation.__table__, HealthGoal.__table__])
-        else:
+        if reset_type == "all":
             Base.metadata.drop_all(bind=engine)
             Base.metadata.create_all(bind=engine)
+        elif reset_type == "transactions":
+            Base.metadata.drop_all(bind=engine, tables=[Transaction.__table__])
+            Base.metadata.create_all(bind=engine, tables=[Transaction.__table__])
+        elif reset_type == "statistics":
+            Base.metadata.drop_all(bind=engine, tables=[FinancialStatistics.__table__, CategoryStatistics.__table__])
+            Base.metadata.create_all(bind=engine, tables=[FinancialStatistics.__table__, CategoryStatistics.__table__])
+        elif reset_type == "financial_health":
+            Base.metadata.drop_all(bind=engine, tables=[FinancialHealth.__table__, FinancialRecommendation.__table__])
+            Base.metadata.create_all(bind=engine, tables=[FinancialHealth.__table__, FinancialRecommendation.__table__])
         logger.info("Database reset successfully!")
     except Exception as e:
         logger.error(f"Error resetting database: {str(e)}")
