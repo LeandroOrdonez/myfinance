@@ -152,6 +152,11 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
             className={`px-2 py-1 text-xs rounded-full ${visibleSeries[s.id] 
               ? `bg-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-100 dark:bg-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-900/30 text-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-800 dark:text-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-400` 
               : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-300'}`}
+            style={{
+              backgroundColor: visibleSeries[s.id] ? s.color : 'white',
+              borderColor: s.color,
+              color: visibleSeries[s.id] ? 'white' : 'rgb(55, 65, 81)'
+            }}
             onClick={() => toggleSeries(s.id)}
           >
             {s.name}
