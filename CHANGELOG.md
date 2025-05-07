@@ -1,5 +1,26 @@
 # MyFinance Changelog
 
+## 2025-05-07
+
+### Financial Health Feature Enhancements
+- Added dark theme support to all Financial Health components
+- Fixed duplicate title in Financial Health dashboard
+- Updated PeriodSelector component with improved styling for both light and dark themes
+- Improved recommendation storage with proper dual-storage implementation
+- Enhanced health history calculation to use the latest transaction date as reference
+
+## 2025-05-05
+
+### Financial Health Feature
+- Implemented comprehensive Financial Health scoring system (0-100 scale)
+- Created new models and schemas for financial health metrics and recommendations
+- Added backend service for calculating health scores based on multiple financial metrics
+- Developed personalized recommendation system based on financial weaknesses
+- Created new API endpoints for retrieving health scores, history, and recommendations
+- Built interactive Financial Health dashboard with score visualization and trends
+- Added component score breakdown with visual indicators
+- Implemented recommendation tracking system with completion status
+
 ## 2025-05-04
 
 ### Backend Refactoring

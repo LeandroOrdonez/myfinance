@@ -4,7 +4,8 @@ import {
   ChartBarIcon, 
   ListBulletIcon,
   Bars3Icon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -26,6 +27,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'analytics',
       label: 'Analytics',
       icon: <ChartBarIcon className="h-5 w-5" />
+    },
+    {
+      id: 'financial-health',
+      label: 'Financial Health',
+      icon: <HeartIcon className="h-5 w-5" />
     },
     {
       id: 'transactions',

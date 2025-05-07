@@ -65,6 +65,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         return 'Analytics Dashboard';
       case 'transactions':
         return 'Transactions';
+      case 'financial-health':
+        return 'Financial Health';
       default:
         return 'MyFinance';
     }

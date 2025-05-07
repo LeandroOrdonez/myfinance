@@ -9,6 +9,7 @@ import { CategoryBreakdown } from './components/dashboard/CategoryBreakdown';
 import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
+import FinancialHealth from './components/dashboard/FinancialHealth';
 import { Loading } from './components/common/Loading';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
@@ -128,6 +129,14 @@ function App() {
                   showUndoButton={true}
                 >
                   <TransactionsView />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/financial-health" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <FinancialHealth />
                 </MainLayout>
               } 
             />

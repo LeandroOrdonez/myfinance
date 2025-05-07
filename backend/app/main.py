@@ -13,7 +13,7 @@ from .database_manager import init_database, reset_database
 from .services.category_suggestion_service import CategorySuggestionService
 
 # Import routers
-from .routers import transactions, statistics, suggestions
+from .routers import transactions, statistics, suggestions, financial_health
 
 # Initialize the database
 init_database()
@@ -37,6 +37,7 @@ app.add_middleware(
 app.include_router(transactions.router)
 app.include_router(statistics.router)
 app.include_router(suggestions.router)
+app.include_router(financial_health.router)
 
 # Add a debug endpoint to reset the database
 # pass statistics or transactions to reset only statistics or transactions  
