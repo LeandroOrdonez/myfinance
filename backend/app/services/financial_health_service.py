@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract, and_, or_, desc, text
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import calendar
 import numpy as np
 import logging
@@ -204,16 +205,53 @@ class FinancialHealthService:
         db.commit()
         db.refresh(health_score)
         
+        # Clear existing recommendations for this month if we're recalculating
+        if force:
+            # Delete any existing recommendations for this month
+            # We identify them by date range (within the same month)
+            month_start = last_day.replace(day=1)
+            month_end = last_day
+            
+            db.query(FinancialRecommendation).filter(
+                FinancialRecommendation.date_created >= month_start,
+                FinancialRecommendation.date_created <= month_end
+            ).delete()
+            db.flush()
+        
+        # Create separate FinancialRecommendation records for each recommendation
+        for rec_data in recommendations:
+            recommendation = FinancialRecommendation(
+                title=rec_data['title'],
+                description=rec_data['description'],
+                category=rec_data['category'],
+                impact_area=rec_data['impact_area'],
+                priority=rec_data['priority'],
+                estimated_score_improvement=rec_data['estimated_score_improvement'],
+                date_created=last_day,
+                is_completed=False,
+                date_completed=None
+            )
+            db.add(recommendation)
+        
+        # Commit the recommendations
+        db.commit()
+        
         return health_score
     
     @staticmethod
     def get_health_history(db: Session, months: int = 12) -> Dict:
         """Get historical health scores for the specified number of months"""
-        today = date.today()
-        start_date = today.replace(day=1) - timedelta(days=months*31)  # Approximate
+        latest_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
+        if latest_transaction:
+            latest_date = latest_transaction.transaction_date
+        else:
+            latest_date = date.today()
+        
+        start_date = latest_date.replace(day=calendar.monthrange(latest_date.year, latest_date.month)[1]) - relativedelta(months=months)
+        start_date = start_date.replace(day=calendar.monthrange(start_date.year, start_date.month)[1])
         
         health_scores = db.query(FinancialHealth).filter(
-            FinancialHealth.date >= start_date
+            FinancialHealth.date > start_date
         ).order_by(FinancialHealth.date).all()
         
         history = {

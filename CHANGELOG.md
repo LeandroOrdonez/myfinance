@@ -1,5 +1,14 @@
 # MyFinance Changelog
 
+## 2025-05-07
+
+### Financial Health Feature Enhancements
+- Added dark theme support to all Financial Health components
+- Fixed duplicate title in Financial Health dashboard
+- Updated PeriodSelector component with improved styling for both light and dark themes
+- Improved recommendation storage with proper dual-storage implementation
+- Enhanced health history calculation to use the latest transaction date as reference
+
 ## 2025-05-05
 
 ### Financial Health Feature

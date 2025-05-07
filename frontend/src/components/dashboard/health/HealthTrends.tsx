@@ -49,10 +49,10 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
 
   if (!historyData || !historyData.dates || historyData.dates.length === 0) {
     return (
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium mb-2">Financial Health Trends</h3>
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+        <h3 className="text-lg font-medium mb-2 dark:text-white">Financial Health Trends</h3>
         <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">No historical data available</p>
+          <p className="text-gray-500 dark:text-gray-400">No historical data available</p>
         </div>
       </div>
     );
@@ -142,19 +142,16 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
   };
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <h3 className="text-lg font-medium mb-2">Financial Health Trends</h3>
+    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+      <h3 className="text-lg font-medium mb-2 dark:text-white">Financial Health Trends</h3>
       
       <div className="flex flex-wrap gap-2 mb-3">
         {series.map(s => (
           <button
             key={s.id}
-            className={`px-2 py-1 text-xs rounded-full border`}
-            style={{
-              backgroundColor: visibleSeries[s.id] ? s.color : 'white',
-              borderColor: s.color,
-              color: visibleSeries[s.id] ? 'white' : 'rgb(55, 65, 81)'
-            }}
+            className={`px-2 py-1 text-xs rounded-full ${visibleSeries[s.id] 
+              ? `bg-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-100 dark:bg-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-900/30 text-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-800 dark:text-${s.id === 'overall' ? 'indigo' : s.id === 'savings_rate' ? 'emerald' : s.id === 'expense_ratio' ? 'amber' : s.id === 'budget_adherence' ? 'cyan' : s.id === 'debt_to_income' ? 'pink' : s.id === 'emergency_fund' ? 'violet' : 'red'}-400` 
+              : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-300'}`}
             onClick={() => toggleSeries(s.id)}
           >
             {s.name}

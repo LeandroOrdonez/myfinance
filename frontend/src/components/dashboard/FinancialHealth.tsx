@@ -37,7 +37,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
     try {
       const months = period === '3m' ? 3 : 
                     period === '6m' ? 6 : 
-                    period === 'ytd' ? new Date().getMonth() + 1 : 
+                    period === 'ytd' ? new Date().getMonth() : 
                     period === '1y' ? 12 : 
                     period === '2y' ? 24 : 36;
                     
@@ -86,10 +86,15 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
 
   if (loading && !healthData) {
     return (
-      <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
-        <h2 className="text-xl font-semibold mb-4">Financial Health</h2>
+      <div className={`p-4 bg-white dark:bg-gray-800 rounded-lg shadow ${className}`}>
+        <div className="flex justify-end mb-4">
+          <PeriodSelector 
+            selectedPeriod={period} 
+            onChange={handlePeriodChange} 
+          />
+        </div>
         <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">Loading financial health data...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading financial health data...</p>
         </div>
       </div>
     );
@@ -97,19 +102,23 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
 
   if (error && !healthData) {
     return (
-      <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
-        <h2 className="text-xl font-semibold mb-4">Financial Health</h2>
+      <div className={`p-4 bg-white dark:bg-gray-800 rounded-lg shadow ${className}`}>
+        <div className="flex justify-end mb-4">
+          <PeriodSelector 
+            selectedPeriod={period} 
+            onChange={handlePeriodChange} 
+          />
+        </div>
         <div className="flex justify-center items-center h-64">
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500 dark:text-red-400">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Financial Health</h2>
+    <div className={`p-4 bg-white dark:bg-gray-800 rounded-lg shadow ${className}`}>
+      <div className="flex justify-end items-center mb-4">
         <PeriodSelector 
           selectedPeriod={period} 
           onChange={handlePeriodChange} 

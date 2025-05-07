@@ -74,22 +74,22 @@ const ComponentScores: React.FC<ComponentScoresProps> = ({ healthData }) => {
   ];
 
   return (
-    <div className="mt-4">
-      <h3 className="text-lg font-medium mb-3">Score Breakdown</h3>
+    <div>
+      <h3 className="text-lg font-medium mb-3 dark:text-white">Score Breakdown</h3>
       <div className="space-y-3">
         {components.map((component) => (
-          <div key={component.key} className="bg-gray-50 p-3 rounded-lg">
+          <div key={component.key} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-1">
-              <div className="font-medium">{component.name}</div>
-              <div className="text-sm text-gray-600">{component.value}</div>
+              <div className="font-medium dark:text-white">{component.name}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">{component.value}</div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
               <div 
                 className={`h-2.5 rounded-full ${getScoreColor(component.score)}`} 
                 style={{ width: `${component.score}%` }}
               ></div>
             </div>
-            <div className="text-xs text-gray-500 mt-1">{component.description}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{component.description}</div>
           </div>
         ))}
       </div>
