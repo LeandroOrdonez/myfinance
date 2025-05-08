@@ -20,6 +20,7 @@ class FinancialHealth(Base):
     debt_to_income_score = Column(Float, default=0)
     emergency_fund_score = Column(Float, default=0)
     spending_stability_score = Column(Float, default=0)
+    investment_rate_score = Column(Float, default=0)
     
     # Raw metrics (for reference)
     savings_rate = Column(Float, default=0)  # Percentage
@@ -28,6 +29,7 @@ class FinancialHealth(Base):
     debt_to_income = Column(Float, default=0)  # Ratio
     emergency_fund_months = Column(Float, default=0)  # Number of months
     spending_stability = Column(Float, default=0)  # Coefficient of variation
+    investment_rate = Column(Float, default=0)  # Percentage of income invested
     
     # Metadata
     recommendations = Column(JSON, nullable=True)  # Store recommendations as JSON

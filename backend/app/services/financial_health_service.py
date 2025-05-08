@@ -27,6 +27,13 @@ class FinancialHealthService:
             "poor": 0.05,       # 5-10% is poor
             "critical": 0.0     # Less than 5% is critical
         },
+        "investment_rate": {
+            "excellent": 0.15,  # 15% or more is excellent
+            "good": 0.10,       # 10-15% is good
+            "average": 0.05,    # 5-10% is average
+            "poor": 0.02,       # 2-5% is poor
+            "critical": 0.0     # Less than 2% is critical
+        },
         "budget_adherence": {
             "excellent": 0.90,  # Less than 10% deviation
             "good": 0.80,       # 10-20% deviation
@@ -162,13 +169,19 @@ class FinancialHealthService:
             db, target_date
         )
         
+        # 7. Investment Rate Score
+        investment_rate_score, investment_rate = FinancialHealthService._calculate_investment_rate(
+            db, target_date
+        )
+        
         # Calculate overall score (weighted average)
         weights = {
-            "savings_rate": 0.25,
-            "expense_ratio": 0.20,
-            "budget_adherence": 0.15,
+            "savings_rate": 0.20,
+            "expense_ratio": 0.15,
+            "budget_adherence": 0.10,
             "debt_to_income": 0.15,
             "emergency_fund": 0.15,
+            "investment_rate": 0.15,
             "spending_stability": 0.10
         }
         
@@ -178,6 +191,7 @@ class FinancialHealthService:
             budget_adherence_score * weights["budget_adherence"] +
             debt_to_income_score * weights["debt_to_income"] +
             emergency_fund_score * weights["emergency_fund"] +
+            investment_rate_score * weights["investment_rate"] +
             spending_stability_score * weights["spending_stability"]
         )
         
@@ -185,8 +199,8 @@ class FinancialHealthService:
         recommendations = FinancialHealthService._generate_recommendations(
             savings_rate_score, expense_ratio_score, budget_adherence_score,
             debt_to_income_score, emergency_fund_score, spending_stability_score,
-            savings_rate, expense_ratio, budget_adherence, debt_to_income,
-            emergency_fund_months, spending_stability
+            investment_rate_score, savings_rate, expense_ratio, budget_adherence, 
+            debt_to_income, emergency_fund_months, spending_stability, investment_rate
         )
         
         # Create and save the financial health record
@@ -199,12 +213,14 @@ class FinancialHealthService:
             debt_to_income_score=debt_to_income_score,
             emergency_fund_score=emergency_fund_score,
             spending_stability_score=spending_stability_score,
+            investment_rate_score=investment_rate_score,
             savings_rate=savings_rate,
             expense_ratio=expense_ratio,
             budget_adherence=budget_adherence,
             debt_to_income=debt_to_income,
             emergency_fund_months=emergency_fund_months,
             spending_stability=spending_stability,
+            investment_rate=investment_rate,
             recommendations=recommendations
         )
         
@@ -269,7 +285,8 @@ class FinancialHealthService:
             "budget_adherence_scores": [],
             "debt_to_income_scores": [],
             "emergency_fund_scores": [],
-            "spending_stability_scores": []
+            "spending_stability_scores": [],
+            "investment_rate_scores": []
         }
         
         for score in health_scores:
@@ -281,6 +298,7 @@ class FinancialHealthService:
             history["debt_to_income_scores"].append(score.debt_to_income_score)
             history["emergency_fund_scores"].append(score.emergency_fund_score)
             history["spending_stability_scores"].append(score.spending_stability_score)
+            history["investment_rate_scores"].append(score.investment_rate_score)
         
         return history
     
@@ -617,6 +635,50 @@ class FinancialHealthService:
         return emergency_fund_score, emergency_fund_months
     
     @staticmethod
+    def _calculate_investment_rate(db: Session, target_date: date) -> Tuple[float, float]:
+        """
+        Calculate investment rate score based on the percentage of income that goes to investments
+        
+        Returns:
+            Tuple of (score, investment_rate)
+        """
+        # Get the last 3 months of data
+        end_date = target_date.replace(day=calendar.monthrange(target_date.year, target_date.month)[1])
+        start_date = (end_date - relativedelta(months=3)).replace(day=1)
+        
+        # Get total income for the period
+        income_query = db.query(func.sum(Transaction.amount)).filter(
+            Transaction.transaction_type == TransactionType.INCOME,
+            Transaction.transaction_date >= start_date,
+            Transaction.transaction_date <= end_date
+        )
+        total_income = income_query.scalar() or 0
+        
+        # Get total investments for the period
+        investments_query = db.query(func.sum(Transaction.amount)).filter(
+            Transaction.transaction_type == TransactionType.EXPENSE,
+            Transaction.expense_category == ExpenseCategory.INVESTMENTS,
+            Transaction.transaction_date >= start_date,
+            Transaction.transaction_date <= end_date
+        )
+        total_investments = abs(investments_query.scalar() or 0)  # Use abs since expenses are negative
+        
+        # Calculate investment rate
+        if total_income <= 0:
+            return 0, 0  # No income, can't calculate investment rate
+            
+        investment_rate = total_investments / total_income
+        
+        # Score the investment rate
+        investment_rate_score = FinancialHealthService._score_component(
+            investment_rate,
+            FinancialHealthService.THRESHOLDS["investment_rate"],
+            higher_is_better=True
+        )
+        
+        return investment_rate_score, investment_rate
+    
+    @staticmethod
     def _calculate_spending_stability(db: Session, target_date: date) -> Tuple[float, float]:
         """
         Calculate spending stability score based on consistency of spending patterns
@@ -671,9 +733,9 @@ class FinancialHealthService:
         savings_rate_score: float, expense_ratio_score: float, 
         budget_adherence_score: float, debt_to_income_score: float,
         emergency_fund_score: float, spending_stability_score: float,
-        savings_rate: float, expense_ratio: float,
+        investment_rate_score: float, savings_rate: float, expense_ratio: float,
         budget_adherence: float, debt_to_income: float,
-        emergency_fund_months: float, spending_stability: float
+        emergency_fund_months: float, spending_stability: float, investment_rate: float
     ) -> List[Dict]:
         """Generate personalized recommendations based on financial health scores"""
         recommendations = []
@@ -780,6 +842,36 @@ class FinancialHealthService:
                 "priority": 2,
                 "estimated_score_improvement": 10
             })
+        
+        if investment_rate_score < 40:
+            recommendations.append({
+                "title": "Increase Your Investment Rate",
+                "description": f"You're currently investing {investment_rate:.1%} of your income, which is below recommended levels. Aim to invest at least 10% of your income for long-term growth.",
+                "category": "investment_rate",
+                "impact_area": "Investment Rate",
+                "priority": 4,
+                "estimated_score_improvement": 15
+            })
+            
+            # Add specific investment tactics
+            if investment_rate < 0.05:
+                recommendations.append({
+                    "title": "Start with Automated Investing",
+                    "description": "Set up automatic transfers to investment accounts on payday to build the habit of investing consistently.",
+                    "category": "investment_rate",
+                    "impact_area": "Investment Rate",
+                    "priority": 3,
+                    "estimated_score_improvement": 10
+                })
+            elif investment_rate < 0.10:
+                recommendations.append({
+                    "title": "Diversify Your Investment Portfolio",
+                    "description": "Consider a mix of stocks, bonds, and other assets to optimize your returns while managing risk.",
+                    "category": "investment_rate",
+                    "impact_area": "Investment Rate",
+                    "priority": 3,
+                    "estimated_score_improvement": 8
+                })
         
         # Add general recommendations if we don't have many specific ones
         if len(recommendations) < 3:

@@ -21,6 +21,7 @@ interface HealthTrendsProps {
     debt_to_income_scores: number[];
     emergency_fund_scores: number[];
     spending_stability_scores: number[];
+    investment_rate_scores: number[];
   } | null;
 }
 
@@ -33,6 +34,7 @@ interface DataPoint {
   debt_to_income: number;
   emergency_fund: number;
   spending_stability: number;
+  investment_rate: number;
   [key: string]: string | number;
 }
 
@@ -44,7 +46,8 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
     budget_adherence: false,
     debt_to_income: false,
     emergency_fund: false,
-    spending_stability: false
+    spending_stability: false,
+    investment_rate: false
   });
 
   if (!historyData || !historyData.dates || historyData.dates.length === 0) {
@@ -67,7 +70,8 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
     budget_adherence: historyData.budget_adherence_scores[index],
     debt_to_income: historyData.debt_to_income_scores[index],
     emergency_fund: historyData.emergency_fund_scores[index],
-    spending_stability: historyData.spending_stability_scores[index]
+    spending_stability: historyData.spending_stability_scores[index],
+    investment_rate: historyData.investment_rate_scores[index]
   }));
 
   // Define dataset colors
@@ -78,7 +82,8 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
     budget_adherence: '#06b6d4', // cyan-500
     debt_to_income: '#ec4899', // pink-500
     emergency_fund: '#8b5cf6', // violet-500
-    spending_stability: '#ef4444' // red-500
+    spending_stability: '#ef4444', // red-500
+    investment_rate: '#14b8a6' // teal-500
   };
 
   // Define series configuration
@@ -131,6 +136,13 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
       dataKey: 'spending_stability',
       color: colors.spending_stability,
       visible: visibleSeries.spending_stability
+    },
+    {
+      id: 'investment_rate',
+      name: 'Investment Rate',
+      dataKey: 'investment_rate',
+      color: colors.investment_rate,
+      visible: visibleSeries.investment_rate
     }
   ];
 

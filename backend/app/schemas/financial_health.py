@@ -12,6 +12,7 @@ class FinancialHealthBase(BaseModel):
     debt_to_income_score: float
     emergency_fund_score: float
     spending_stability_score: float
+    investment_rate_score: float
     
     # Raw metrics
     savings_rate: float
@@ -20,6 +21,7 @@ class FinancialHealthBase(BaseModel):
     debt_to_income: float
     emergency_fund_months: float
     spending_stability: float
+    investment_rate: float
     
     # Recommendations
     recommendations: Optional[List[Dict[str, Any]]] = None
@@ -45,6 +47,7 @@ class FinancialHealthHistory(BaseModel):
     debt_to_income_scores: List[float]
     emergency_fund_scores: List[float]
     spending_stability_scores: List[float]
+    investment_rate_scores: List[float]
 
 
 class RecommendationBase(BaseModel):

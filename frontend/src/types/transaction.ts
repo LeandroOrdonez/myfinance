@@ -142,6 +142,7 @@ export interface FinancialHealthScore {
   debt_to_income_score: number;
   emergency_fund_score: number;
   spending_stability_score: number;
+  investment_rate_score: number;
   
   // Raw metrics
   savings_rate: number;
@@ -150,6 +151,7 @@ export interface FinancialHealthScore {
   debt_to_income: number;
   emergency_fund_months: number;
   spending_stability: number;
+  investment_rate: number;
   
   // Recommendations
   recommendations?: RecommendationData[];
@@ -164,6 +166,7 @@ export interface FinancialHealthHistory {
   debt_to_income_scores: number[];
   emergency_fund_scores: number[];
   spending_stability_scores: number[];
+  investment_rate_scores: number[];
 }
 
 export interface RecommendationData {

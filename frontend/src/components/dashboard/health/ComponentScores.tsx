@@ -8,12 +8,14 @@ interface ComponentScoresProps {
     debt_to_income_score: number;
     emergency_fund_score: number;
     spending_stability_score: number;
+    investment_rate_score: number;
     savings_rate: number;
     expense_ratio: number;
     budget_adherence: number;
     debt_to_income: number;
     emergency_fund_months: number;
     spending_stability: number;
+    investment_rate: number;
   };
 }
 
@@ -70,6 +72,13 @@ const ComponentScores: React.FC<ComponentScoresProps> = ({ healthData }) => {
       score: healthData.spending_stability_score,
       value: `${(healthData.spending_stability * 100).toFixed(1)}%`,
       description: 'Consistency of spending patterns'
+    },
+    {
+      key: 'investment_rate',
+      name: 'Investment Rate',
+      score: healthData.investment_rate_score,
+      value: `${(healthData.investment_rate * 100).toFixed(1)}%`,
+      description: 'Percentage of income invested'
     }
   ];
 
