@@ -1,5 +1,17 @@
 # MyFinance Changelog
 
+## 2025-05-09
+
+### Investment Rate Metric Implementation
+- Added new investment rate metric to the Financial Health feature
+- Updated FinancialHealth model to include investment_rate_score and investment_rate fields
+- Implemented investment rate calculation based on income and investment transactions
+- Added investment rate thresholds for score calculation
+- Updated the overall health score calculation to include the investment rate metric
+- Added investment-specific recommendations based on investment rate score
+- Updated frontend components to display investment rate metric and trends
+- Enhanced financial health history to include investment rate scores
+
 ## 2025-05-07
 
 ### Financial Health Feature Enhancements
