@@ -8,11 +8,10 @@ import os
 import logging
 
 from ..database import get_db
-from ..models import transaction as models
+from ..models.transaction import Transaction, ExpenseCategory, IncomeCategory, TransactionType
 from ..schemas import transaction as schemas
 from ..services.csv_parser import CSVParser
 from ..services.statistics_service import StatisticsService
-from ..models.transaction import ExpenseCategory, IncomeCategory, TransactionType
 from datetime import date, datetime
 
 from ..services.category_suggestion_service import CategorySuggestionService
@@ -76,7 +75,7 @@ async def upload_csv(
                         trans.income_category = IncomeCategory(best_category)
                 
                 # Create and save the transaction
-                db_trans = models.Transaction(**trans.dict())
+                db_trans = Transaction(**trans.dict())
                 db.add(db_trans)
                 db_transactions.append(db_trans)
             
@@ -115,21 +114,20 @@ def get_transactions(
         db_sort_field = SORT_FIELD_MAPPING.get(sort_field, 'transaction_date')
         
         # Build the base query
-        query = db.query(models.Transaction)
+        query = db.query(Transaction)
 
         # Apply search filter
         if search:
             ilike_str = f"%{search.lower()}%"
             query = query.filter(
                 or_(
-                    func.lower(models.Transaction.description).ilike(ilike_str),
-                    func.lower(models.Transaction.counterparty_name).ilike(ilike_str)
+                    func.lower(Transaction.description).ilike(ilike_str),
+                    func.lower(Transaction.counterparty_name).ilike(ilike_str)
                 )
             )
         # Apply category filter
         if category and category != 'all':
             # Try to match ExpenseCategory or IncomeCategory enums
-            from .models.transaction import ExpenseCategory, IncomeCategory
             expense_enum = None
             income_enum = None
             try:
@@ -143,35 +141,35 @@ def get_transactions(
             if expense_enum and income_enum:
                 query = query.filter(
                     or_(
-                        models.Transaction.expense_category == expense_enum,
-                        models.Transaction.income_category == income_enum
+                        Transaction.expense_category == expense_enum,
+                        Transaction.income_category == income_enum
                     )
                 )
             elif expense_enum:
-                query = query.filter(models.Transaction.expense_category == expense_enum)
+                query = query.filter(Transaction.expense_category == expense_enum)
             elif income_enum:
-                query = query.filter(models.Transaction.income_category == income_enum)
+                query = query.filter(Transaction.income_category == income_enum)
             else:
                 query = query.filter(False)  # No match, return empty
         # Apply date range filter
         if start_date:
             try:
                 start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                query = query.filter(models.Transaction.transaction_date >= start)
+                query = query.filter(Transaction.transaction_date >= start)
             except Exception:
                 pass
         if end_date:
             try:
                 end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                query = query.filter(models.Transaction.transaction_date <= end)
+                query = query.filter(Transaction.transaction_date <= end)
             except Exception:
                 pass
 
         # Add sorting
         if sort_direction == 'asc':
-            sort_column = getattr(models.Transaction, db_sort_field).asc()
+            sort_column = getattr(Transaction, db_sort_field).asc()
         else:
-            sort_column = getattr(models.Transaction, db_sort_field).desc()
+            sort_column = getattr(Transaction, db_sort_field).desc()
         
         query = query.order_by(sort_column)
         
@@ -195,7 +193,7 @@ def get_transactions(
 
 @router.delete("/{transaction_id}")
 async def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
-    transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
     
@@ -219,8 +217,8 @@ def update_transaction_category(
     transaction_type: TransactionType = Query(...),
     db: Session = Depends(get_db)
 ):
-    transaction = db.query(models.Transaction).filter(
-        models.Transaction.id == transaction_id
+    transaction = db.query(Transaction).filter(
+        Transaction.id == transaction_id
     ).first()
     
     if not transaction:
@@ -250,7 +248,7 @@ def restore_transaction(
     try:
         # Create a new transaction with the provided data
         # The ID will be auto-generated, which is fine for our purpose
-        new_transaction = models.Transaction(**transaction_data.dict(exclude={"id"}))
+        new_transaction = Transaction(**transaction_data.dict(exclude={"id"}))
         db.add(new_transaction)
         db.commit()
         db.refresh(new_transaction)

@@ -27,6 +27,13 @@ class FinancialHealthService:
             "poor": 0.05,       # 5-10% is poor
             "critical": 0.0     # Less than 5% is critical
         },
+        "budget_adherence": {
+            "excellent": 0.90,  # Less than 10% deviation
+            "good": 0.80,       # 10-20% deviation
+            "average": 0.70,    # 20-30% deviation
+            "poor": 0.50,       # 30-50% deviation
+            "critical": 0.0     # More than 50% deviation
+        },
         "expense_ratio": {
             "excellent": 0.60,  # 60% or less is excellent
             "good": 0.70,       # 60-70% is good
@@ -520,13 +527,7 @@ class FinancialHealthService:
         # Score the adherence
         adherence_score = FinancialHealthService._score_component(
             adherence,
-            {
-                "excellent": 0.90,  # Less than 10% deviation
-                "good": 0.80,       # 10-20% deviation
-                "average": 0.70,    # 20-30% deviation
-                "poor": 0.50,       # 30-50% deviation
-                "critical": 0.0     # More than 50% deviation
-            },
+            FinancialHealthService.THRESHOLDS["budget_adherence"],
             higher_is_better=True
         )
         
