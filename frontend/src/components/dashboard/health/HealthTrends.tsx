@@ -182,7 +182,19 @@ const HealthTrends: React.FC<HealthTrendsProps> = ({ historyData }) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis domain={[0, 100]} />
-            <Tooltip />
+            <Tooltip
+              formatter={(value: number, name: string) => [
+                  value.toFixed(0),
+                  name
+              ]}
+              contentStyle={{ 
+                backgroundColor: 'var(--color-tooltip-bg)', 
+                borderColor: 'var(--color-tooltip-border)',
+                color: 'var(--color-tooltip-text)'
+              }}
+              itemStyle={{ color: 'inherit' }}
+              wrapperClassName="tooltip-wrapper"
+            />
             <Legend />
             {series.filter(s => visibleSeries[s.id]).map(s => (
               <Line 

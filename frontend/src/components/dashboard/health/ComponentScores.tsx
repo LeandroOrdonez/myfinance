@@ -20,13 +20,21 @@ interface ComponentScoresProps {
 }
 
 const ComponentScores: React.FC<ComponentScoresProps> = ({ healthData }) => {
-  // Helper function to get color based on score
+  // Helper functions to get color based on score
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'bg-green-500';
     if (score >= 60) return 'bg-green-400';
     if (score >= 40) return 'bg-yellow-500';
     if (score >= 20) return 'bg-orange-500';
     return 'bg-red-500';
+  };
+
+  const getScoreTextColor = (score: number) => {
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-green-400';
+    if (score >= 40) return 'text-yellow-500';
+    if (score >= 20) return 'text-orange-500';
+    return 'text-red-500';
   };
 
   // Component data with labels and descriptions
@@ -90,7 +98,7 @@ const ComponentScores: React.FC<ComponentScoresProps> = ({ healthData }) => {
           <div key={component.key} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-1">
               <div className="font-medium dark:text-white">{component.name}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">{component.value}</div>
+              <div className={`font-semibold ${getScoreTextColor(component.score)} dark:text-gray-300`}>{component.score.toFixed(0)}</div>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
               <div 
@@ -98,7 +106,7 @@ const ComponentScores: React.FC<ComponentScoresProps> = ({ healthData }) => {
                 style={{ width: `${component.score}%` }}
               ></div>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{component.description}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{component.description}: {component.value}</div>
           </div>
         ))}
       </div>

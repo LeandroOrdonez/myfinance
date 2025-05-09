@@ -33,6 +33,20 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Interactive charts over time and by category
 - Monthly and yearly summary views
 
+### Financial Health
+- Comprehensive financial health scoring system (0-100 scale)
+- Multiple financial metrics tracked and scored:
+  - Savings rate
+  - Expense ratio
+  - Budget adherence
+  - Debt-to-income ratio
+  - Emergency fund
+  - Spending stability
+  - Investment rate
+- Personalized recommendations based on financial weaknesses
+- Historical trends visualization
+- Recommendation tracking system
+
 ## Architecture
 
 - **Monorepo** layout with separate `backend` and `frontend` directories
