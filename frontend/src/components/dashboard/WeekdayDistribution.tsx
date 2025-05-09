@@ -163,25 +163,25 @@ const WeekdayDistribution: React.FC = () => {
           >
             <Tabs.Trigger 
               value="average" 
-              className={`px-3 py-1 rounded-md ${activeTab === 'average' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'average' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               Average Amount
             </Tabs.Trigger>
             <Tabs.Trigger 
               value="median" 
-              className={`px-3 py-1 rounded-md ${activeTab === 'median' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'median' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               Median Amount
             </Tabs.Trigger>
             <Tabs.Trigger 
               value="count" 
-              className={`px-3 py-1 rounded-md ${activeTab === 'count' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'count' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               Transaction Count
             </Tabs.Trigger>
             <Tabs.Trigger 
               value="total" 
-              className={`px-3 py-1 rounded-md ${activeTab === 'total' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+              className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'total' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               Total Amount
             </Tabs.Trigger>

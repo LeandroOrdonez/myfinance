@@ -163,13 +163,13 @@ export const CategoryTrends: React.FC = () => {
         <Tabs.List className="flex space-x-4 mb-4">
           <Tabs.Trigger
             value="periods"
-            className={`px-4 py-2 rounded-md ${activeTab === 'periods' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'periods' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             Period Comparison
           </Tabs.Trigger>
           <Tabs.Trigger
             value="categories"
-            className={`px-4 py-2 rounded-md ${activeTab === 'categories' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'categories' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             Top Categories
           </Tabs.Trigger>

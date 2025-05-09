@@ -98,7 +98,7 @@ const ComponentScores: React.FC<ComponentScoresProps> = ({ healthData }) => {
           <div key={component.key} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-1">
               <div className="font-medium dark:text-white">{component.name}</div>
-              <div className={`font-semibold ${getScoreTextColor(component.score)} dark:text-gray-300`}>{component.score.toFixed(0)}</div>
+              <div className={`font-semibold ${getScoreTextColor(component.score)}`}>{component.score.toFixed(0)}</div>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
               <div 
