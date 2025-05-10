@@ -87,7 +87,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="bg-white text-xs dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {transactions.map((transaction) => (
               <tr key={transaction.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-200">
@@ -122,7 +122,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       )
                     }
                   >
-                    <Select.Trigger className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+                    <Select.Trigger className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-xs leading-4 font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                       <Select.Value placeholder="Select category" />
                     </Select.Trigger>
 
@@ -134,7 +134,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                 <Select.Item
                                   key={category}
                                   value={category}
-                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
+                                  className="relative flex items-center px-8 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
                                 >
                                   <Select.ItemText>{category}</Select.ItemText>
                                 </Select.Item>
@@ -143,7 +143,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                 <Select.Item
                                   key={category}
                                   value={category}
-                                  className="relative flex items-center px-8 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
+                                  className="relative flex items-center px-8 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white rounded-md outline-none cursor-default"
                                 >
                                   <Select.ItemText>{category}</Select.ItemText>
                                 </Select.Item>
@@ -159,7 +159,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     onClick={() => onTransactionDelete(transaction.id)}
                     className="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    <TrashIcon className="h-4 w-4" />
                   </button>
                 </td>
               </tr>

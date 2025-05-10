@@ -10,7 +10,7 @@ import { useCategoryStatistics } from '../../hooks/useCategoryStatistics';
 import { useStatistics } from '../../hooks/useStatistics';
 import { Loading } from '../common/Loading';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { BarChart2, Grid3x3 } from 'lucide-react';
+import { ChartBarDecreasing, Grid3x3 } from 'lucide-react';
 
 const EXPENSE_COLORS = [
   '#EF4444', '#DC2626', '#B91C1C', '#991B1B', '#7F1D1D',
@@ -192,7 +192,7 @@ export const CategoryBreakdown: React.FC = () => {
               className={`p-2 ${chartType === 'bar' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
               title="Bar Chart View"
             >
-              <BarChart2 size={18} />
+              <ChartBarDecreasing size={18} />
             </button>
           </div>
         </div>
