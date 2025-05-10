@@ -126,7 +126,7 @@ export const CategoryTrends: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold dark:text-gray-100">Category Trends</h2>
+        <h2 className="text-lg font-medium dark:text-gray-200">Category Trends</h2>
         
         {/* Period Dropdown */}
         <DropdownMenu.Root>

@@ -25,11 +25,11 @@ const formatCurrency = (value: number) => {
 
 // Define periods similar to FinancialTrends component
 const PERIODS = [
-  { label: '3m', value: '3m' },
-  { label: '6m', value: '6m' },
+  { label: '3M', value: '3m' },
+  { label: '6M', value: '6m' },
   { label: 'YTD', value: 'ytd' },
-  { label: '1y', value: '1y' },
-  { label: '2y', value: '2y' },
+  { label: '1Y', value: '1y' },
+  { label: '2Y', value: '2y' },
   { label: 'All', value: 'all' },
 ];
 

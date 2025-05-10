@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 
 interface Recommendation {
@@ -21,6 +21,43 @@ interface RecommendationsProps {
 
 const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onUpdate }) => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [priorityFilter, setPriorityFilter] = useState<number | null>(null);
+  const [yearFilter, setYearFilter] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  
+  // Extract unique years from recommendations
+  const availableYears = useMemo(() => {
+    if (!recommendations || recommendations.length === 0) return [];
+    
+    const years = new Set<string>();
+    recommendations.forEach(rec => {
+      const year = new Date(rec.date_created).getFullYear().toString();
+      years.add(year);
+    });
+    return Array.from(years).sort().reverse();
+  }, [recommendations]);
+
+  // Filter recommendations based on selected filters
+  const filteredRecommendations = useMemo(() => {
+    if (!recommendations || recommendations.length === 0) return [];
+    
+    return recommendations.filter(rec => {
+      // Filter by priority if set
+      if (priorityFilter !== null && rec.priority !== priorityFilter) {
+        return false;
+      }
+      
+      // Filter by year if set
+      if (yearFilter !== null) {
+        const recYear = new Date(rec.date_created).getFullYear().toString();
+        if (recYear !== yearFilter) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [recommendations, priorityFilter, yearFilter]);
 
   if (!recommendations || recommendations.length === 0) {
     return (
@@ -60,12 +97,117 @@ const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onUp
     setExpandedId(expandedId === id ? null : id);
   };
 
+  // Handle bulk completion
+  const handleBulkComplete = () => {
+    setShowConfirmation(true);
+  };
+
+  // Confirm bulk completion
+  const confirmBulkComplete = () => {
+    filteredRecommendations.forEach(rec => {
+      if (!rec.is_completed) {
+        onUpdate(rec.id, true);
+      }
+    });
+    setShowConfirmation(false);
+  };
+
+  // Cancel bulk completion
+  const cancelBulkComplete = () => {
+    setShowConfirmation(false);
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-      <h3 className="text-lg font-medium mb-3 dark:text-white">Personalized Recommendations</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg font-medium dark:text-white">Personalized Recommendations</h3>
+        
+        <button
+          onClick={handleBulkComplete}
+          disabled={filteredRecommendations.every(r => r.is_completed) || filteredRecommendations.length === 0}
+          className={`text-xs px-3 py-1 rounded ${filteredRecommendations.every(r => r.is_completed) || filteredRecommendations.length === 0 
+            ? 'bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed' 
+            : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-700 dark:text-indigo-100 dark:hover:bg-indigo-600'}`}
+        >
+          Mark All as Complete
+        </button>
+      </div>
       
-      <div className="space-y-3">
-        {recommendations.map(recommendation => (
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <select 
+          className="text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+          value={priorityFilter === null ? '' : priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value === '' ? null : Number(e.target.value))}
+        >
+          <option value="">All Priorities</option>
+          <option value="5">Highest</option>
+          <option value="4">High</option>
+          <option value="3">Medium</option>
+          <option value="2">Low</option>
+          <option value="1">Lowest</option>
+        </select>
+        
+        <select 
+          className="text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+          value={yearFilter === null ? '' : yearFilter}
+          onChange={(e) => setYearFilter(e.target.value === '' ? null : e.target.value)}
+        >
+          <option value="">All Years</option>
+          {availableYears.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+        
+        {(priorityFilter !== null || yearFilter !== null) && (
+          <button 
+            onClick={() => {
+              setPriorityFilter(null);
+              setYearFilter(null);
+            }}
+            className="text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-2 py-1 rounded flex items-center"
+          >
+            Clear Filters
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+      
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h4 className="text-lg font-medium mb-3 dark:text-white">Confirm Action</h4>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Are you sure you want to mark all {filteredRecommendations.filter(r => !r.is_completed).length} visible incomplete recommendations as completed?
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button 
+                onClick={cancelBulkComplete}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmBulkComplete}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {filteredRecommendations.length === 0 ? (
+        <div className="flex justify-center items-center h-32">
+          <p className="text-gray-500 dark:text-gray-400">No recommendations match your filters</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredRecommendations.map(recommendation => (
           <div 
             key={recommendation.id} 
             className={`border rounded-lg overflow-hidden ${recommendation.is_completed ? 'bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'}`}
@@ -132,6 +274,7 @@ const Recommendations: React.FC<RecommendationsProps> = ({ recommendations, onUp
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };

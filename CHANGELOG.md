@@ -1,5 +1,20 @@
 # MyFinance Changelog
 
+## 2025-05-10
+
+### User Experience Improvements
+- Added welcoming splash screen for first-time users
+- Implemented personalized greeting system based on user's name and time of day
+- Added context-aware page descriptions for different sections of the app
+- Set default time period to '1y' for trend charts instead of 'all'
+- Enhanced recommendations with priority and year filters
+- Added bulk completion feature for recommendations with confirmation dialog
+
+### Financial Health Calculation Improvements
+- Enhanced emergency fund calculation to exclude investment expenses
+- Moved spending stability thresholds to centralized constants
+- Fixed potential division by zero issues in financial calculations
+
 ## 2025-05-09
 
 ### Investment Rate Metric Implementation

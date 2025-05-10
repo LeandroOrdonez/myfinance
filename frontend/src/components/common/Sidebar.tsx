@@ -1,12 +1,16 @@
 import React from 'react';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { 
-  ChartBarIcon, 
+  ChartBarIcon as ChartBarIconOutline, 
   ListBulletIcon,
   Bars3Icon,
   ChevronRightIcon,
-  HeartIcon
+  HeartIcon as HeartIconOutline
 } from '@heroicons/react/24/outline';
+import { 
+  HeartIcon as HeartIconSolid,
+  ChartBarIcon as ChartBarIconSolid
+} from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
 interface SidebarProps {
@@ -26,12 +30,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'analytics',
       label: 'Analytics',
-      icon: <ChartBarIcon className="h-5 w-5" />
+      icon: activeView === 'analytics' ? <ChartBarIconSolid className="h-5 w-5" /> : <ChartBarIconOutline className="h-5 w-5" />
     },
     {
       id: 'financial-health',
       label: 'Financial Health',
-      icon: <HeartIcon className="h-5 w-5" />
+      icon: activeView === 'financial-health' ? <HeartIconSolid className="h-5 w-5" /> : <HeartIconOutline className="h-5 w-5" />
     },
     {
       id: 'transactions',
