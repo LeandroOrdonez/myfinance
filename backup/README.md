@@ -114,10 +114,10 @@ You can schedule this script with cron to run automatic backups:
 crontab -e
 
 # Add a line to run the backup daily at 2am
-0 2 * * * cd /home/leandro/code/myfinance && /home/leandro/code/myfinance/backup/backup_script.py
+0 2 * * * cd /path/to/myfinance && /path/to/myfinance/backup/backup_script.py
 
 # Alternative: specify folder ID directly (if not using .env)
-# 0 2 * * * cd /home/leandro/code/myfinance && /home/leandro/code/myfinance/backup/backup_script.py --folder-id YOUR_FOLDER_ID
+# 0 2 * * * cd /path/to/myfinance && /path/to/myfinance/backup/backup_script.py --folder-id YOUR_FOLDER_ID
 ```
 
 ## Troubleshooting

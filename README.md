@@ -2,6 +2,10 @@
 
 A personal finance manager for tracking, categorizing, and analyzing your financial transactions. Built as a monorepo with a FastAPI backend and a React + TypeScript frontend, MyFinance helps you import, view, and analyze your spending and income.
 
+<p align="center">
+  <img src="frontend/public/myfinance.gif" alt="MyFinance App Demo" width="800">
+</p>
+
 ## Table of Contents
 
 - [Features](#features)
