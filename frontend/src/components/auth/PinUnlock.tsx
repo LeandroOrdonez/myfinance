@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Delete } from "lucide-react";
-import { cn } from "../../lib/utils";
 
 interface PinUnlockProps {
   onUnlock: () => void;
@@ -172,10 +171,7 @@ export const PinUnlock: React.FC<PinUnlockProps> = ({
                                 : "#e5e7eb",
                       }}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      className={cn(
-                        "w-14 h-14 rounded-full flex items-center justify-center",
-                        "transition-colors duration-300",
-                      )}
+                      className="w-14 h-14 rounded-full flex items-center justify-center transition-colors duration-300"
                     >
                       {pin[i] && (
                         <motion.div

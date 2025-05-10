@@ -15,10 +15,10 @@ const PERIODS = [
 ];
 
 export const FinancialTrends: React.FC = () => {
-  const [period, setPeriod] = React.useState('all');
+  const [period, setPeriod] = React.useState('1y');
 
   // Compute start_date and end_date based on selected period
-  const now = new Date('2025-04-15T23:50:45+02:00'); // Use latest source of truth
+  const now = new Date(); // Use latest source of truth
   let start_date: string | undefined = undefined;
   let end_date: string | undefined = undefined;
 

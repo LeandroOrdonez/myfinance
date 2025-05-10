@@ -6,6 +6,7 @@ import { Sidebar } from '../components/common/Sidebar';
 import { ThemeToggle } from '../components/common/ThemeToggle';
 import { LogoutButton } from '../components/auth/LogoutButton';
 import { useTransactions } from '../hooks/useTransactions';
+import { UserGreeting } from '../components/dashboard/UserGreeting';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -58,20 +59,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     }
   };
   
-  // Get page title based on current view
-  const getPageTitle = () => {
-    switch (currentView) {
-      case 'analytics':
-        return 'Analytics Dashboard';
-      case 'transactions':
-        return 'Transactions';
-      case 'financial-health':
-        return 'Financial Health';
-      default:
-        return 'MyFinance';
-    }
-  };
-  
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
       {/* Sidebar */}
@@ -89,9 +76,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         <div className="py-6 dark:text-gray-100">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {getPageTitle()}
-              </h1>
+              <UserGreeting />
               <div className="flex space-x-3 items-center">
                 <ThemeToggle />
                 {showUndoButton && (

@@ -2,8 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  userName: string | null;
   login: () => void;
   logout: () => void;
+  setUserName: (name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,12 +24,19 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string | null>(null);
   
-  // Check if user was previously authenticated
+  // Check if user was previously authenticated and get user name
   useEffect(() => {
     const storedAuth = localStorage.getItem('myfinance_auth');
+    const storedName = localStorage.getItem('myfinance_user_name');
+    
     if (storedAuth) {
       setIsAuthenticated(JSON.parse(storedAuth));
+    }
+    
+    if (storedName) {
+      setUserName(storedName);
     }
   }, []);
 
@@ -41,8 +50,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('myfinance_auth');
   };
 
+  const handleSetUserName = (name: string) => {
+    setUserName(name);
+    localStorage.setItem('myfinance_user_name', name);
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      userName, 
+      login, 
+      logout,
+      setUserName: handleSetUserName
+    }}>
       {children}
     </AuthContext.Provider>
   );

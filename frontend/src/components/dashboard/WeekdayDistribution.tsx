@@ -36,7 +36,7 @@ const PERIODS = [
 const WeekdayDistribution: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<WeekdayDistributionType | null>(null);
-  const [period, setPeriod] = useState('all');
+  const [period, setPeriod] = useState('1y');
   const [activeTab, setActiveTab] = useState('average');
   const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({
     Expenses: true,

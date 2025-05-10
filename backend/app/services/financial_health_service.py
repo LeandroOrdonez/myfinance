@@ -34,6 +34,13 @@ class FinancialHealthService:
             "poor": 0.02,       # 2-5% is poor
             "critical": 0.0     # Less than 2% is critical
         },
+        "spending_stability": {
+            "excellent": 0.90,  # Very stable (less than 10% variation)
+            "good": 0.80,       # Stable (10-20% variation)
+            "average": 0.70,    # Somewhat stable (20-30% variation)
+            "poor": 0.50,       # Unstable (30-50% variation)
+            "critical": 0.0     # Very unstable (more than 50% variation)
+        },
         "budget_adherence": {
             "excellent": 0.90,  # Less than 10% deviation
             "good": 0.80,       # 10-20% deviation
@@ -601,14 +608,46 @@ class FinancialHealthService:
         Returns:
             Tuple of (score, emergency_fund_months)
         """
-        # Get average monthly expenses over the last 6 months
+        # Get average monthly expenses over the last 6 months, excluding investments
         six_months_ago = target_date - timedelta(days=180)
         
-        avg_monthly_expense = db.query(func.avg(FinancialStatistics.period_expenses)).filter(
+        # First, get the monthly dates for the last 6 months
+        monthly_dates = db.query(FinancialStatistics.date).filter(
             FinancialStatistics.period == StatisticsPeriod.MONTHLY,
             FinancialStatistics.date >= six_months_ago,
             FinancialStatistics.date <= target_date
-        ).scalar() or 0
+        ).all()
+        
+        # Calculate non-investment expenses for each month
+        total_expenses = 0
+        months_count = 0
+        
+        for date_record in monthly_dates:
+            month_date = date_record[0]
+            
+            # Get total expenses for the month
+            monthly_expenses = db.query(FinancialStatistics.period_expenses).filter(
+                FinancialStatistics.period == StatisticsPeriod.MONTHLY,
+                FinancialStatistics.date == month_date
+            ).scalar() or 0
+            
+            # Get investment expenses for the month
+            investment_expenses = db.query(CategoryStatistics.period_amount).filter(
+                CategoryStatistics.period == StatisticsPeriod.MONTHLY,
+                CategoryStatistics.date == month_date,
+                CategoryStatistics.transaction_type == TransactionType.EXPENSE,
+                CategoryStatistics.category_name == ExpenseCategory.INVESTMENTS.value
+            ).scalar() or 0
+            
+            # Calculate non-investment expenses
+            non_investment_expenses = monthly_expenses - investment_expenses
+            
+            if non_investment_expenses > 0:
+                total_expenses += non_investment_expenses
+                months_count += 1
+        
+        # Calculate average monthly non-investment expenses
+        avg_monthly_expense = total_expenses / months_count if months_count > 0 else 0
         
         # Estimate emergency fund from total savings
         # This is a simplified approach - in a real app, you might have a specific
@@ -621,7 +660,7 @@ class FinancialHealthService:
             emergency_fund_months = total_savings.total_net_savings / avg_monthly_expense
         else:
             emergency_fund_months = 0
-        
+            
         # Cap at reasonable maximum for scoring
         emergency_fund_months = min(emergency_fund_months, 12)
         
@@ -716,13 +755,7 @@ class FinancialHealthService:
         # Score the stability
         stability_score = FinancialHealthService._score_component(
             stability,
-            {
-                "excellent": 0.90,  # Very stable (less than 10% variation)
-                "good": 0.80,       # Stable (10-20% variation)
-                "average": 0.70,    # Somewhat stable (20-30% variation)
-                "poor": 0.50,       # Unstable (30-50% variation)
-                "critical": 0.0     # Very unstable (more than 50% variation)
-            },
+            FinancialHealthService.THRESHOLDS["spending_stability"],
             higher_is_better=True
         )
         
