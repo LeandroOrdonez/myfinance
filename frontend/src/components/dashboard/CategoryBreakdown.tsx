@@ -10,6 +10,7 @@ import { useCategoryStatistics } from '../../hooks/useCategoryStatistics';
 import { useStatistics } from '../../hooks/useStatistics';
 import { Loading } from '../common/Loading';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { BarChart2, Grid3x3 } from 'lucide-react';
 
 const EXPENSE_COLORS = [
   '#EF4444', '#DC2626', '#B91C1C', '#991B1B', '#7F1D1D',
@@ -181,15 +182,17 @@ export const CategoryBreakdown: React.FC = () => {
           <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             <button
               onClick={() => setChartType('treemap')}
-              className={`px-3 py-1 text-sm ${chartType === 'treemap' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+              className={`p-2 ${chartType === 'treemap' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+              title="Treemap View"
             >
-              Treemap
+              <Grid3x3 size={18} />
             </button>
             <button
               onClick={() => setChartType('bar')}
-              className={`px-3 py-1 text-sm ${chartType === 'bar' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+              className={`p-2 ${chartType === 'bar' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+              title="Bar Chart View"
             >
-              Bar Chart
+              <BarChart2 size={18} />
             </button>
           </div>
         </div>
