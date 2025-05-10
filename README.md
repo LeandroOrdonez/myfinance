@@ -36,7 +36,6 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Dashboard showing savings, expenses, and income
 - Interactive charts over time and by category
 - Monthly and yearly summary views
-- Personalized dashboard with time-based greetings
 
 ### Financial Health
 - Comprehensive financial health scoring system (0-100 scale)
@@ -45,7 +44,7 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
   - Expense ratio
   - Budget adherence
   - Debt-to-income ratio
-  - Emergency fund (excluding investment expenses)
+  - Emergency fund
   - Spending stability
   - Investment rate
 - Personalized recommendations based on financial weaknesses
@@ -53,10 +52,7 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Recommendation tracking system
 
 ### User Experience
-- Welcoming splash screen for first-time users
-- Personalized greetings based on user's name and time of day (morning/afternoon/evening/night)
-- Context-aware page descriptions for different sections
-- PIN-based authentication system
+- PIN-based authentication system (not yet fully implemented, PIN hard-coded to 1234)
 - Dark/light theme support
 
 ## Architecture
