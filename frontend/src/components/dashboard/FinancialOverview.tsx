@@ -46,36 +46,36 @@ export const FinancialOverview: React.FC = () => {
           colorType="neutral"
         />
         <BaseMetricCard
-          title="Total Income"
+          title={`Total Income (${currentDate.getFullYear()})`}
           Icon={Download}
-          amount={statistics.current_month.total_income}
+          amount={statistics.current_month.yearly_income}
           change={calculateChange(
-            statistics.current_month.total_income,
-            statistics.last_month.total_income
+            statistics.current_month.yearly_income,
+            statistics.last_month.yearly_income
           )}
-          previousAmount={statistics.last_month.total_income}
+          previousAmount={statistics.last_month.yearly_income}
           colorType="income"
         />
         <BaseMetricCard
-          title="Total Expenses"
+          title={`Total Expenses (${currentDate.getFullYear()})`}
           Icon={Upload}
-          amount={statistics.current_month.total_expenses}
+          amount={statistics.current_month.yearly_expenses}
           change={calculateChange(
-            statistics.current_month.total_expenses,
-            statistics.last_month.total_expenses
+            statistics.current_month.yearly_expenses,
+            statistics.last_month.yearly_expenses
           )}
-          previousAmount={statistics.last_month.total_expenses}
+          previousAmount={statistics.last_month.yearly_expenses}
           colorType="expense"
         />
         <BaseMetricCard
-          title="Total Savings Rate"
+          title={`${currentMonth} Savings Rate`}
           Icon={TrendingUp}
-          amount={statistics.all_time.savings_rate}
+          amount={statistics.current_month.savings_rate}
           change={calculateChange(
-            statistics.all_time.savings_rate,
-            (statistics.last_month.total_net_savings / statistics.last_month.total_income) * 100.0
+            statistics.current_month.savings_rate,
+            statistics.last_month.savings_rate
           )}
-          previousAmount={(statistics.last_month.total_net_savings / statistics.last_month.total_income) * 100.0}
+          previousAmount={statistics.last_month.savings_rate}
           isPercentage={true}
           colorType="neutral"
         />
