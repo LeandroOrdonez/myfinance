@@ -603,12 +603,12 @@ class FinancialHealthService:
     @staticmethod
     def _calculate_emergency_fund(db: Session, target_date: date) -> Tuple[float, float]:
         """
-        Calculate emergency fund score based on savings relative to monthly expenses
+        Calculate emergency fund score based on savings relative to monthly essential expenses
         
         Returns:
             Tuple of (score, emergency_fund_months)
         """
-        # Get average monthly expenses over the last 6 months, excluding investments
+        # Get average monthly essential expenses over the last 6 months
         six_months_ago = target_date - timedelta(days=180)
         
         # First, get the monthly dates for the last 6 months
@@ -618,36 +618,36 @@ class FinancialHealthService:
             FinancialStatistics.date <= target_date
         ).all()
         
-        # Calculate non-investment expenses for each month
-        total_expenses = 0
+        # Calculate essential expenses for each month
+        total_essential_expenses = 0
         months_count = 0
         
         for date_record in monthly_dates:
             month_date = date_record[0]
             
-            # Get total expenses for the month
-            monthly_expenses = db.query(FinancialStatistics.period_expenses).filter(
-                FinancialStatistics.period == StatisticsPeriod.MONTHLY,
-                FinancialStatistics.date == month_date
-            ).scalar() or 0
+            # Get total essential expenses for the month
+            essential_expenses = 0
             
-            # Get investment expenses for the month
-            investment_expenses = db.query(CategoryStatistics.period_amount).filter(
-                CategoryStatistics.period == StatisticsPeriod.MONTHLY,
-                CategoryStatistics.date == month_date,
-                CategoryStatistics.transaction_type == TransactionType.EXPENSE,
-                CategoryStatistics.category_name == ExpenseCategory.INVESTMENTS.value
-            ).scalar() or 0
+            # Get all essential expense categories
+            essential_categories = [cat.value for cat in ExpenseCategory.get_essential_categories()]
             
-            # Calculate non-investment expenses
-            non_investment_expenses = monthly_expenses - investment_expenses
-            
-            if non_investment_expenses > 0:
-                total_expenses += non_investment_expenses
-                months_count += 1
+            # Sum up all expenses from essential categories
+            for category in essential_categories:
+                category_expense = db.query(CategoryStatistics.period_amount).filter(
+                    CategoryStatistics.period == StatisticsPeriod.MONTHLY,
+                    CategoryStatistics.date == month_date,
+                    CategoryStatistics.transaction_type == TransactionType.EXPENSE,
+                    CategoryStatistics.category_name == category
+                ).scalar() or 0
+                
+                essential_expenses += category_expense
         
-        # Calculate average monthly non-investment expenses
-        avg_monthly_expense = total_expenses / months_count if months_count > 0 else 0
+            if essential_expenses > 0:
+                total_essential_expenses += essential_expenses
+                months_count += 1
+    
+        # Calculate average monthly essential expenses
+        avg_monthly_essential_expense = total_essential_expenses / months_count if months_count > 0 else 0
         
         # Estimate emergency fund from total savings
         # This is a simplified approach - in a real app, you might have a specific
@@ -656,8 +656,8 @@ class FinancialHealthService:
             FinancialStatistics.period == StatisticsPeriod.ALL_TIME
         ).first()
         
-        if total_savings and avg_monthly_expense > 0:
-            emergency_fund_months = total_savings.total_net_savings / avg_monthly_expense
+        if total_savings and avg_monthly_essential_expense > 0:
+            emergency_fund_months = total_savings.total_net_savings / avg_monthly_essential_expense
         else:
             emergency_fund_months = 0
             

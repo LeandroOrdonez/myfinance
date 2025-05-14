@@ -68,6 +68,22 @@ export const FinancialOverview: React.FC = () => {
           colorType="expense"
         />
         <BaseMetricCard
+          title="Yearly Avg. Income"
+          Icon={Calculator}
+          amount={yearlyIncomeAverage}
+          change={calculateChange(
+            yearlyIncomeAverage,
+            previousYearlyIncomeAverage
+          )}
+          previousAmount={previousYearlyIncomeAverage}
+          colorType="income"
+          period={currentMonth}
+        />
+      </div>
+
+      {/* Bottom row - Modified for yearly averages */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <BaseMetricCard
           title={`${currentMonth} Savings Rate`}
           Icon={TrendingUp}
           amount={statistics.current_month.savings_rate}
@@ -79,10 +95,6 @@ export const FinancialOverview: React.FC = () => {
           isPercentage={true}
           colorType="neutral"
         />
-      </div>
-
-      {/* Bottom row - Modified for yearly averages */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <BaseMetricCard
           title={`${currentMonth} Income`}
           Icon={ArrowDown}
@@ -104,18 +116,6 @@ export const FinancialOverview: React.FC = () => {
           )}
           previousAmount={statistics.last_month.period_expenses}
           colorType="expense"
-        />
-        <BaseMetricCard
-          title="Yearly Avg. Income"
-          Icon={Calculator}
-          amount={yearlyIncomeAverage}
-          change={calculateChange(
-            yearlyIncomeAverage,
-            previousYearlyIncomeAverage
-          )}
-          previousAmount={previousYearlyIncomeAverage}
-          colorType="income"
-          period={currentMonth}
         />
         <BaseMetricCard
           title="Yearly Avg. Expense"

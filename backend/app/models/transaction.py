@@ -6,6 +6,10 @@ class TransactionType(enum.Enum):
     INCOME = "Income"
     EXPENSE = "Expense"
 
+class ExpenseType(enum.Enum):
+    ESSENTIAL = "Essential"
+    DISCRETIONARY = "Discretionary"
+
 class ExpenseCategory(enum.Enum):
     HOUSING = "Housing"
     UTILITIES = "Utilities"
@@ -22,6 +26,50 @@ class ExpenseCategory(enum.Enum):
     TRAVEL = "Travel"
     ENTERTAINMENT = "Entertainment"
     OTHERS = "Others"
+    
+    @property
+    def expense_type(self):
+        """
+        Classify expense categories as either essential or discretionary
+        """
+        essential_categories = [
+            ExpenseCategory.HOUSING,
+            ExpenseCategory.UTILITIES,
+            ExpenseCategory.GROCERIES,
+            ExpenseCategory.TRANSPORTATION,
+            ExpenseCategory.INSURANCE,
+            ExpenseCategory.DEBT
+        ]
+        
+        return ExpenseType.ESSENTIAL if self in essential_categories else ExpenseType.DISCRETIONARY
+    
+    @property
+    def is_essential(self):
+        """
+        Check if the expense category is essential
+        """
+        return self.expense_type == ExpenseType.ESSENTIAL
+    
+    @property
+    def is_discretionary(self):
+        """
+        Check if the expense category is discretionary
+        """
+        return self.expense_type == ExpenseType.DISCRETIONARY
+    
+    @classmethod
+    def get_essential_categories(cls):
+        """
+        Return a list of all essential expense categories
+        """
+        return [category for category in cls if category.is_essential]
+    
+    @classmethod
+    def get_discretionary_categories(cls):
+        """
+        Return a list of all discretionary expense categories
+        """
+        return [category for category in cls if category.is_discretionary]
 
 class IncomeCategory(enum.Enum):
     SALARY = "Salary"
