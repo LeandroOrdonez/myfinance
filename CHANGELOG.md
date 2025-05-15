@@ -1,5 +1,22 @@
 # MyFinance Changelog
 
+## 2025-05-16
+
+### Expense Type Statistics Endpoint
+- Added new `/statistics/by-expense-type` endpoint to analyze spending by essential vs discretionary categories
+- Implemented aggregation of expense data by expense type
+- Added detailed category breakdown within each expense type
+- Included period-specific, cumulative, and yearly metrics for each expense type
+
+## 2025-05-15
+
+### Expense Classification Enhancement
+- Added classification of expense categories as essential or discretionary
+- Updated ExpenseCategory model with expense_type property and helper methods
+- Enhanced emergency fund calculation to focus on essential expenses only
+- Added expense_type field to CategoryStatistics for better expense analysis
+- Created database migration for expense type classification
+
 ## 2025-05-10
 
 ### User Experience Improvements

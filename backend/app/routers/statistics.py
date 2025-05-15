@@ -9,7 +9,7 @@ import numpy as np
 from enum import Enum
 
 from ..database import get_db
-from ..models.transaction import Transaction, TransactionType
+from ..models.transaction import Transaction, TransactionType, ExpenseType
 from ..models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from ..services.statistics_service import StatisticsService
 
@@ -21,6 +21,170 @@ router = APIRouter(
     prefix="/statistics",
     tags=["statistics"]
 )
+
+@router.get("/by-expense-type")
+def get_expense_type_statistics(
+    db: Session = Depends(get_db),
+    period: str = Query("monthly", description="Statistics period (monthly, yearly, all_time)"),
+    date: str = Query(None, description="Target date in ISO format (YYYY-MM-DD). Required for monthly/yearly periods.")
+):
+    """Get statistics aggregated by expense type (essential vs discretionary)"""
+    try:
+        # Convert period string to enum
+        try:
+            stat_period = StatisticsPeriod(period)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid period: {period}. Must be one of: monthly, yearly, all_time")
+        
+        # Get latest transaction date
+        latest_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
+        
+        # Parse date if provided and needed
+        target_date = None
+
+        if not date:
+            target_date = latest_transaction.transaction_date
+        elif stat_period != StatisticsPeriod.ALL_TIME:
+            try:
+                target_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid date format: {date}. Use YYYY-MM-DD")
+        
+        # For ALL_TIME, we don't need a specific date
+        if stat_period == StatisticsPeriod.ALL_TIME:
+            target_date = None
+        # For MONTHLY and no date specified, use last day of current month
+        elif stat_period == StatisticsPeriod.MONTHLY and not target_date:
+            today = datetime.now().date()
+            target_date = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+        # For YEARLY and no date specified, use last day of current year
+        elif stat_period == StatisticsPeriod.YEARLY and not target_date:
+            today = datetime.now().date()
+            target_date = datetime(today.year, 12, 31).date()
+        
+        # If it's monthly period, ensure we're using the last day of the month
+        if stat_period == StatisticsPeriod.MONTHLY and target_date:
+            target_date = target_date.replace(day=calendar.monthrange(target_date.year, target_date.month)[1])
+        # If it's yearly period, ensure we're using the last day of the year
+        elif stat_period == StatisticsPeriod.YEARLY and target_date:
+            target_date = datetime(target_date.year, 12, 31).date()
+            
+        # Query category statistics from the database
+        query = db.query(CategoryStatistics).filter(
+            CategoryStatistics.period == stat_period,
+            CategoryStatistics.transaction_type == TransactionType.EXPENSE,
+            CategoryStatistics.expense_type != None  # Only get records with expense_type
+        )
+        
+        # Add date filter if needed
+        if target_date and stat_period != StatisticsPeriod.ALL_TIME:
+            query = query.filter(CategoryStatistics.date == target_date)
+        
+        # Execute query
+        stats = query.all()
+        
+        if not stats:
+            # Return empty results for each expense type
+            return [
+                {
+                    "expense_type": ExpenseType.ESSENTIAL.value,
+                    "period": stat_period.value,
+                    "date": target_date.isoformat() if target_date else None,
+                    "period_amount": 0.0,
+                    "period_transaction_count": 0,
+                    "period_percentage": 0.0,
+                    "total_amount": 0.0,
+                    "transaction_count": 0,
+                    "total_amount_cumulative": 0.0,
+                    "total_transaction_count": 0,
+                    "average_transaction_amount": 0.0,
+                    "yearly_amount": 0.0,
+                    "yearly_transaction_count": 0,
+                    "categories": []
+                },
+                {
+                    "expense_type": ExpenseType.DISCRETIONARY.value,
+                    "period": stat_period.value,
+                    "date": target_date.isoformat() if target_date else None,
+                    "period_amount": 0.0,
+                    "period_transaction_count": 0,
+                    "period_percentage": 0.0,
+                    "total_amount": 0.0,
+                    "transaction_count": 0,
+                    "total_amount_cumulative": 0.0,
+                    "total_transaction_count": 0,
+                    "average_transaction_amount": 0.0,
+                    "yearly_amount": 0.0,
+                    "yearly_transaction_count": 0,
+                    "categories": []
+                }
+            ]
+        
+        # Group by expense type
+        essential_stats = [s for s in stats if s.expense_type == ExpenseType.ESSENTIAL]
+        discretionary_stats = [s for s in stats if s.expense_type == ExpenseType.DISCRETIONARY]
+        
+        # Aggregate results by expense type
+        results = []
+        
+        # Process essential expenses
+        if essential_stats:
+            essential_result = {
+                "expense_type": ExpenseType.ESSENTIAL.value,
+                "period": stat_period.value,
+                "date": essential_stats[0].date.isoformat() if essential_stats[0].date else None,
+                "period_amount": sum(float(s.period_amount) for s in essential_stats),
+                "period_transaction_count": sum(s.period_transaction_count for s in essential_stats),
+                "period_percentage": sum(float(s.period_percentage) for s in essential_stats),
+                "total_amount": sum(float(s.period_amount) for s in essential_stats),
+                "transaction_count": sum(s.period_transaction_count for s in essential_stats),
+                "total_amount_cumulative": sum(float(s.total_amount) for s in essential_stats),
+                "total_transaction_count": sum(s.total_transaction_count for s in essential_stats),
+                "average_transaction_amount": (sum(float(s.period_amount) for s in essential_stats) / 
+                                             sum(s.period_transaction_count for s in essential_stats)) 
+                                             if sum(s.period_transaction_count for s in essential_stats) > 0 else 0.0,
+                "yearly_amount": sum(float(s.yearly_amount) for s in essential_stats),
+                "yearly_transaction_count": sum(s.yearly_transaction_count for s in essential_stats),
+                "categories": [{
+                    "category": s.category_name,
+                    "period_amount": float(s.period_amount),
+                    "period_transaction_count": s.period_transaction_count,
+                    "period_percentage": float(s.period_percentage)
+                } for s in essential_stats]
+            }
+            results.append(essential_result)
+        
+        # Process discretionary expenses
+        if discretionary_stats:
+            discretionary_result = {
+                "expense_type": ExpenseType.DISCRETIONARY.value,
+                "period": stat_period.value,
+                "date": discretionary_stats[0].date.isoformat() if discretionary_stats[0].date else None,
+                "period_amount": sum(float(s.period_amount) for s in discretionary_stats),
+                "period_transaction_count": sum(s.period_transaction_count for s in discretionary_stats),
+                "period_percentage": sum(float(s.period_percentage) for s in discretionary_stats),
+                "total_amount": sum(float(s.period_amount) for s in discretionary_stats),
+                "transaction_count": sum(s.period_transaction_count for s in discretionary_stats),
+                "total_amount_cumulative": sum(float(s.total_amount) for s in discretionary_stats),
+                "total_transaction_count": sum(s.total_transaction_count for s in discretionary_stats),
+                "average_transaction_amount": (sum(float(s.period_amount) for s in discretionary_stats) / 
+                                             sum(s.period_transaction_count for s in discretionary_stats)) 
+                                             if sum(s.period_transaction_count for s in discretionary_stats) > 0 else 0.0,
+                "yearly_amount": sum(float(s.yearly_amount) for s in discretionary_stats),
+                "yearly_transaction_count": sum(s.yearly_transaction_count for s in discretionary_stats),
+                "categories": [{
+                    "category": s.category_name,
+                    "period_amount": float(s.period_amount),
+                    "period_transaction_count": s.period_transaction_count,
+                    "period_percentage": float(s.period_percentage)
+                } for s in discretionary_stats]
+            }
+            results.append(discretionary_result)
+        
+        return results
+    except Exception as e:
+        logger.error(f"Error in get_expense_type_statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/by-category")
 def get_category_statistics(

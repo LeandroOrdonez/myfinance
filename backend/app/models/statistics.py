@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Float, String, Date, Enum, ForeignKey
 from ..database import Base
-from .transaction import TransactionType, ExpenseCategory, IncomeCategory
+from .transaction import TransactionType, ExpenseCategory, IncomeCategory, ExpenseType
 import enum
 
 class StatisticsPeriod(enum.Enum):
@@ -48,6 +48,7 @@ class CategoryStatistics(Base):
     # Category identification
     category_name = Column(String(100), nullable=False)
     transaction_type = Column(Enum(TransactionType), nullable=False)
+    expense_type = Column(Enum(ExpenseType), nullable=True)  # Essential or Discretionary (null for income)
     
     # Period-specific metrics
     period_amount = Column(Float, default=0)

@@ -223,6 +223,7 @@ class StatisticsService:
             expense_categories.append({
                 'category_name': cat.value,
                 'transaction_type': TransactionType.EXPENSE,
+                'expense_type': cat.expense_type,  # Add the expense type (essential or discretionary)
                 'period_amount': period_amount,
                 'period_transaction_count': period_count,
                 'period_percentage': period_percentage,
