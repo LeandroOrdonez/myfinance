@@ -1,5 +1,14 @@
 # MyFinance Changelog
 
+## 2025-05-17
+
+### Essential vs Discretionary Expense Visualization
+- Redesigned CategoryTrends component to focus on essential vs discretionary spending
+- Added interactive pie chart visualization with hover effects for expense type breakdown
+- Implemented detailed category listings for both essential and discretionary expenses
+- Enhanced dark mode support with improved contrast and readability
+- Optimized component layout and removed redundant Top Categories tab
+
 ## 2025-05-16
 
 ### Expense Type Statistics Endpoint

@@ -88,6 +88,21 @@ export const api = {
     return response.data;
   },
 
+  getExpenseTypeStatistics: async (
+    period: 'monthly' | 'yearly' | 'all_time' = 'monthly',
+    date?: string
+  ) => {
+    const params: Record<string, string> = { period };
+    if (date) {
+      params.date = date;
+    }
+    
+    const response = await axios.get(`${API_BASE_URL}/statistics/by-expense-type`, {
+      params
+    });
+    return response.data;
+  },
+
   async deleteTransaction(transactionId: number): Promise<void> {
     const response = await axios.delete(`${API_BASE_URL}/transactions/${transactionId}`);
 
