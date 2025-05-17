@@ -6,6 +6,8 @@ import { subMonths, startOfYear, format as formatDate } from 'date-fns';
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import { ChartArea, ChartColumnStacked } from 'lucide-react';
 
 const PERIODS = [
   { label: '3M', value: '3m' },
@@ -34,6 +37,7 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
 }) => {
   const [period, setPeriod] = useState('1y');
   const [transactionType, setTransactionType] = useState<TransactionType>(defaultTransactionType);
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
   const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({});
 
   // Compute start_date and end_date based on selected period
@@ -88,7 +92,10 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
     dates.forEach(date => {
       const entry: Record<string, any> = { date };
       categories.forEach(category => {
+        // Initialize percentage fields (for area chart)
         entry[category] = 0;
+        // Initialize amount fields (for bar chart)
+        entry[`${category}_amount`] = 0;
       });
       dataByDate.set(date, entry);
     });
@@ -97,8 +104,10 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
     timeseriesData.forEach(item => {
       const dateEntry = dataByDate.get(item.date);
       if (dateEntry) {
-        // Use period_percentage as the metric
+        // Use period_percentage for area chart
         dateEntry[item.category_name] = item.period_percentage;
+        // Use period_amount for bar chart
+        dateEntry[`${item.category_name}_amount`] = item.period_amount;
       }
     });
     
@@ -108,6 +117,7 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
   // Define color palette for categories
   const categoryColors = useMemo(() => {
     const colors = [
+      // Primary colors
       '#10B981', // Green
       '#EF4444', // Red
       '#6366F1', // Indigo
@@ -118,6 +128,30 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
       '#F97316', // Orange
       '#3B82F6', // Blue
       '#84CC16', // Lime
+      
+      // Secondary colors
+      '#0891B2', // Cyan
+      '#A855F7', // Violet
+      '#D946EF', // Fuchsia
+      '#F43F5E', // Rose
+      '#059669', // Emerald
+      '#65A30D', // Lime Dark
+      '#0284C7', // Sky
+      '#7C3AED', // Violet Dark
+      '#2563EB', // Blue Dark
+      '#DC2626', // Red Dark
+      
+      // Tertiary colors
+      '#0D9488', // Teal Dark
+      '#0369A1', // Sky Dark
+      '#4F46E5', // Indigo Dark
+      '#9333EA', // Purple Dark
+      '#C026D3', // Fuchsia Dark
+      '#E11D48', // Rose Dark
+      '#16A34A', // Green Dark
+      '#CA8A04', // Yellow Dark
+      '#EA580C', // Orange Dark
+      '#4338CA', // Indigo Medium
     ];
     
     const colorMap: Record<string, string> = {};
@@ -149,21 +183,171 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
     return false;
   };
 
-  const formatValue = (value: number) => {
-    if (!value && value !== 0) return '0';
+  const formatValue = (value: number, isPercentage: boolean = true) => {
+    if (!value && value !== 0) return isPercentage ? '0%' : '€0';
     
-    // Always format as percentage since we're only using period_percentage
-    return `${Number(value).toFixed(1)}%`;
+    if (isPercentage) {
+      // Format as percentage for area chart
+      return `${value.toFixed(1)}%`;
+    } else {
+      // Format as currency for bar chart
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        notation: 'compact'
+      }).format(value);
+    }
+  };
+
+  const renderChart = () => {
+    if (chartType === 'area') {
+      return (
+        <AreaChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={(date) => {
+              const d = new Date(date);
+              return formatDate(d, 'MMM yyyy');
+            }}
+          />
+          <YAxis 
+            tickFormatter={(value) => formatValue(value, true)}
+            domain={[0, 100]}
+            allowDataOverflow={true}
+          />
+          <Tooltip 
+            formatter={(value: number, name: string) => [formatValue(value, true), name]}
+            contentStyle={{ 
+              backgroundColor: 'var(--color-tooltip-bg)', 
+              borderColor: 'var(--color-tooltip-border)',
+              color: 'var(--color-tooltip-text)'
+            }}
+            labelFormatter={(label) => {
+              const d = new Date(label);
+              return formatDate(d, 'MMMM yyyy');
+            }}
+          />
+          <Legend onClick={handleLegendClick} 
+            wrapperStyle={{ cursor: 'pointer' }}
+            formatter={(value, entry: any) => (
+                <span style={{ 
+                    color: visibleSeries[entry.dataKey] ? entry.color : '#999',
+                    cursor: 'pointer'
+                }}>
+                    {value}
+                </span>
+            )}
+          />
+          
+          {categories.map(category => (
+            <Area
+              key={category}
+              type="monotone"
+              dataKey={category}
+              name={category}
+              stackId="1"
+              stroke={categoryColors[category]}
+              fill={categoryColors[category]}
+              fillOpacity={0.6}
+              isAnimationActive={false}
+              hide={!visibleSeries[category]}
+            />
+          ))}
+        </AreaChart>
+      );
+    }
+    
+    // Default to bar chart
+    return (
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={(date) => {
+            const d = new Date(date);
+            return formatDate(d, 'MMM yyyy');
+          }}
+        />
+        <YAxis 
+          tickFormatter={(value) => formatValue(value, false)}
+          domain={[0, 'auto']}
+        />
+        <Tooltip 
+          formatter={(value: number, name: string) => {
+            // Extract the base category name without the _amount suffix
+            const categoryName = name.replace('_amount', '');
+            return [formatValue(value, false), categoryName];
+          }}
+          contentStyle={{ 
+            backgroundColor: 'var(--color-tooltip-bg)', 
+            borderColor: 'var(--color-tooltip-border)',
+            color: 'var(--color-tooltip-text)'
+          }}
+          labelFormatter={(label) => {
+            const d = new Date(label);
+            return formatDate(d, 'MMMM yyyy');
+          }}
+        />
+        <Legend 
+          onClick={(entry) => {
+            // Extract the base category name without the _amount suffix
+            const dataKey = String(entry.dataKey);
+            const categoryName = dataKey.replace('_amount', '');
+            handleLegendClick({ ...entry, dataKey: categoryName });
+          }} 
+          wrapperStyle={{ cursor: 'pointer' }}
+          formatter={(value, entry: any) => {
+            // Extract the base category name without the _amount suffix
+            const dataKey = String(entry.dataKey);
+            const categoryName = dataKey.replace('_amount', '');
+            return (
+              <span style={{ 
+                color: visibleSeries[categoryName] ? entry.color : '#999',
+                cursor: 'pointer'
+              }}>
+                {categoryName}
+              </span>
+            );
+          }}
+        />
+        
+        {categories.map(category => (
+          <Bar
+            key={category}
+            dataKey={`${category}_amount`}
+            name={`${category}_amount`}
+            stackId="1"
+            fill={categoryColors[category]}
+            isAnimationActive={false}
+            hide={!visibleSeries[category]}
+          />
+        ))}
+      </BarChart>
+    );
   };
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">{title}</h3>
-        <div className="p-2 rounded-full bg-blue-100 bg-opacity-70">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M3 3a1 1 0 000 2h10a1 1 0 100-2H3zm0 4a1 1 0 000 2h6a1 1 0 100-2H3zm0 4a1 1 0 100 2h12a1 1 0 100-2H3z" clipRule="evenodd" />
-          </svg>
+        <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+          <button
+            className={`px-3 py-1 text-sm ${chartType === 'bar' 
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+              : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+            onClick={() => setChartType('bar')}
+          >
+            <ChartColumnStacked size={18} />
+          </button>
+          <button
+            className={`px-3 py-1 text-sm ${chartType === 'area' 
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+              : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+            onClick={() => setChartType('area')}
+          >
+            <ChartArea size={18} />
+          </button>
         </div>
       </div>
       
@@ -210,54 +394,7 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
       ) : chartData.length > 0 ? (
         <div style={{ height: '400px' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                tickFormatter={(date) => {
-                  const d = new Date(date);
-                  return formatDate(d, 'MMM yyyy');
-                }}
-              />
-              <YAxis 
-                tickFormatter={(value) => formatValue(value)}
-                domain={[0, 100]}
-                allowDataOverflow={true}
-              />
-              <Tooltip 
-                formatter={(value: number, name: string) => [formatValue(value), name]}
-                labelFormatter={(label) => {
-                  const d = new Date(label);
-                  return formatDate(d, 'MMMM yyyy');
-                }}
-              />
-              <Legend onClick={handleLegendClick} 
-                wrapperStyle={{ cursor: 'pointer' }}
-                formatter={(value, entry: any) => (
-                    <span style={{ 
-                        color: visibleSeries[entry.dataKey] ? entry.color : '#999',
-                        cursor: 'pointer'
-                    }}>
-                        {value}
-                    </span>
-                )}
-              />
-              
-              {categories.map(category => (
-                <Area
-                  key={category}
-                  type="monotone"
-                  dataKey={category}
-                  name={category}
-                  stackId="1"
-                  stroke={categoryColors[category]}
-                  fill={categoryColors[category]}
-                  fillOpacity={0.6}
-                  isAnimationActive={false}
-                  hide={!visibleSeries[category]}
-                />
-              ))}
-            </AreaChart>
+            {renderChart()}
           </ResponsiveContainer>
         </div>
       ) : (

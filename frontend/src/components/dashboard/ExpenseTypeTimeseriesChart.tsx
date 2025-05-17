@@ -32,7 +32,7 @@ const EXPENSE_TYPE_COLORS = {
 
 export const ExpenseTypeTimeseriesChart: React.FC = () => {
   const [period, setPeriod] = useState('1y');
-  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
+  const [chartType, setChartType] = useState<'area' | 'bar'>('bar');
 
   // Compute start_date and end_date based on selected period
   const now = new Date();
@@ -77,12 +77,17 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
       entry.discretionary = 0;
       entry.essential_count = 0;
       entry.discretionary_count = 0;
+      entry.essential_percentage = 0;
+      entry.discretionary_percentage = 0;
       
       // Fill in actual values
       dateData.forEach(item => {
         if (item.expense_type === 'essential' || item.expense_type === 'discretionary') {
+          // For bar chart we'll use the amount
           entry[item.expense_type] = item.period_amount;
           entry[`${item.expense_type}_count`] = item.period_transaction_count;
+          // For area chart we'll use the percentage
+          entry[`${item.expense_type}_percentage`] = item.period_percentage;
         }
       });
       
@@ -97,8 +102,12 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
     return dataByDate;
   }, [timeseriesData]);
 
-  const formatValue = (value: number) => {
-    if (!value && value !== 0) return '0';
+  const formatValue = (value: number, isPercentage: boolean = false) => {
+    if (!value && value !== 0) return isPercentage ? '0%' : '€0';
+    
+    if (isPercentage) {
+      return `${value.toFixed(1)}%`;
+    }
     
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -121,13 +130,20 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
               }}
             />
             <YAxis 
-              tickFormatter={(value) => formatValue(value)}
+              tickFormatter={(value) => formatValue(value, true)}
+              domain={[0, 100]}
+              allowDataOverflow={true}
             />
             <Tooltip 
               formatter={(value: number, name: string) => {
-                if (name === 'essential') return [formatValue(value), 'Essential'];
-                if (name === 'discretionary') return [formatValue(value), 'Discretionary'];
+                if (name === 'Essential') return [formatValue(value, true), 'Essential'];
+                if (name === 'Discretionary') return [formatValue(value, true), 'Discretionary'];
                 return [value, name];
+              }}
+              contentStyle={{ 
+                backgroundColor: 'var(--color-tooltip-bg)', 
+                borderColor: 'var(--color-tooltip-border)',
+                color: 'var(--color-tooltip-text)'
               }}
               labelFormatter={(label) => {
                 const d = new Date(label);
@@ -137,7 +153,7 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
             <Legend />
             <Area
               type="monotone"
-              dataKey="essential"
+              dataKey="essential_percentage"
               name="Essential"
               stackId="1"
               stroke={EXPENSE_TYPE_COLORS.essential}
@@ -147,7 +163,7 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
             />
             <Area
               type="monotone"
-              dataKey="discretionary"
+              dataKey="discretionary_percentage"
               name="Discretionary"
               stackId="1"
               stroke={EXPENSE_TYPE_COLORS.discretionary}
@@ -177,9 +193,14 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
             />
             <Tooltip 
               formatter={(value: number, name: string) => {
-                if (name === 'essential') return [formatValue(value), 'Essential'];
-                if (name === 'discretionary') return [formatValue(value), 'Discretionary'];
+                if (name === 'Essential') return [formatValue(value), 'Essential'];
+                if (name === 'Discretionary') return [formatValue(value), 'Discretionary'];
                 return [value, name];
+              }}
+              contentStyle={{ 
+                backgroundColor: 'var(--color-tooltip-bg)', 
+                borderColor: 'var(--color-tooltip-border)',
+                color: 'var(--color-tooltip-text)'
               }}
               labelFormatter={(label) => {
                 const d = new Date(label);
@@ -214,6 +235,14 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Essential vs Discretionary Spending</h3>
         <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+         <button
+            className={`px-3 py-1 text-sm ${chartType === 'bar' 
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+              : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+            onClick={() => setChartType('bar')}
+          >
+            <ChartColumnStacked size={18} />
+          </button>
           <button
             className={`px-3 py-1 text-sm ${chartType === 'area' 
               ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
@@ -221,14 +250,6 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
             onClick={() => setChartType('area')}
           >
             <ChartArea size={18} />
-          </button>
-          <button
-            className={`px-3 py-1 text-sm ${chartType === 'bar' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-              : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-            onClick={() => setChartType('bar')}
-          >
-            <ChartColumnStacked size={18} />
           </button>
         </div>
       </div>

@@ -6,6 +6,7 @@ export interface ExpenseTypeTimeseriesItem {
   expense_type: string;
   period_amount: number;
   period_transaction_count: number;
+  period_percentage: number;
 }
 
 export const useExpenseTypeTimeseries = (
@@ -35,9 +36,36 @@ export const useExpenseTypeTimeseries = (
         expense_type: item.expense_type.toLowerCase(),
         period_amount: Number(item.period_amount) || 0,
         period_transaction_count: Number(item.period_transaction_count) || 0,
+        period_percentage: Number(item.period_percentage) || 0,
       }));
       
-      setTimeseriesData(transformedData);
+      // Calculate period_percentage if not provided by the API
+      // Group by date to calculate totals and percentages
+      const dateGroups = transformedData.reduce((groups: Record<string, any[]>, item) => {
+        if (!groups[item.date]) {
+          groups[item.date] = [];
+        }
+        groups[item.date].push(item);
+        return groups;
+      }, {});
+      
+      // Calculate percentages for each date group
+      const dataWithPercentages = transformedData.map(item => {
+        const dateItems = dateGroups[item.date];
+        const totalAmount = dateItems.reduce((sum, di) => sum + di.period_amount, 0);
+        
+        // If period_percentage is already set from the API, use it
+        // Otherwise calculate it based on the total amount for that date
+        if (item.period_percentage === 0 && totalAmount > 0) {
+          return {
+            ...item,
+            period_percentage: (item.period_amount / totalAmount) * 100
+          };
+        }
+        return item;
+      });
+      
+      setTimeseriesData(dataWithPercentages);
       setError(null);
     } catch (err) {
       setError('Failed to fetch expense type timeseries data');
