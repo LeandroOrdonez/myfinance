@@ -142,6 +142,34 @@ export const api = {
     return response.data;
   },
 
+  getCategoryStatisticsTimeseries: async (
+    transaction_type?: TransactionType,
+    category_name?: string,
+    start_date?: string, 
+    end_date?: string
+  ) => {
+    const params: Record<string, string> = {};
+    if (transaction_type) params.transaction_type = transaction_type;
+    if (category_name) params.category_name = category_name;
+    if (start_date) params.start_date = start_date;
+    if (end_date) params.end_date = end_date;
+    const response = await axios.get(`${API_BASE_URL}/statistics/category/timeseries`, { params });
+    return response.data;
+  },
+
+  getExpenseTypeStatisticsTimeseries: async (
+    expense_type?: string,
+    start_date?: string, 
+    end_date?: string
+  ) => {
+    const params: Record<string, string> = {};
+    if (expense_type) params.expense_type = expense_type;
+    if (start_date) params.start_date = start_date;
+    if (end_date) params.end_date = end_date;
+    const response = await axios.get(`${API_BASE_URL}/statistics/expense-type/timeseries`, { params });
+    return response.data;
+  },
+
   suggestCategory: async (
     description: string,
     amount: number,

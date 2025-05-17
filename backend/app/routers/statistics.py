@@ -12,6 +12,12 @@ from ..database import get_db
 from ..models.transaction import Transaction, TransactionType, ExpenseType
 from ..models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from ..services.statistics_service import StatisticsService
+from ..schemas.statistics import (
+    FinancialStatisticsResponse,
+    CategoryStatisticsResponse,
+    ExpenseTypeTimeseriesResponse,
+    ExpenseTypeTimeseriesItem
+)
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -510,7 +516,7 @@ def get_weekday_distribution(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/timeseries")
+@router.get("/timeseries", response_model=List[FinancialStatisticsResponse])
 def get_statistics_timeseries(
     db: Session = Depends(get_db),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
@@ -533,6 +539,133 @@ def get_statistics_timeseries(
             except Exception:
                 pass
         monthly_stats = query.order_by(FinancialStatistics.date).all()
+        
+        # Convert date objects to ISO format strings for serialization
+        for stat in monthly_stats:
+            if stat.date:
+                stat.date = stat.date.isoformat()
+                
         return monthly_stats
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/category/timeseries", response_model=List[CategoryStatisticsResponse])
+def get_category_statistics_timeseries(
+    db: Session = Depends(get_db),
+    transaction_type: TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
+    category_name: str = Query(None, description="Filter by category name"),
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+):
+    """
+    Get category statistics time series for trend analysis.
+    Returns monthly category statistics within the specified date range.
+    """
+    try:
+        query = db.query(CategoryStatistics).filter(
+            CategoryStatistics.period == StatisticsPeriod.MONTHLY
+        )
+        
+        # Apply transaction type filter if provided
+        if transaction_type:
+            query = query.filter(CategoryStatistics.transaction_type == transaction_type)
+            
+        # Apply category name filter if provided
+        if category_name:
+            query = query.filter(CategoryStatistics.category_name == category_name)
+            
+        # Apply date filters if provided
+        if start_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                query = query.filter(CategoryStatistics.date >= start)
+            except Exception:
+                pass
+                
+        if end_date:
+            try:
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                query = query.filter(CategoryStatistics.date <= end)
+            except Exception:
+                pass
+                
+        # Get results ordered by date
+        monthly_stats = query.order_by(CategoryStatistics.date).all()
+        
+        # Convert date objects to ISO format strings for serialization
+        for stat in monthly_stats:
+            if stat.date:
+                stat.date = stat.date.isoformat()
+                
+        return monthly_stats
+    except Exception as e:
+        logger.error(f"Error in get_category_statistics_timeseries: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/expense-type/timeseries", response_model=ExpenseTypeTimeseriesResponse)
+def get_expense_type_statistics_timeseries(
+    db: Session = Depends(get_db),
+    expense_type: ExpenseType = Query(None, description="Filter by expense type (essential or discretionary)"),
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+):
+    """
+    Get expense type (essential vs discretionary) statistics time series for trend analysis.
+    Returns monthly expense type statistics within the specified date range.
+    """
+    try:
+        # Build the base query for expense transactions only
+        query = db.query(
+            CategoryStatistics.date,
+            CategoryStatistics.expense_type,
+            func.sum(CategoryStatistics.period_amount).label("period_amount"),
+            func.sum(CategoryStatistics.period_transaction_count).label("period_transaction_count")
+        ).filter(
+            CategoryStatistics.period == StatisticsPeriod.MONTHLY,
+            CategoryStatistics.transaction_type == TransactionType.EXPENSE,
+            CategoryStatistics.expense_type != None  # Only get records with expense_type
+        )
+        
+        # Apply expense type filter if provided
+        if expense_type:
+            query = query.filter(CategoryStatistics.expense_type == expense_type)
+            
+        # Apply date filters if provided
+        if start_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                query = query.filter(CategoryStatistics.date >= start)
+            except Exception:
+                pass
+                
+        if end_date:
+            try:
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                query = query.filter(CategoryStatistics.date <= end)
+            except Exception:
+                pass
+                
+        # Group by date and expense type, then order by date
+        monthly_stats = query.group_by(
+            CategoryStatistics.date,
+            CategoryStatistics.expense_type
+        ).order_by(CategoryStatistics.date).all()
+        
+        # Convert to a list of ExpenseTypeTimeseriesItem objects
+        result = [
+            ExpenseTypeTimeseriesItem(
+                date=stat.date.isoformat(),
+                expense_type=stat.expense_type.value,
+                period_amount=round(stat.period_amount, 2),
+                period_transaction_count=stat.period_transaction_count
+            )
+            for stat in monthly_stats
+        ]
+        
+        # Return wrapped in the response model
+        return ExpenseTypeTimeseriesResponse(root=result)
+    except Exception as e:
+        logger.error(f"Error in get_expense_type_statistics_timeseries: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

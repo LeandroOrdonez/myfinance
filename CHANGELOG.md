@@ -2,11 +2,19 @@
 
 ## 2025-05-17
 
+### Analytics Dashboard Enhancement
+- Added new `CategoryTimeseriesChart` component to visualize category spending trends over time
+- Added new `ExpenseTypeTimeseriesChart` component to compare essential vs discretionary spending trends
+
+### Statistics Timeseries API Enhancements
+- Added new `/statistics/category/timeseries` endpoint for tracking category statistics over time
+- Added new `/statistics/expense-type/timeseries` endpoint for analyzing essential vs discretionary spending trends
+- Implemented filtering by date range, category name, transaction type, and expense type
+- Enhanced API documentation with detailed parameter descriptions
+
 ### Essential vs Discretionary Expense Visualization
 - Redesigned CategoryTrends component to focus on essential vs discretionary spending
-- Added interactive pie chart visualization with hover effects for expense type breakdown
 - Implemented detailed category listings for both essential and discretionary expenses
-- Enhanced dark mode support with improved contrast and readability
 - Optimized component layout and removed redundant Top Categories tab
 
 ## 2025-05-16

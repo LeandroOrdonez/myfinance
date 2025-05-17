@@ -11,6 +11,8 @@ import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
 import FinancialHealth from './components/dashboard/FinancialHealth';
 import { Loading } from './components/common/Loading';
+import { CategoryTimeseriesChart } from './components/dashboard/CategoryTimeseriesChart';
+import { ExpenseTypeTimeseriesChart } from './components/dashboard/ExpenseTypeTimeseriesChart';
 import { useTransactions } from './hooks/useTransactions';
 import { api } from './services/api';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -30,6 +32,10 @@ const AnalyticsDashboard = () => {
         </div>
       </div>
       <FinancialTrends />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategoryTimeseriesChart title="Category Trends Over Time" />
+        <ExpenseTypeTimeseriesChart />
+      </div>
       <WeekdayDistribution />
     </div>
   );

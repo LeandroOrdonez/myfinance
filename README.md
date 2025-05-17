@@ -36,6 +36,8 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Dashboard showing savings, expenses, and income
 - Interactive charts over time and by category
 - Monthly and yearly summary views
+- Detailed timeseries data for category-level and expense-type analysis
+- Essential vs. discretionary expense tracking
 
 ### Financial Health
 - Comprehensive financial health scoring system (0-100 scale)
