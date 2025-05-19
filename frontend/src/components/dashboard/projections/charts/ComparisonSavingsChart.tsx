@@ -43,8 +43,8 @@ const ComparisonSavingsChart: React.FC<ComparisonSavingsChartProps> = ({ data })
     return `${month}/${year}`;
   };
 
-  // Generate colors for different scenarios
-  const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f43f5e', '#f59e0b'];
+  // Generate colors for different scenarios - colorblind-friendly palette
+  const colors = ['#0072B2', '#E69F00', '#009E73', '#CC79A7', '#56B4E9'];
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {

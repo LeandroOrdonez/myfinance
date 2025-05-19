@@ -281,9 +281,13 @@ class ProjectionService:
             # Initialize investment portfolio
             investment_portfolio = 0
             
-            # Calculate initial net worth (would need to query actual assets/liabilities)
-            # For simplicity, we'll assume initial net worth is 6 months of income
-            initial_net_worth = current_income * 6
+            # Get the latest total_net_savings value from FinancialStatistics
+            latest_stats = db.query(FinancialStatistics).filter(
+                FinancialStatistics.period == StatisticsPeriod.ALL_TIME
+            ).first()
+            
+            # Use the latest total_net_savings as initial net worth, or fall back to 6 months of income if not available
+            initial_net_worth = latest_stats.total_net_savings if latest_stats else current_income * 6
             
             # Calculate monthly growth rates from annual rates
             monthly_income_growth = (1 + param_dict.get("income_growth_rate", 0.03)) ** (1/12) - 1

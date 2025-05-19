@@ -1,5 +1,21 @@
 # MyFinance Changelog
 
+## 2025-05-19
+
+### Accessibility Improvements
+- Updated projection comparison charts to use a colorblind-friendly color palette
+- Implemented consistent color scheme across all comparison charts (Savings, Net Worth, and Investment)
+- Improved chart readability for users with color vision deficiencies
+
+### Projection Calculation Enhancement
+- Modified `calculate_projection` method to use the latest `total_net_savings` value from `FinancialStatistics` instead of assuming initial net worth to be 6 times current income
+- Added fallback to previous calculation method if statistics data is unavailable
+
+### Projection Components Refactoring
+- Refactored projection components to remove shadcn-ui dependencies
+- Created custom hooks for better state management (useProjectionScenarios, useProjectionResults, useScenarioComparison)
+- Fixed infinite API call issues in projection components
+
 ## 2025-05-18
 
 ### Financial Projection Feature Implementation
