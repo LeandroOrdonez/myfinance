@@ -53,6 +53,22 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Historical trends visualization
 - Recommendation tracking system
 
+### Financial Projections
+- Future financial scenario modeling based on historical patterns
+- Multiple projection scenarios with customizable parameters:
+  - Base Case (current patterns)
+  - Optimistic Case (improved financial situation)
+  - Conservative Case (cautious outlook)
+  - Expense Reduction (focus on reducing spending)
+  - Investment Focus (prioritize investments)
+- Adjustable parameters including income growth, expense growth, investment rate, and more
+- Visualization of projected outcomes:
+  - Net Worth Projection
+  - Income vs. Expenses
+  - Savings Growth
+  - Investment Growth
+- Scenario comparison for side-by-side analysis
+
 ### User Experience
 - PIN-based authentication system (not yet fully implemented, PIN hard-coded to 1234)
 - Dark/light theme support

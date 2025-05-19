@@ -10,6 +10,7 @@ import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
 import FinancialHealth from './components/dashboard/FinancialHealth';
+import ProjectionDashboard from './components/dashboard/projections/ProjectionDashboard';
 import { Loading } from './components/common/Loading';
 import { CategoryTimeseriesChart } from './components/dashboard/CategoryTimeseriesChart';
 import { ExpenseTypeTimeseriesChart } from './components/dashboard/ExpenseTypeTimeseriesChart';
@@ -143,6 +144,14 @@ function App() {
               element={
                 <MainLayout onUploadSuccess={handleUploadSuccess}>
                   <FinancialHealth />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/projections" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <ProjectionDashboard />
                 </MainLayout>
               } 
             />

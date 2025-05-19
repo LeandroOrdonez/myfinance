@@ -11,8 +11,7 @@ import {
   FinancialHealthHistory,
   Recommendation
 } from '../types/transaction';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from '../config';
 
 export const api = {
   uploadCSV: async (file: File): Promise<Transaction[]> => {

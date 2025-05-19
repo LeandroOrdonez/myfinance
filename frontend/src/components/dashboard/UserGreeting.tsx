@@ -44,11 +44,13 @@ const greetingVariations: GreetingVariation = {
 const getPageTitle = (currentView: string) => {
   switch (currentView) {
     case 'analytics':
-      return 'Analytics: Your financial insights at a glance';
+      return <><span>Analytics</span>&nbsp;&middot;&nbsp;<span className="italic">Your financial insights at a glance</span></>;
     case 'transactions':
-      return 'Transactions: Track your money movements';
+      return <><span>Transactions</span>&nbsp;&middot;&nbsp;<span className="italic">Track your money movements</span></>;
     case 'financial-health':
-      return ' Financial Health: Improving your financial wellbeing';
+      return <><span>Financial Health</span>&nbsp;&middot;&nbsp;<span className="italic">Improving your financial wellbeing</span></>;
+    case 'projections':
+      return <><span>Financial Projections</span>&nbsp;&middot;&nbsp;<span className="italic">Visualize your financial future</span></>;
     default:
       return 'Smart money management';
   }

@@ -5,11 +5,13 @@ import {
   ListBulletIcon,
   Bars3Icon,
   ChevronRightIcon,
-  HeartIcon as HeartIconOutline
+  HeartIcon as HeartIconOutline,
+  PresentationChartLineIcon as PresentationChartLineIconOutline
 } from '@heroicons/react/24/outline';
 import { 
   HeartIcon as HeartIconSolid,
-  ChartBarIcon as ChartBarIconSolid
+  ChartBarIcon as ChartBarIconSolid,
+  PresentationChartLineIcon as PresentationChartLineIconSolid
 } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
@@ -36,6 +38,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'financial-health',
       label: 'Financial Health',
       icon: activeView === 'financial-health' ? <HeartIconSolid className="h-5 w-5" /> : <HeartIconOutline className="h-5 w-5" />
+    },
+    {
+      id: 'projections',
+      label: 'Projections',
+      icon: activeView === 'projections' ? <PresentationChartLineIconSolid className="h-5 w-5" /> : <PresentationChartLineIconOutline className="h-5 w-5" />
     },
     {
       id: 'transactions',

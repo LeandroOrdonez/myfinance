@@ -4,8 +4,10 @@ from .database import engine, Base
 from .models.transaction import Transaction
 from .models.statistics import FinancialStatistics, CategoryStatistics
 from .models.financial_health import FinancialHealth, FinancialRecommendation
+from .models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult
 from .services.statistics_service import StatisticsService
 from .services.financial_health_service import FinancialHealthService
+from .services.projection_service import ProjectionService
 from sqlalchemy.orm import Session
 
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +22,7 @@ def init_database():
     existing_tables = inspector.get_table_names()
     logger.info(f"Existing tables: {existing_tables}")
 
-    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations"]
+    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations", "projection_scenarios", "projection_parameters", "projection_results"]
     missing_tables = [table for table in tables_to_check if table not in existing_tables]
 
     if missing_tables:
@@ -44,6 +46,7 @@ def init_database():
             need_stats_init = False
             need_category_stats_init = False
             need_financial_health_init = False
+            need_projection_init = False
             
             if "transactions" in existing_tables:
                 if "financial_statistics" in missing_tables:
@@ -52,8 +55,10 @@ def init_database():
                     need_category_stats_init = True
                 if "financial_health" in missing_tables:
                     need_financial_health_init = True
+                if "projection_scenarios" in missing_tables:
+                    need_projection_init = True
             
-            if need_stats_init or need_category_stats_init or need_financial_health_init:
+            if need_stats_init or need_category_stats_init or need_financial_health_init or need_projection_init:
                 logger.info("Initializing statistics and financial health for existing transactions...")
                 with Session(engine) as db:
                     if need_stats_init:
@@ -65,6 +70,9 @@ def init_database():
                     if need_financial_health_init:
                         logger.info("Initializing financial health scores...")
                         FinancialHealthService.initialize_financial_health(db)
+                    if need_projection_init:
+                        logger.info("Creating default projection scenarios...")
+                        ProjectionService.create_default_scenarios(db)
                 logger.info("Statistics and financial health initialized successfully!")
             
         except Exception as e:
@@ -89,6 +97,9 @@ def reset_database(reset_type: str = "all"):
         elif reset_type == "financial_health":
             Base.metadata.drop_all(bind=engine, tables=[FinancialHealth.__table__, FinancialRecommendation.__table__])
             Base.metadata.create_all(bind=engine, tables=[FinancialHealth.__table__, FinancialRecommendation.__table__])
+        elif reset_type == "projections":
+            Base.metadata.drop_all(bind=engine, tables=[ProjectionScenario.__table__, ProjectionParameter.__table__, ProjectionResult.__table__])
+            Base.metadata.create_all(bind=engine, tables=[ProjectionScenario.__table__, ProjectionParameter.__table__, ProjectionResult.__table__])
         logger.info("Database reset successfully!")
     except Exception as e:
         logger.error(f"Error resetting database: {str(e)}")

@@ -1,5 +1,17 @@
 # MyFinance Changelog
 
+## 2025-05-18
+
+### Financial Projection Feature Implementation
+- Added new Financial Projection feature for visualizing future financial scenarios
+- Created backend models for projection scenarios, parameters, and results
+- Implemented projection engine to analyze historical patterns and generate projections
+- Added API endpoints for managing scenarios and calculating projections
+- Developed frontend components for scenario management and visualization
+- Implemented multiple default scenarios (Base Case, Optimistic, Conservative, etc.)
+- Added scenario comparison functionality to compare different financial paths
+- Integrated with existing financial health and statistics features
+
 ## 2025-05-17
 
 ### Analytics Dashboard Enhancement

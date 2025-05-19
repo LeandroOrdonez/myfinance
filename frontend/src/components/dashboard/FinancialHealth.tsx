@@ -117,7 +117,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
   }
 
   return (
-    <div className={`p-4 bg-white dark:bg-gray-800 rounded-lg shadow ${className}`}>
+    <div className={`p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-lg transition-all duration-300 border border-gray-100 ${className}`}>
       <div className="flex justify-end items-center mb-4">
         <PeriodSelector 
           selectedPeriod={period} 
