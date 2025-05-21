@@ -274,5 +274,3 @@ def test_parse_kbc_csv_all_data_valid():
     first_t = transactions[0]
     assert isinstance(first_t, TransactionCreate)
     assert first_t.source_bank == "KBC"
-
-```

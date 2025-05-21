@@ -312,5 +312,3 @@ def test_add_transaction_no_category(MockLogger, service):
 # If the actual enums are complex or not yet defined, this part might need adjustment
 # when integrating with the real model definitions.
 # The current tests assume simple string `.value` for categories in payloads.
-
-```

@@ -456,5 +456,3 @@ def test_compare_scenarios_first_scenario_no_results(mock_db_session, service):
     mock_db_session.query(ProjectionResult).filter().order_by().all.return_value = [] # No results for first scenario
     with pytest.raises(ValueError, match="No projection results found for scenario 1"):
         service.compare_scenarios(mock_db_session, [1, 2])
-
-```

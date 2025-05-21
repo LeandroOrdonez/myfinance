@@ -509,5 +509,3 @@ def test_get_health_history(mock_db_session, service):
     assert len(history["dates"]) == 2
     assert history["dates"] == [date(2023,1,31), date(2023,2,28)]
     assert history["overall_scores"] == [60, 70]
-
-```

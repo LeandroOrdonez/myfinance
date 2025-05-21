@@ -364,5 +364,3 @@ def test_initialize_category_statistics(mock_calc_cat_stats, mock_db_session, se
     # Add calls: 1 CategoryStatistics object per period if data exists
     assert mock_db_session.add.call_count == 3 
     mock_db_session.commit.assert_called_once()
-
-```
