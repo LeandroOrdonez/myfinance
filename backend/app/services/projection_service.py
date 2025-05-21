@@ -144,7 +144,12 @@ class ProjectionService:
         """Analyze historical financial data to extract patterns and trends"""
         try:
             # Get the last 2 years of data
-            two_years_ago = date.today() - relativedelta(years=2)
+            # Use the date from the last transaction if available otherwise use today
+            latest_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
+            if latest_transaction:
+                two_years_ago = latest_transaction.transaction_date - relativedelta(years=2)
+            else:
+                two_years_ago = date.today() - relativedelta(years=2)
             
             # Query monthly statistics
             monthly_stats = db.query(FinancialStatistics).filter(
