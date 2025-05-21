@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProjectionParameterCreate } from '../../../types/projections';
 
 interface ParameterEditorProps {
@@ -7,6 +7,20 @@ interface ParameterEditorProps {
 }
 
 const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange }) => {
+  // State to track input values separately from parameter values
+  const [inputValues, setInputValues] = useState<string[]>([]);
+
+  // Initialize input values when parameters change
+  useEffect(() => {
+    const initialInputs = parameters.map(param => {
+      if (param.param_type === 'percentage') {
+        return (param.param_value * 100).toFixed(1);
+      }
+      return param.param_value.toString();
+    });
+    setInputValues(initialInputs);
+  }, [parameters.length]); // Only re-initialize when the number of parameters changes
+
   // Format parameter name for display
   const formatParamName = (name: string) => {
     return name
@@ -15,34 +29,49 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
       .join(' ');
   };
 
-  // Handle parameter value change
-  const handleValueChange = (index: number, value: string) => {
+  // Handle input value change (just update the input state)
+  const handleInputChange = (index: number, value: string) => {
+    const newInputValues = [...inputValues];
+    newInputValues[index] = value;
+    setInputValues(newInputValues);
+  };
+
+  // Handle blur event to update the actual parameter value
+  const handleInputBlur = (index: number) => {
     const newParams = [...parameters];
-    newParams[index].param_value = parseFloat(value) || 0;
+    let parsedValue = parseFloat(inputValues[index]) || 0;
+    
+    // Convert percentage inputs back to decimal form for storage
+    if (newParams[index].param_type === 'percentage') {
+      newParams[index].param_value = parsedValue / 100;
+    } else {
+      newParams[index].param_value = parsedValue;
+    }
+    
     onChange(newParams);
   };
 
   // Handle parameter type change
   const handleTypeChange = (index: number, type: string) => {
     const newParams = [...parameters];
+    const oldType = newParams[index].param_type;
+    const currentValue = newParams[index].param_value;
+    const newInputValues = [...inputValues];
+    
+    // Convert value when switching between percentage and non-percentage types
+    if (oldType === 'percentage' && type !== 'percentage') {
+      // Convert from decimal (0.035) to actual value (3.5)
+      newParams[index].param_value = currentValue * 100;
+      newInputValues[index] = (currentValue * 100).toString();
+    } else if (oldType !== 'percentage' && type === 'percentage') {
+      // Convert from actual value (3.5) to decimal (0.035)
+      newParams[index].param_value = currentValue / 100;
+      newInputValues[index] = (currentValue).toFixed(1);
+    }
+    
     newParams[index].param_type = type as any;
+    setInputValues(newInputValues);
     onChange(newParams);
-  };
-
-  // Format value for display based on type
-  const formatValue = (value: number, type: string) => {
-    if (type === 'percentage') {
-      return (value * 100).toFixed(1);
-    }
-    return value.toString();
-  };
-
-  // Format value for display in the input field
-  const getDisplayValue = (param: ProjectionParameterCreate) => {
-    if (param.param_type === 'percentage') {
-      return (param.param_value * 100).toFixed(1);
-    }
-    return param.param_value.toString();
   };
 
   // Get suffix for parameter type
@@ -78,8 +107,9 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
                   <div className="flex items-center space-x-2">
                     <input
                       type="number"
-                      value={getDisplayValue(param)}
-                      onChange={(e) => handleValueChange(index, e.target.value)}
+                      value={inputValues[index] || ''}
+                      onChange={(e) => handleInputChange(index, e.target.value)}
+                      onBlur={() => handleInputBlur(index)}
                       className="w-24 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       step={param.param_type === 'percentage' ? '0.1' : '1'}
                     />

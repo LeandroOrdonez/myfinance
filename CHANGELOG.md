@@ -1,5 +1,15 @@
 # MyFinance Changelog
 
+## 2025-05-21
+
+### Bug Fixes
+- Fixed percentage value handling in the ParameterEditor component by implementing a local state approach for input values
+- Added input debouncing with onBlur event to only update parameters when input is complete
+- Corrected value conversion when switching between parameter types
+- Improved user experience when editing percentage and numeric parameters
+- Fixed type conversion issue in projection API endpoints where SQLAlchemy model instances were not properly converted to Pydantic schema instances
+- Updated `get_scenario_detail` and `get_scenario_parameters` endpoints to explicitly convert between model types
+
 ## 2025-05-19
 
 ### Accessibility Improvements

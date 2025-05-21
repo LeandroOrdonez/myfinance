@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("/scenarios", response_model=List[schemas.ProjectionScenario])
+@router.get("/scenarios", response_model=List[schemas.ProjectionScenarioDetail])
 def get_scenarios(db: Session = Depends(get_db)):
     """Get all projection scenarios"""
     try:
@@ -86,6 +86,17 @@ def get_scenario_detail(
             ProjectionParameter.scenario_id == scenario_id
         ).all()
         
+        # Convert SQLAlchemy model instances to Pydantic schema instances
+        pydantic_parameters = [
+            schemas.ProjectionParameter(
+                id=param.id,
+                scenario_id=param.scenario_id,
+                param_name=param.param_name,
+                param_value=param.param_value,
+                param_type=param.param_type
+            ) for param in parameters
+        ]
+        
         # Combine into response
         result = schemas.ProjectionScenarioDetail(
             id=scenario.id,
@@ -94,7 +105,7 @@ def get_scenario_detail(
             is_default=scenario.is_default,
             created_at=scenario.created_at,
             user_id=scenario.user_id,
-            parameters=parameters
+            parameters=pydantic_parameters
         )
         
         return result
@@ -194,7 +205,18 @@ def get_scenario_parameters(
             ProjectionParameter.scenario_id == scenario_id
         ).all()
         
-        return parameters
+        # Convert SQLAlchemy model instances to Pydantic schema instances
+        pydantic_parameters = [
+            schemas.ProjectionParameter(
+                id=param.id,
+                scenario_id=param.scenario_id,
+                param_name=param.param_name,
+                param_value=param.param_value,
+                param_type=param.param_type
+            ) for param in parameters
+        ]
+        
+        return pydantic_parameters
     except HTTPException:
         raise
     except Exception as e:
