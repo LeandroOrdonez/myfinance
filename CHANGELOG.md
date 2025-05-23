@@ -2,6 +2,11 @@
 
 ## 2025-05-23
 
+### API Enhancements
+- Added new `/statistics/category/averages` endpoint to calculate average income/expenses per category over a specified time period
+- Implemented using existing `CategoryStatistics` model for consistency and efficiency
+- Provides monthly averages, totals, percentages, and transaction counts for each category
+
 ### Code Refactoring
 - Completely refactored the API service architecture for better code organization
 - Created dedicated `statisticService`, `financialHealthService` and `transactionService` modules

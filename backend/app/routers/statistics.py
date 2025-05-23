@@ -15,6 +15,7 @@ from ..services.statistics_service import StatisticsService
 from ..schemas.statistics import (
     FinancialStatisticsResponse,
     CategoryStatisticsResponse,
+    CategoryAveragesResponse,
     ExpenseTypeTimeseriesResponse,
     ExpenseTypeTimeseriesItem
 )
@@ -548,6 +549,113 @@ def get_statistics_timeseries(
         return monthly_stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/category/averages", response_model=CategoryAveragesResponse)
+def get_category_averages(
+    db: Session = Depends(get_db),
+    transaction_type: TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
+    start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(..., description="End date (YYYY-MM-DD)")
+):
+    """
+    Get average income/expenses per category over a specified time period.
+    Calculates monthly averages for each category between start_date and end_date.
+    """
+    try:
+        # Parse dates
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+            
+        if start > end:
+            raise HTTPException(status_code=400, detail="Start date must be before end date")
+            
+        # Calculate number of months in the period
+        months_diff = (end.year - start.year) * 12 + end.month - start.month + 1
+        
+        # Query CategoryStatistics in the date range
+        query = db.query(CategoryStatistics).filter(
+            CategoryStatistics.period == StatisticsPeriod.MONTHLY,
+            CategoryStatistics.date >= start,
+            CategoryStatistics.date <= end
+        )
+        
+        # Apply transaction type filter if provided
+        if transaction_type:
+            query = query.filter(CategoryStatistics.transaction_type == transaction_type)
+        
+        # Get all monthly statistics for the period
+        monthly_stats = query.all()
+        
+        # Group by category to calculate averages
+        category_data = {}
+        for stat in monthly_stats:
+            key = (stat.category_name, stat.transaction_type.value, 
+                   stat.expense_type.value if stat.expense_type else None)
+            
+            if key not in category_data:
+                category_data[key] = {
+                    "total_amount": 0,
+                    "transaction_count": 0,
+                    "months_present": 0
+                }
+            
+            category_data[key]["total_amount"] += stat.period_amount
+            category_data[key]["transaction_count"] += stat.period_transaction_count
+            category_data[key]["months_present"] += 1
+        
+        # Calculate totals for percentage calculation
+        expense_total = sum(data["total_amount"] for (_, trans_type, _), data in category_data.items() 
+                          if trans_type == TransactionType.EXPENSE.value)
+        income_total = sum(data["total_amount"] for (_, trans_type, _), data in category_data.items() 
+                         if trans_type == TransactionType.INCOME.value)
+        
+        # Format the results
+        categories = []
+        for (category_name, trans_type, expense_type), data in category_data.items():
+            # Skip categories with no transactions
+            if data["transaction_count"] == 0:
+                continue
+                
+            # Calculate average amount per month (considering the full period)
+            average_amount = data["total_amount"] / months_diff
+            
+            # Calculate average per transaction
+            average_transaction_amount = data["total_amount"] / data["transaction_count"]
+            
+            # Calculate percentage of total
+            total = expense_total if trans_type == TransactionType.EXPENSE.value else income_total
+            percentage = (data["total_amount"] / total * 100) if total > 0 else 0
+            
+            categories.append({
+                "category_name": category_name,
+                "transaction_type": trans_type,
+                "expense_type": expense_type,
+                "average_amount": round(average_amount, 2),
+                "total_amount": round(data["total_amount"], 2),
+                "transaction_count": data["transaction_count"],
+                "average_transaction_amount": round(average_transaction_amount, 2),
+                "percentage": round(percentage, 2)
+            })
+        
+        # Sort categories by average amount (descending)
+        categories.sort(key=lambda x: x["average_amount"], reverse=True)
+        
+        return CategoryAveragesResponse(
+            start_date=start_date,
+            end_date=end_date,
+            months_count=months_diff,
+            categories=categories
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error calculating category averages: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error calculating category averages: {str(e)}")
+
 
 
 @router.get("/category/timeseries", response_model=List[CategoryStatisticsResponse])
