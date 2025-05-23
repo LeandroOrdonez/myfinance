@@ -10,7 +10,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import * as Tabs from '@radix-ui/react-tabs';
-import { api } from '../../services/api';
+import { statisticService } from '../../services/statisticService';
 import { WeekdayDistribution as WeekdayDistributionType } from '../../types/transaction';
 import { subMonths, startOfYear, format as formatDate } from 'date-fns';
 
@@ -70,7 +70,7 @@ const WeekdayDistribution: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const result = await api.getWeekdayDistribution(
+        const result = await statisticService.getWeekdayDistribution(
           undefined,
           startDate,
           endDate

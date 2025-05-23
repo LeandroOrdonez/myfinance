@@ -41,7 +41,7 @@ const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border rounded p-2 shadow-md">
+        <div className="bg-background border rounded p-2 shadow-md">
           <p className="font-medium">{formatDate(label)}</p>
           <p className="text-primary">
             Net Worth: {formatCurrency(payload[0].value)}

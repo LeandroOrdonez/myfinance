@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { statisticService } from '../services/statisticService';
 
 // Define the expense type statistics interface
 export interface ExpenseTypeStatistics {
@@ -39,7 +39,7 @@ export const useExpenseTypeStatistics = (initialPeriod: StatisticsPeriod = 'mont
   ) => {
     setLoading(true);
     try {
-      const data = await api.getExpenseTypeStatistics(fetchPeriod, fetchDate);
+      const data = await statisticService.getExpenseTypeStatistics(fetchPeriod, fetchDate);
       setExpenseTypeStats(data);
       setError(null);
     } catch (err) {

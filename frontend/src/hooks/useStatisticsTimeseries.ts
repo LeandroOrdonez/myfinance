@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { statisticService } from '../services/statisticService';
 
 interface TimeseriesData {
     date: string;
@@ -20,7 +20,7 @@ export const useStatisticsTimeseries = (start_date?: string, end_date?: string) 
     const fetchTimeseriesData = async () => {
         setLoading(true);
         try {
-            const data = await api.getStatisticsTimeseries(start_date, end_date);
+            const data = await statisticService.getStatisticsTimeseries(start_date, end_date);
             const transformedData = data.map((item: any) => ({
                 date: item.date,
                 period_income: Number(item.period_income) || 0,

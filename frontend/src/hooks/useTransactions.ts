@@ -8,9 +8,9 @@ import {
   SortParams,
   ActionType,
 } from '../types/transaction';
-import { api } from '../services/api';
-import { isWithinInterval } from 'date-fns';
+import { transactionService } from '../services/transactionService';
 import { useActionHistory } from './useActionHistory';
+import { statisticService } from '../services/statisticService';
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -62,7 +62,7 @@ const fetchData = async (filtersOverride?: {
       start_date: dateRange.start ? dateRange.start : undefined,
       end_date: dateRange.end ? dateRange.end : undefined,
     };
-    const transactionsResponse = await api.getTransactions(
+    const transactionsResponse = await transactionService.getTransactions(
       currentPage,
       PAGE_SIZE,
       sortParams,
@@ -102,7 +102,7 @@ const fetchData = async (filtersOverride?: {
         transactionType
       });
 
-      const updatedTransaction = await api.updateCategory(
+      const updatedTransaction = await transactionService.updateCategory(
         transactionId, 
         category, 
         transactionType
@@ -116,7 +116,7 @@ const fetchData = async (filtersOverride?: {
       );
       
       // Refresh financial statistics
-      await api.getStatisticsOverview();
+      await statisticService.getStatisticsOverview();
     } catch (error) {
       console.error('Failed to update category:', error);
     }
@@ -134,7 +134,7 @@ const fetchData = async (filtersOverride?: {
         transaction: transaction
       });
       
-      await api.deleteTransaction(transactionId);
+      await transactionService.deleteTransaction(transactionId);
       
       // Update local statistics before refetching
       const category = transaction.transaction_type === TransactionType.EXPENSE 

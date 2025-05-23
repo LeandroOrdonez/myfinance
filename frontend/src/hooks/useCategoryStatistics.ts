@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { statisticService } from '../services/statisticService';
 import { CategoryStatistics, TransactionType } from '../types/transaction';
 
 type StatisticsPeriod = 'monthly' | 'yearly' | 'all_time';
@@ -17,7 +17,7 @@ export const useCategoryStatistics = (initialPeriod: StatisticsPeriod = 'monthly
   ) => {
     setLoading(true);
     try {
-      const data = await api.getCategoryStatistics(fetchPeriod, fetchDate);
+      const data = await statisticService.getCategoryStatistics(fetchPeriod, fetchDate);
       setCategoryStats(data);
       setError(null);
     } catch (err) {

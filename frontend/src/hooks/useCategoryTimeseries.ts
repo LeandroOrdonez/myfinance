@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { statisticService } from '../services/statisticService';
 import { TransactionType } from '../types/transaction';
 
 export interface CategoryTimeseriesData {
@@ -32,7 +32,7 @@ export const useCategoryTimeseries = (
   const fetchTimeseriesData = async () => {
     setLoading(true);
     try {
-      const data = await api.getCategoryStatisticsTimeseries(
+      const data = await statisticService.getCategoryStatisticsTimeseries(
         transaction_type,
         category_name,
         start_date, 

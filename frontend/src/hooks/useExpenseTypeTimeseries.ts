@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { statisticService } from '../services/statisticService';
 
 export interface ExpenseTypeTimeseriesItem {
   date: string;
@@ -21,7 +21,7 @@ export const useExpenseTypeTimeseries = (
   const fetchTimeseriesData = async () => {
     setLoading(true);
     try {
-      const data = await api.getExpenseTypeStatisticsTimeseries(
+      const data = await statisticService.getExpenseTypeStatisticsTimeseries(
         expense_type,
         start_date, 
         end_date

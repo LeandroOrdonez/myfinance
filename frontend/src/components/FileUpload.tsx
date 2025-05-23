@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Progress from '@radix-ui/react-progress';
 import * as Toast from '@radix-ui/react-toast';
-import { api } from '../services/api';
+import { transactionService } from '../services/transactionService';
 
 interface FileUploadProps {
   onUploadSuccess: () => void;
@@ -21,7 +21,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
     setError(null);
 
     try {
-      await api.uploadCSV(file);
+      await transactionService.uploadCSV(file);
       onUploadSuccess();
       setShowToast(true);
     } catch (err) {

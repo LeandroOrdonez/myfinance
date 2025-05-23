@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { statisticService } from '../services/statisticService';
 
 interface Statistics {
   period: 'monthly' | 'all_time';
@@ -34,7 +34,7 @@ export const useStatistics = () => {
   const fetchStatistics = async () => {
     setLoading(true);
     try {
-      const data = await api.getStatisticsOverview();
+      const data = await statisticService.getStatisticsOverview();
       setStatistics(data);
       setError(null);
     } catch (err) {

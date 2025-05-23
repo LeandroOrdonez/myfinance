@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../services/api';
+import { financialHealthService } from '../../services/financialHealthService';
 import { FinancialHealthScore, FinancialHealthHistory, Recommendation } from '../../types/transaction';
-import { format } from 'date-fns';
 import HealthScoreGauge from './health/HealthScoreGauge';
 import ComponentScores from './health/ComponentScores';
 import HealthTrends from './health/HealthTrends';
@@ -23,7 +22,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
   const fetchHealthData = async () => {
     try {
       setLoading(true);
-      const data = await api.getFinancialHealthScore();
+      const data = await financialHealthService.getFinancialHealthScore();
       setHealthData(data);
     } catch (err) {
       console.error('Error fetching health score:', err);
@@ -41,7 +40,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
                     period === '1y' ? 12 : 
                     period === '2y' ? 24 : 36;
                     
-      const data = await api.getFinancialHealthHistory(months);
+      const data = await financialHealthService.getFinancialHealthHistory(months);
       setHistoryData(data);
     } catch (err) {
       console.error('Error fetching health history:', err);
@@ -51,7 +50,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
 
   const fetchRecommendations = async () => {
     try {
-      const data = await api.getRecommendations();
+      const data = await financialHealthService.getRecommendations();
       setRecommendations(data);
     } catch (err) {
       console.error('Error fetching recommendations:', err);
@@ -61,7 +60,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
 
   const handleRecommendationUpdate = async (id: number, isCompleted: boolean) => {
     try {
-      await api.updateRecommendation(id, isCompleted);
+      await financialHealthService.updateRecommendation(id, isCompleted);
       
       // Refresh recommendations
       fetchRecommendations();

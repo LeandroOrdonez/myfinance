@@ -15,7 +15,7 @@ import { Loading } from './components/common/Loading';
 import { CategoryTimeseriesChart } from './components/dashboard/CategoryTimeseriesChart';
 import { ExpenseTypeTimeseriesChart } from './components/dashboard/ExpenseTypeTimeseriesChart';
 import { useTransactions } from './hooks/useTransactions';
-import { api } from './services/api';
+import { statisticService } from './services/statisticService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
@@ -99,7 +99,7 @@ const TransactionsView = () => {
 function App() {
   const handleUploadSuccess = async () => {
     try {
-      await api.initializeStatistics();
+      await statisticService.initializeStatistics();
       // No need to explicitly refresh data as components will handle this with their hooks
     } catch (error) {
       console.error('Failed to initialize statistics:', error);

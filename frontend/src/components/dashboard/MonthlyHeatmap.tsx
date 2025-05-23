@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../services/api';
+import { statisticService } from '../../services/statisticService';
 import { Loading } from '../common/Loading';
 
 interface MonthlyStatistics {
@@ -49,7 +49,7 @@ export const MonthlyHeatmap: React.FC = () => {
       setLoading(true);
       try {
         // Get all available monthly data
-        const data = await api.getStatisticsTimeseries();
+        const data = await statisticService.getStatisticsTimeseries();
         
         // Process the data into year-month format
         const processedData: Record<string, YearData> = {};

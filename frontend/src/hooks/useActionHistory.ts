@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { UndoableAction, ActionType, Transaction, ExpenseCategory, IncomeCategory, TransactionType } from '../types/transaction';
-import { api } from '../services/api';
+import { transactionService } from '../services/transactionService';
 
 export const useActionHistory = () => {
   const [actionHistory, setActionHistory] = useState<UndoableAction[]>([]);
@@ -51,7 +51,7 @@ export const useActionHistory = () => {
   const restoreTransaction = async (transaction: Transaction): Promise<boolean> => {
     try {
       // We need to recreate the transaction via API
-      await api.restoreTransaction(transaction);
+      await transactionService.restoreTransaction(transaction);
       return true;
     } catch (error) {
       console.error('Failed to restore transaction:', error);
@@ -70,7 +70,7 @@ export const useActionHistory = () => {
         return false;
       }
 
-      await api.updateCategory(transactionId, oldCategory, transactionType);
+      await transactionService.updateCategory(transactionId, oldCategory, transactionType);
       return true;
     } catch (error) {
       console.error('Failed to restore category:', error);

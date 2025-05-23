@@ -1,5 +1,13 @@
 # MyFinance Changelog
 
+## 2025-05-23
+
+### Code Refactoring
+- Completely refactored the API service architecture for better code organization
+- Created dedicated `statisticService`, `financialHealthService` and `transactionService` modules
+- Removed the centralized API service in favor of specialized service modules
+- Improved code maintainability by separating concerns and reducing module coupling
+
 ## 2025-05-21
 
 ### Bug Fixes
