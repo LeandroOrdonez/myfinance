@@ -35,7 +35,7 @@ interface CategoryAveragesResponse {
 }
 
 export const CategoryAverages: React.FC = () => {
-  const [period, setPeriod] = useState('6m');
+  const [period, setPeriod] = useState('1y');
   const [transactionType, setTransactionType] = useState<TransactionType | undefined>(TransactionType.EXPENSE);
   const [categoryData, setCategoryData] = useState<CategoryAveragesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -202,7 +202,7 @@ export const CategoryAverages: React.FC = () => {
 
       {!loading && !error && categoryData && (
         <div>
-          <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
             Showing monthly averages from {categoryData.start_date} to {categoryData.end_date} ({categoryData.months_count-1} months)
           </div>
           
@@ -245,7 +245,7 @@ export const CategoryAverages: React.FC = () => {
           
           {/* Summary Section */}
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
               <h4 className="text-sm font-medium mb-2 dark:text-gray-200">Top Categories</h4>
               <div className="space-y-2">
                 {chartData.slice(0, 5).map((cat, index) => (
@@ -265,7 +265,7 @@ export const CategoryAverages: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
               <h4 className="text-sm font-medium mb-2 dark:text-gray-200">Summary</h4>
               {categoryData && (
                 <div className="space-y-2">

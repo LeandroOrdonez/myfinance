@@ -2,6 +2,10 @@
 
 ## 2025-05-24
 
+### Theme System Improvements
+- Enhanced theme system to automatically detect and respond to system color scheme preferences
+- Added support for three theme modes: light, dark, and system (automatic)
+
 ### UI Enhancements
 - Added new `CategoryAverages` component to visualize average spending/income by category
 - Implemented period selection (3M, 6M, YTD, 1Y, 2Y, All) for flexible time range analysis

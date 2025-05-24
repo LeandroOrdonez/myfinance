@@ -8,7 +8,7 @@ import { FinancialTrends } from './components/dashboard/FinancialTrends';
 import { CategoryBreakdown } from './components/dashboard/CategoryBreakdown';
 import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
-import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
+// import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
 import FinancialHealth from './components/dashboard/FinancialHealth';
 import ProjectionDashboard from './components/dashboard/projections/ProjectionDashboard';
 import { Loading } from './components/common/Loading';
