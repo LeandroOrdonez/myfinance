@@ -19,6 +19,7 @@ import { statisticService } from './services/statisticService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
+import { CategoryAverages } from './components/dashboard/CategoryAverages';
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
@@ -37,7 +38,10 @@ const AnalyticsDashboard = () => {
         <CategoryTimeseriesChart title="Category Trends Over Time" />
         <ExpenseTypeTimeseriesChart />
       </div>
-      <WeekdayDistribution />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategoryAverages />
+        {/* <WeekdayDistribution /> */}
+      </div>
     </div>
   );
 };

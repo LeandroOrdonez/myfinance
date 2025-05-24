@@ -101,7 +101,7 @@ const WeekdayDistribution: React.FC = () => {
   };
 
   // Transform data for charts
-  const transformDataForChart = (type: 'count' | 'total' | 'average' | 'median') => {
+  const transformDataForChart = (type: 'count' | 'average') => {
     if (!data || !data.weekdays) return [];
     
     // Define the order of weekdays
@@ -129,7 +129,7 @@ const WeekdayDistribution: React.FC = () => {
               className={`text-sm ${entry.name === 'Expenses' ? 'text-rose-600' : 'text-emerald-600'}`}
             >
               {`${entry.name}: ${
-                activeTab === 'total' || activeTab === 'average' || activeTab === 'median' 
+                activeTab === 'average' 
                   ? formatCurrency(entry.value) 
                   : entry.value.toFixed(0)
               }`}
@@ -165,25 +165,13 @@ const WeekdayDistribution: React.FC = () => {
               value="average" 
               className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'average' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             >
-              Average Amount
-            </Tabs.Trigger>
-            <Tabs.Trigger 
-              value="median" 
-              className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'median' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
-            >
-              Median Amount
+              Average
             </Tabs.Trigger>
             <Tabs.Trigger 
               value="count" 
               className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'count' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             >
-              Transaction Count
-            </Tabs.Trigger>
-            <Tabs.Trigger 
-              value="total" 
-              className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'total' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
-            >
-              Total Amount
+              Count
             </Tabs.Trigger>
           </Tabs.List>
           <div>
@@ -208,37 +196,7 @@ const WeekdayDistribution: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <>
-            <Tabs.Content value="total" className="outline-none">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={transformDataForChart('total')}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `€${value}`} />
-                    <RechartsTooltip content={<CustomTooltip />} />
-                    <Legend 
-                      onClick={handleLegendClick}
-                      wrapperStyle={{ cursor: 'pointer' }}
-                      formatter={(value, entry: any) => (
-                        <span style={{ 
-                          color: visibleSeries[entry.dataKey] ? entry.color : '#999',
-                          cursor: 'pointer'
-                        }}>
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} hide={!visibleSeries['Expenses']} />
-                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} hide={!visibleSeries['Income']} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Tabs.Content>
-            
+          <>            
             <Tabs.Content value="count" className="outline-none">
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -274,36 +232,6 @@ const WeekdayDistribution: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={transformDataForChart('average')}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `€${value}`} />
-                    <RechartsTooltip content={<CustomTooltip />} />
-                    <Legend 
-                      onClick={handleLegendClick}
-                      wrapperStyle={{ cursor: 'pointer' }}
-                      formatter={(value, entry: any) => (
-                        <span style={{ 
-                          color: visibleSeries[entry.dataKey] ? entry.color : '#999',
-                          cursor: 'pointer'
-                        }}>
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Bar dataKey="Expenses" fill="#EF4444" isAnimationActive={false} hide={!visibleSeries['Expenses']} />
-                    <Bar dataKey="Income" fill="#10B981" isAnimationActive={false} hide={!visibleSeries['Income']} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Tabs.Content>
-            
-            <Tabs.Content value="median" className="outline-none">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={transformDataForChart('median')}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />

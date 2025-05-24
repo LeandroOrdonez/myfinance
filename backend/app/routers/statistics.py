@@ -555,8 +555,8 @@ def get_statistics_timeseries(
 def get_category_averages(
     db: Session = Depends(get_db),
     transaction_type: TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
-    start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(..., description="End date (YYYY-MM-DD)")
+    start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
 ):
     """
     Get average income/expenses per category over a specified time period.
@@ -565,8 +565,14 @@ def get_category_averages(
     try:
         # Parse dates
         try:
-            start = datetime.strptime(start_date, "%Y-%m-%d").date()
-            end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            if start_date:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+            else: # default to the date of the first transaction
+                start = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first().transaction_date
+            if end_date:
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            else: # default to the date of the last transaction
+                end = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first().transaction_date
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
             
@@ -643,10 +649,10 @@ def get_category_averages(
         
         # Sort categories by average amount (descending)
         categories.sort(key=lambda x: x["average_amount"], reverse=True)
-        
+               
         return CategoryAveragesResponse(
-            start_date=start_date,
-            end_date=end_date,
+            start_date=start_date or start.strftime("%Y-%m-%d"),
+            end_date=end_date or end.strftime("%Y-%m-%d"),
             months_count=months_diff,
             categories=categories
         )

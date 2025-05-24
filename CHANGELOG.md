@@ -1,11 +1,22 @@
 # MyFinance Changelog
 
+## 2025-05-24
+
+### UI Enhancements
+- Added new `CategoryAverages` component to visualize average spending/income by category
+- Implemented period selection (3M, 6M, YTD, 1Y, 2Y, All) for flexible time range analysis
+- Added transaction type toggle to switch between expense and income categories
+- Created color-coded bar chart visualization with detailed tooltips
+- Included summary section with key statistics for the selected period
+- Simplified WeekdayDistribution component by removing redundant chart options
+
 ## 2025-05-23
 
 ### API Enhancements
 - Added new `/statistics/category/averages` endpoint to calculate average income/expenses per category over a specified time period
 - Implemented using existing `CategoryStatistics` model for consistency and efficiency
 - Provides monthly averages, totals, percentages, and transaction counts for each category
+- Made date parameters optional with sensible defaults to improve API usability
 
 ### Code Refactoring
 - Completely refactored the API service architecture for better code organization

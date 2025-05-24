@@ -109,4 +109,18 @@ export const statisticService = {
     const response = await axios.get(`${API_BASE_URL}/statistics/weekday-distribution`, { params });
     return response.data;
   },
+
+  getCategoryAverages: async (
+    transactionType?: TransactionType,
+    startDate?: string,
+    endDate?: string
+  ) => {
+    const params: Record<string, string> = {};
+    if (transactionType) params.transaction_type = transactionType;
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    
+    const response = await axios.get(`${API_BASE_URL}/statistics/category/averages`, { params });
+    return response.data;
+  },
 };
