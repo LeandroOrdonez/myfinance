@@ -1,5 +1,13 @@
 # MyFinance Changelog
 
+## 2025-05-25
+
+### Transaction Management Improvements
+- Enhanced CSV upload functionality to prevent duplicate transactions from being stored
+- Added warning messages when duplicate transactions are detected during import
+- Implemented transaction uniqueness check based on account number, date, amount, description, and source bank
+- Added summary logging for skipped duplicate transactions
+
 ## 2025-05-24
 
 ### Theme System Improvements

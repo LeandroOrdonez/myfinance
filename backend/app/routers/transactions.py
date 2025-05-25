@@ -56,7 +56,23 @@ async def upload_csv(
             
             # Save to database with category suggestions
             db_transactions = []
+            skipped_count = 0
+            
             for trans in transactions:
+                # Check for duplicate transaction
+                existing_transaction = db.query(Transaction).filter(
+                    Transaction.account_number == trans.account_number,
+                    Transaction.transaction_date == trans.transaction_date,
+                    Transaction.amount == trans.amount,
+                    Transaction.description == trans.description,
+                    Transaction.source_bank == trans.source_bank
+                ).first()
+                
+                if existing_transaction:
+                    logger.warning(f"Skipping duplicate transaction: {trans.description} on {trans.transaction_date} for {trans.amount} {trans.currency}")
+                    skipped_count += 1
+                    continue
+                
                 # Get category suggestions before creating the transaction
                 suggestions = category_suggestion_service.suggest_category(
                     trans.description,
@@ -79,6 +95,13 @@ async def upload_csv(
                 db.add(db_trans)
                 db_transactions.append(db_trans)
             
+            if skipped_count > 0:
+                logger.info(f"Skipped {skipped_count} duplicate transactions during import")
+                
+            if not db_transactions:
+                logger.warning("No new transactions were imported - all were duplicates")
+                return []
+                
             db.commit()
             
             # Refresh to get IDs and add to suggestion service
