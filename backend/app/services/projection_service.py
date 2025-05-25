@@ -171,10 +171,39 @@ class ProjectionService:
             expense_series = []
             savings_series = []
             
+            # Query for investment transactions to exclude from expense calculations
+            investment_stats = {}
+            
+            # Get category statistics for investments
+            investment_categories = db.query(CategoryStatistics).filter(
+                CategoryStatistics.period == StatisticsPeriod.MONTHLY,
+                CategoryStatistics.date >= two_years_ago,
+                CategoryStatistics.transaction_type == TransactionType.EXPENSE,
+                CategoryStatistics.category_name == ExpenseCategory.INVESTMENTS.value
+            ).order_by(CategoryStatistics.date).all()
+            
+            # Create a lookup of investment amounts by month
+            for stat in investment_categories:
+                month_key = stat.date.strftime('%Y-%m')
+                if month_key not in investment_stats:
+                    investment_stats[month_key] = 0
+                investment_stats[month_key] += stat.period_amount
+            
             for stat in monthly_stats:
                 dates.append(stat.date)
                 income_series.append(stat.period_income)
-                expense_series.append(stat.period_expenses)
+                
+                # Get the month key for looking up investment amounts
+                month_key = stat.date.strftime('%Y-%m')
+                
+                # Subtract investment amount from expenses if available
+                investment_amount = investment_stats.get(month_key, 0)
+                adjusted_expenses = stat.period_expenses - investment_amount
+                
+                # Ensure we don't have negative expenses after subtraction
+                adjusted_expenses = max(0, adjusted_expenses)
+                expense_series.append(adjusted_expenses)
+                
                 savings_series.append(stat.period_net_savings)
             
             # Calculate growth rates
@@ -191,40 +220,48 @@ class ProjectionService:
                     expense_growth_rates.append(expense_growth)
             
             # Calculate averages
-            avg_monthly_income = np.mean(income_series[-12:]) if len(income_series) >= 12 else np.mean(income_series)
-            avg_monthly_expenses = np.mean(expense_series[-12:]) if len(expense_series) >= 12 else np.mean(expense_series)
-            avg_monthly_savings = np.mean(savings_series[-12:]) if len(savings_series) >= 12 else np.mean(savings_series)
+            avg_monthly_income = np.mean(income_series)
+            avg_monthly_expenses = np.mean(expense_series)
+            avg_monthly_savings = np.mean(savings_series)
             
             # Calculate average growth rates (annualized)
             avg_annual_income_growth = np.mean(income_growth_rates) * 12 if income_growth_rates else 0.03
             avg_annual_expense_growth = np.mean(expense_growth_rates) * 12 if expense_growth_rates else 0.03
             
-            # Get latest investment rate
-            latest_health = db.query(FinancialHealth).order_by(FinancialHealth.date.desc()).first()
-            current_investment_rate = latest_health.investment_rate if latest_health else 0.10
+            # Calculate average investment rate over the last two years
+            financial_health_records = db.query(FinancialHealth)\
+                .filter(FinancialHealth.date >= two_years_ago)\
+                .order_by(FinancialHealth.date).all()
+                
+            investment_rates = [record.investment_rate for record in financial_health_records if record.investment_rate is not None]
+            avg_investment_rate = np.mean(investment_rates) if investment_rates else 0.10
             
-            # Calculate expense breakdown (essential vs discretionary)
+            # Calculate expense breakdown (essential vs discretionary), excluding investments
             category_stats = db.query(CategoryStatistics).filter(
                 CategoryStatistics.period == StatisticsPeriod.MONTHLY,
                 CategoryStatistics.date >= two_years_ago,
                 CategoryStatistics.transaction_type == TransactionType.EXPENSE
             ).order_by(CategoryStatistics.date).all()
             
-            # Group stats by month and expense type
-            monthly_stats = {}
+            # Group stats by month and expense type, excluding investments
+            monthly_expense_stats = {}
             for stat in category_stats:
+                # Skip investment expenses
+                if stat.category_name == ExpenseCategory.INVESTMENTS.value:
+                    continue
+                    
                 month_key = stat.date.strftime('%Y-%m')
-                if month_key not in monthly_stats:
-                    monthly_stats[month_key] = {'essential': 0, 'discretionary': 0}
+                if month_key not in monthly_expense_stats:
+                    monthly_expense_stats[month_key] = {'essential': 0, 'discretionary': 0}
                 
                 if stat.expense_type == ExpenseType.ESSENTIAL:
-                    monthly_stats[month_key]['essential'] += stat.period_amount
+                    monthly_expense_stats[month_key]['essential'] += stat.period_amount
                 else:
-                    monthly_stats[month_key]['discretionary'] += stat.period_amount
+                    monthly_expense_stats[month_key]['discretionary'] += stat.period_amount
             
             # Extract monthly totals for each expense type
-            monthly_essential = [month_data['essential'] for month_data in monthly_stats.values()]
-            monthly_discretionary = [month_data['discretionary'] for month_data in monthly_stats.values()]
+            monthly_essential = [month_data['essential'] for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
+            monthly_discretionary = [month_data['discretionary'] for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
             
             avg_essential_ratio = np.mean(monthly_essential) / avg_monthly_expenses if avg_monthly_expenses > 0 else 0.6
             avg_discretionary_ratio = np.mean(monthly_discretionary) / avg_monthly_expenses if avg_monthly_expenses > 0 else 0.4
@@ -237,7 +274,7 @@ class ProjectionService:
                 "avg_monthly_savings": avg_monthly_savings,
                 "avg_annual_income_growth": avg_annual_income_growth,
                 "avg_annual_expense_growth": avg_annual_expense_growth,
-                "current_investment_rate": current_investment_rate,
+                "avg_investment_rate": avg_investment_rate,
                 "essential_expense_ratio": avg_essential_ratio,
                 "discretionary_expense_ratio": avg_discretionary_ratio,
                 "latest_date": dates[-1] if dates else date.today()
@@ -286,7 +323,7 @@ class ProjectionService:
             current_income = historical_data["avg_monthly_income"]
             current_essential_expenses = historical_data["avg_monthly_expenses"] * historical_data["essential_expense_ratio"]
             current_discretionary_expenses = historical_data["avg_monthly_expenses"] * historical_data["discretionary_expense_ratio"]
-            current_investment_rate = param_dict.get("investment_rate", historical_data["current_investment_rate"])
+            current_investment_rate = historical_data["avg_investment_rate"] or param_dict.get("investment_rate", 0.10)
             
             # Initialize investment portfolio with current market value if provided
             investment_portfolio = param_dict.get("holdings_market_value", 0)

@@ -50,20 +50,17 @@ const WeekdayDistribution: React.FC = () => {
 
   if (period === '3m') {
     startDate = formatDate(subMonths(now, 3), 'yyyy-MM-dd');
-    endDate = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '6m') {
     startDate = formatDate(subMonths(now, 6), 'yyyy-MM-dd');
-    endDate = formatDate(now, 'yyyy-MM-dd');
   } else if (period === 'ytd') {
     startDate = formatDate(startOfYear(now), 'yyyy-MM-dd');
-    endDate = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '1y') {
     startDate = formatDate(subMonths(now, 12), 'yyyy-MM-dd');
-    endDate = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '2y') {
     startDate = formatDate(subMonths(now, 24), 'yyyy-MM-dd');
-    endDate = formatDate(now, 'yyyy-MM-dd');
   }
+
+  endDate = formatDate(now, 'yyyy-MM-dd');
 
   // Fetch data when filters change
   useEffect(() => {

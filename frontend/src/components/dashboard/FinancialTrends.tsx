@@ -24,20 +24,17 @@ export const FinancialTrends: React.FC = () => {
 
   if (period === '3m') {
     start_date = formatDate(subMonths(now, 3), 'yyyy-MM-01');
-    end_date = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '6m') {
     start_date = formatDate(subMonths(now, 6), 'yyyy-MM-01');
-    end_date = formatDate(now, 'yyyy-MM-dd');
   } else if (period === 'ytd') {
     start_date = formatDate(startOfYear(now), 'yyyy-MM-01');
-    end_date = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '1y') {
     start_date = formatDate(subMonths(now, 12), 'yyyy-MM-01');
-    end_date = formatDate(now, 'yyyy-MM-dd');
   } else if (period === '2y') {
     start_date = formatDate(subMonths(now, 24), 'yyyy-MM-01');
-    end_date = formatDate(now, 'yyyy-MM-dd');
   }
+
+  end_date = formatDate(now, 'yyyy-MM-dd');
 
   const { timeseriesData, loading } = useStatisticsTimeseries(start_date, end_date);
 

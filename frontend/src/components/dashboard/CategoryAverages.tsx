@@ -48,15 +48,15 @@ export const CategoryAverages: React.FC = () => {
   let end_date: string | undefined = undefined;
 
   if (period === '3m') {
-    start_date = formatDate(subMonths(now, 3), 'yyyy-MM-dd');
+    start_date = formatDate(subMonths(now, 3), 'yyyy-MM-01');
   } else if (period === '6m') {
-    start_date = formatDate(subMonths(now, 6), 'yyyy-MM-dd');
+    start_date = formatDate(subMonths(now, 6), 'yyyy-MM-01');
   } else if (period === 'ytd') {
-    start_date = formatDate(startOfYear(now), 'yyyy-MM-dd');
+    start_date = formatDate(startOfYear(now), 'yyyy-MM-01');
   } else if (period === '1y') {
-    start_date = formatDate(subMonths(now, 12), 'yyyy-MM-dd');
+    start_date = formatDate(subMonths(now, 12), 'yyyy-MM-01');
   } else if (period === '2y') {
-    start_date = formatDate(subMonths(now, 24), 'yyyy-MM-dd');
+    start_date = formatDate(subMonths(now, 24), 'yyyy-MM-01');
   }
   // For 'all', we leave start_date undefined to get all data
 

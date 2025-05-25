@@ -7,6 +7,8 @@
 - Enhanced net worth calculations to include existing investment portfolio value
 - Updated frontend components to allow users to input and edit holdings market value
 - Improved projection accuracy by accounting for existing investments
+- Modified expense calculations to exclude investment expenses for more accurate projections
+- Implemented average investment rate calculation based on two years of historical data
 
 ### Transaction Management Improvements
 - Enhanced CSV upload functionality to prevent duplicate transactions from being stored
