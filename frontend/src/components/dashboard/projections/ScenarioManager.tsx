@@ -74,7 +74,8 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
         { param_name: 'investment_rate', param_value: 0.10, param_type: 'percentage' },
         { param_name: 'inflation_rate', param_value: 0.02, param_type: 'percentage' },
         { param_name: 'investment_return_rate', param_value: 0.07, param_type: 'percentage' },
-        { param_name: 'emergency_fund_target', param_value: 6.0, param_type: 'months' }
+        { param_name: 'emergency_fund_target', param_value: 6.0, param_type: 'months' },
+        { param_name: 'holdings_market_value', param_value: 0.0, param_type: 'amount' }
       ]
     });
     setIsCreateDialogOpen(true);

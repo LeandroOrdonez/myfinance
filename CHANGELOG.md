@@ -2,6 +2,12 @@
 
 ## 2025-05-25
 
+### Projection Functionality Enhancement
+- Added optional holdings market value field for investments in projection scenarios
+- Enhanced net worth calculations to include existing investment portfolio value
+- Updated frontend components to allow users to input and edit holdings market value
+- Improved projection accuracy by accounting for existing investments
+
 ### Transaction Management Improvements
 - Enhanced CSV upload functionality to prevent duplicate transactions from being stored
 - Added warning messages when duplicate transactions are detected during import

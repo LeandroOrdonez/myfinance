@@ -61,7 +61,8 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
   - Conservative Case (cautious outlook)
   - Expense Reduction (focus on reducing spending)
   - Investment Focus (prioritize investments)
-- Adjustable parameters including income growth, expense growth, investment rate, and more
+- Adjustable parameters including income growth, expense growth, investment rate, current market value of investments, and more
+- Support for entering current market value of investments to provide more accurate projections
 - Visualization of projected outcomes:
   - Net Worth Projection
   - Income vs. Expenses

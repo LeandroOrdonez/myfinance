@@ -19,7 +19,7 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
       return param.param_value.toString();
     });
     setInputValues(initialInputs);
-  }, [parameters.length]); // Only re-initialize when the number of parameters changes
+  }, [parameters]); // Re-initialize when parameters change
 
   // Format parameter name for display
   const formatParamName = (name: string) => {
@@ -51,29 +51,6 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
     onChange(newParams);
   };
 
-  // Handle parameter type change
-  const handleTypeChange = (index: number, type: string) => {
-    const newParams = [...parameters];
-    const oldType = newParams[index].param_type;
-    const currentValue = newParams[index].param_value;
-    const newInputValues = [...inputValues];
-    
-    // Convert value when switching between percentage and non-percentage types
-    if (oldType === 'percentage' && type !== 'percentage') {
-      // Convert from decimal (0.035) to actual value (3.5)
-      newParams[index].param_value = currentValue * 100;
-      newInputValues[index] = (currentValue * 100).toString();
-    } else if (oldType !== 'percentage' && type === 'percentage') {
-      // Convert from actual value (3.5) to decimal (0.035)
-      newParams[index].param_value = currentValue / 100;
-      newInputValues[index] = (currentValue).toFixed(1);
-    }
-    
-    newParams[index].param_type = type as any;
-    setInputValues(newInputValues);
-    onChange(newParams);
-  };
-
   // Get suffix for parameter type
   const getValueSuffix = (type: string) => {
     switch (type) {
@@ -96,7 +73,6 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
             <tr className="bg-gray-50 border-b">
               <th className="w-[300px] text-left p-3 font-medium">Parameter</th>
               <th className="text-left p-3 font-medium">Value</th>
-              <th className="text-left p-3 font-medium">Type</th>
             </tr>
           </thead>
           <tbody>
@@ -116,26 +92,6 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
                     <span className="text-gray-500 text-sm">
                       {getValueSuffix(param.param_type)}
                     </span>
-                  </div>
-                </td>
-                <td className="p-3">
-                  <div className="relative w-[140px]">
-                    <select
-                      value={param.param_type}
-                      onChange={(e) => handleTypeChange(index, e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="percentage">Percentage</option>
-                      <option value="amount">Amount</option>
-                      <option value="months">Months</option>
-                      <option value="integer">Integer</option>
-                      <option value="boolean">Boolean</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                      </svg>
-                    </div>
                   </div>
                 </td>
               </tr>

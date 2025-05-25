@@ -30,6 +30,7 @@ class ProjectionService:
             "inflation_rate": {"value": 0.02, "type": ParamType.PERCENTAGE},
             "investment_return_rate": {"value": 0.07, "type": ParamType.PERCENTAGE},
             "emergency_fund_target": {"value": 6.0, "type": ParamType.MONTHS},
+            "holdings_market_value": {"value": 0.0, "type": ParamType.AMOUNT},
         },
         "optimistic_case": {
             "income_growth_rate": {"value": 0.05, "type": ParamType.PERCENTAGE},
@@ -39,6 +40,7 @@ class ProjectionService:
             "inflation_rate": {"value": 0.02, "type": ParamType.PERCENTAGE},
             "investment_return_rate": {"value": 0.08, "type": ParamType.PERCENTAGE},
             "emergency_fund_target": {"value": 6.0, "type": ParamType.MONTHS},
+            "holdings_market_value": {"value": 0.0, "type": ParamType.AMOUNT},
         },
         "conservative_case": {
             "income_growth_rate": {"value": 0.02, "type": ParamType.PERCENTAGE},
@@ -48,6 +50,7 @@ class ProjectionService:
             "inflation_rate": {"value": 0.03, "type": ParamType.PERCENTAGE},
             "investment_return_rate": {"value": 0.05, "type": ParamType.PERCENTAGE},
             "emergency_fund_target": {"value": 9.0, "type": ParamType.MONTHS},
+            "holdings_market_value": {"value": 0.0, "type": ParamType.AMOUNT},
         },
         "expense_reduction": {
             "income_growth_rate": {"value": 0.03, "type": ParamType.PERCENTAGE},
@@ -57,6 +60,7 @@ class ProjectionService:
             "inflation_rate": {"value": 0.02, "type": ParamType.PERCENTAGE},
             "investment_return_rate": {"value": 0.07, "type": ParamType.PERCENTAGE},
             "emergency_fund_target": {"value": 6.0, "type": ParamType.MONTHS},
+            "holdings_market_value": {"value": 0.0, "type": ParamType.AMOUNT},
         },
         "investment_focus": {
             "income_growth_rate": {"value": 0.03, "type": ParamType.PERCENTAGE},
@@ -66,6 +70,7 @@ class ProjectionService:
             "inflation_rate": {"value": 0.02, "type": ParamType.PERCENTAGE},
             "investment_return_rate": {"value": 0.07, "type": ParamType.PERCENTAGE},
             "emergency_fund_target": {"value": 6.0, "type": ParamType.MONTHS},
+            "holdings_market_value": {"value": 0.0, "type": ParamType.AMOUNT},
         }
     }
     
@@ -283,8 +288,8 @@ class ProjectionService:
             current_discretionary_expenses = historical_data["avg_monthly_expenses"] * historical_data["discretionary_expense_ratio"]
             current_investment_rate = param_dict.get("investment_rate", historical_data["current_investment_rate"])
             
-            # Initialize investment portfolio
-            investment_portfolio = 0
+            # Initialize investment portfolio with current market value if provided
+            investment_portfolio = param_dict.get("holdings_market_value", 0)
             
             # Get the latest total_net_savings value from FinancialStatistics
             latest_stats = db.query(FinancialStatistics).filter(
@@ -292,7 +297,9 @@ class ProjectionService:
             ).first()
             
             # Use the latest total_net_savings as initial net worth, or fall back to 6 months of income if not available
-            initial_net_worth = latest_stats.total_net_savings if latest_stats else current_income * 6
+            # Add the current market value of investments to the initial net worth
+            savings_base = latest_stats.total_net_savings if latest_stats else current_income * 6
+            initial_net_worth = savings_base + investment_portfolio
             
             # Calculate monthly growth rates from annual rates
             monthly_income_growth = (1 + param_dict.get("income_growth_rate", 0.03)) ** (1/12) - 1
