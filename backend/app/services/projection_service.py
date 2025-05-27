@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, extract, and_, or_, desc, text
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+import copy
 import calendar
 import numpy as np
 import logging
@@ -85,11 +86,35 @@ class ProjectionService:
             return existing_defaults
             
         # Define default scenarios
+        historical_data = ProjectionService.analyze_historical_data(db)
+
+        # Start with a deep copy of the default base_case parameters
+        base_case_params = copy.deepcopy(ProjectionService.DEFAULT_PARAMETERS["base_case"])
+
+        # Update specific parameter values using historical data
+        # Fallback to original default from DEFAULT_PARAMETERS if key not in historical_data
+        base_case_params["income_growth_rate"]["value"] = historical_data.get(
+            "avg_annual_income_growth", 
+            base_case_params["income_growth_rate"]["value"]
+        )
+        base_case_params["essential_expenses_growth_rate"]["value"] = historical_data.get(
+            "avg_annual_essential_expense_growth", 
+            base_case_params["essential_expenses_growth_rate"]["value"]
+        )
+        base_case_params["discretionary_expenses_growth_rate"]["value"] = historical_data.get(
+            "avg_annual_discretionary_expense_growth", 
+            base_case_params["discretionary_expenses_growth_rate"]["value"]
+        )
+        base_case_params["investment_rate"]["value"] = historical_data.get(
+            "avg_investment_rate", 
+            base_case_params["investment_rate"]["value"]
+        )
+
         scenario_definitions = {
             "base_case": {
                 "name": "Base Case",
                 "description": "Projection based on current patterns and average growth rates",
-                "parameters": ProjectionService.DEFAULT_PARAMETERS["base_case"]
+                "parameters": base_case_params 
             },
             "optimistic_case": {
                 "name": "Optimistic Case",
@@ -145,6 +170,42 @@ class ProjectionService:
             raise e
     
     @staticmethod
+    def calculate_annual_growth(monthly_amounts: List[float]) -> Optional[float]:
+        """
+        Calculate annualized growth by comparing total amounts between two consecutive years.
+        
+        Args:
+            monthly_amounts: A list of monthly values in chronological order (at least 24 entries for 2 years)
+            
+        Returns:
+            The annual growth rate as a decimal, or None if calculation is not possible
+            
+        Methodology:
+            1. Sum first 12 months (year 1 total)
+            2. Sum next 12 months (year 2 total)
+            3. Calculate (year2_total / year1_total) - 1
+        """
+        # Validate input length
+        if len(monthly_amounts) < 24:
+            return None
+            
+        # Calculate total for year 1 (first 12 months)
+        year1_total = sum(monthly_amounts[:12])
+        
+        # Calculate total for year 2 (next 12 months)
+        year2_total = sum(monthly_amounts[12:24])
+        
+        # Handle zero beginning value
+        if year1_total == 0:
+            return None
+            
+        # Calculate annual growth rate
+        annual_growth = (year2_total / year1_total) - 1
+        
+        return annual_growth
+    
+    
+    @staticmethod
     def analyze_historical_data(db: Session) -> Dict[str, Any]:
         """Analyze historical financial data to extract patterns and trends"""
         try:
@@ -198,35 +259,25 @@ class ProjectionService:
                 
                 # Subtract investment amount from expenses if available
                 investment_amount = investment_stats.get(month_key, 0)
-                adjusted_expenses = stat.period_expenses - investment_amount
+                adjusted_expenses = max(0, stat.period_expenses - investment_amount)
                 
-                # Ensure we don't have negative expenses after subtraction
-                adjusted_expenses = max(0, adjusted_expenses)
                 expense_series.append(adjusted_expenses)
                 
                 savings_series.append(stat.period_net_savings)
-            
-            # Calculate growth rates
-            income_growth_rates = []
-            expense_growth_rates = []
-            
-            for i in range(1, len(income_series)):
-                if income_series[i-1] > 0:
-                    income_growth = (income_series[i] - income_series[i-1]) / income_series[i-1]
-                    income_growth_rates.append(income_growth)
-                
-                if expense_series[i-1] > 0:
-                    expense_growth = (expense_series[i] - expense_series[i-1]) / expense_series[i-1]
-                    expense_growth_rates.append(expense_growth)
             
             # Calculate averages
             avg_monthly_income = np.mean(income_series)
             avg_monthly_expenses = np.mean(expense_series)
             avg_monthly_savings = np.mean(savings_series)
             
-            # Calculate average growth rates (annualized)
-            avg_annual_income_growth = np.mean(income_growth_rates) * 12 if income_growth_rates else 0.03
-            avg_annual_expense_growth = np.mean(expense_growth_rates) * 12 if expense_growth_rates else 0.03
+            # Calculate annual growth rates using year-over-year comparison method
+            # This provides a more stable and accurate growth rate than month-over-month averages
+            annual_income_growth = ProjectionService.calculate_annual_growth(income_series)
+            annual_expense_growth = ProjectionService.calculate_annual_growth(expense_series)
+            
+            # Default to 3% if we can't calculate from historical data
+            avg_annual_income_growth = annual_income_growth if annual_income_growth is not None else 0.03
+            avg_annual_expense_growth = annual_expense_growth if annual_expense_growth is not None else 0.03
             
             # Calculate average investment rate over the last two years
             financial_health_records = db.query(FinancialHealth)\
@@ -263,6 +314,14 @@ class ProjectionService:
             monthly_essential = [month_data['essential'] for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
             monthly_discretionary = [month_data['discretionary'] for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
             
+            # Calculate annual growth for essential and discretionary expenses using year-over-year comparison
+            annual_essential_expense_growth = ProjectionService.calculate_annual_growth(monthly_essential)
+            annual_discretionary_expense_growth = ProjectionService.calculate_annual_growth(monthly_discretionary)
+            
+            # Default to 3% if we can't calculate from historical data
+            avg_annual_essential_expense_growth = annual_essential_expense_growth if annual_essential_expense_growth is not None else 0.03
+            avg_annual_discretionary_expense_growth = annual_discretionary_expense_growth if annual_discretionary_expense_growth is not None else 0.03
+            
             avg_essential_ratio = np.mean(monthly_essential) / avg_monthly_expenses if avg_monthly_expenses > 0 else 0.6
             avg_discretionary_ratio = np.mean(monthly_discretionary) / avg_monthly_expenses if avg_monthly_expenses > 0 else 0.4
             # Calculate seasonality (not implemented in this version)
@@ -273,7 +332,9 @@ class ProjectionService:
                 "avg_monthly_expenses": avg_monthly_expenses,
                 "avg_monthly_savings": avg_monthly_savings,
                 "avg_annual_income_growth": avg_annual_income_growth,
-                "avg_annual_expense_growth": avg_annual_expense_growth,
+                "avg_annual_expense_growth": avg_annual_expense_growth,  # Overall expense growth
+                "avg_annual_essential_expense_growth": avg_annual_essential_expense_growth,
+                "avg_annual_discretionary_expense_growth": avg_annual_discretionary_expense_growth,
                 "avg_investment_rate": avg_investment_rate,
                 "essential_expense_ratio": avg_essential_ratio,
                 "discretionary_expense_ratio": avg_discretionary_ratio,
@@ -339,9 +400,9 @@ class ProjectionService:
             initial_net_worth = savings_base + investment_portfolio
             
             # Calculate monthly growth rates from annual rates
-            monthly_income_growth = (1 + param_dict.get("income_growth_rate", 0.03)) ** (1/12) - 1
-            monthly_essential_growth = (1 + param_dict.get("essential_expenses_growth_rate", 0.03)) ** (1/12) - 1
-            monthly_discretionary_growth = (1 + param_dict.get("discretionary_expenses_growth_rate", 0.03)) ** (1/12) - 1
+            monthly_income_growth = (1 + param_dict.get("income_growth_rate", historical_data.get("avg_annual_income_growth", 0.03))) ** (1/12) - 1
+            monthly_essential_growth = (1 + param_dict.get("essential_expenses_growth_rate", historical_data.get("avg_annual_essential_expense_growth", 0.03))) ** (1/12) - 1
+            monthly_discretionary_growth = (1 + param_dict.get("discretionary_expenses_growth_rate", historical_data.get("avg_annual_discretionary_expense_growth", 0.03))) ** (1/12) - 1
             monthly_investment_return = (1 + param_dict.get("investment_return_rate", 0.07)) ** (1/12) - 1
             
             # Generate projection results

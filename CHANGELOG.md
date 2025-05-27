@@ -1,5 +1,12 @@
 # MyFinance Changelog
 
+## 2025-05-28
+
+### Projection Functionality Enhancement
+- Enhanced growth rate calculations using year-over-year comparison method
+- Added separate growth tracking for essential and discretionary expenses
+- Improved base case scenario to use personalized historical growth rates
+
 ## 2025-05-25
 
 ### Projection Functionality Enhancement
