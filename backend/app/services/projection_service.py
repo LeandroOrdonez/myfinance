@@ -141,10 +141,14 @@ class ProjectionService:
         try:
             # Create each default scenario
             for key, definition in scenario_definitions.items():
+                # Set is_base_scenario to True only for the Base Case
+                is_base = (key == "base_case")
+                
                 scenario = ProjectionScenario(
                     name=definition["name"],
                     description=definition["description"],
                     is_default=True,
+                    is_base_scenario=is_base,
                     created_at=date.today()
                 )
                 db.add(scenario)
@@ -363,6 +367,10 @@ class ProjectionService:
             scenario = db.query(ProjectionScenario).filter(ProjectionScenario.id == scenario_id).first()
             if not scenario:
                 raise ValueError(f"Scenario with ID {scenario_id} not found")
+            
+            # Recompute base case parameters if it's the base scenario
+            if scenario.is_base_scenario:
+                ProjectionService.recompute_base_case_parameters(db)
                 
             parameters = db.query(ProjectionParameter).filter(
                 ProjectionParameter.scenario_id == scenario_id
@@ -493,6 +501,90 @@ class ProjectionService:
             
         except Exception as e:
             logger.error(f"Error retrieving projection results: {str(e)}")
+            raise e
+    
+    @staticmethod
+    def recompute_base_case_parameters(db: Session) -> Dict[str, Any]:
+        """Recompute the parameters of the base case scenario using the latest historical data
+        
+        This method updates the base case scenario parameters to reflect the most recent
+        financial patterns from the user's historical data. It's useful for keeping the
+        base case scenario relevant as new financial data is added over time.
+        
+        Returns:
+            Dict containing the scenario ID, name, parameter changes, and a success message
+        """
+        try:
+            # Find the base scenario using the is_base_scenario flag
+            base_case = db.query(ProjectionScenario).filter(
+                ProjectionScenario.is_base_scenario == True
+            ).first()
+            
+            if not base_case:
+                raise ValueError("Base scenario not found. Please ensure one scenario has is_base_scenario set to True.")
+                
+            # Get current parameters
+            current_params = {}
+            params = db.query(ProjectionParameter).filter(ProjectionParameter.scenario_id == base_case.id).all()
+            for param in params:
+                current_params[param.param_name] = {
+                    "value": param.param_value,
+                    "type": param.param_type
+                }
+            
+            # Get latest historical data
+            historical_data = ProjectionService.analyze_historical_data(db)
+            
+            # Define parameters to update with their corresponding historical data keys
+            param_mapping = {
+                "income_growth_rate": "avg_annual_income_growth",
+                "essential_expenses_growth_rate": "avg_annual_essential_expense_growth",
+                "discretionary_expenses_growth_rate": "avg_annual_discretionary_expense_growth",
+                "investment_rate": "avg_investment_rate"
+            }
+            
+            # Track changes for return value
+            changes = {}
+            
+            # Update parameters
+            for param_name, historical_key in param_mapping.items():
+                param = db.query(ProjectionParameter).filter(
+                    ProjectionParameter.scenario_id == base_case.id,
+                    ProjectionParameter.param_name == param_name
+                ).first()
+                
+                if param and historical_key in historical_data:
+                    # Record old value
+                    old_value = param.param_value
+                    
+                    # Update with new value
+                    param.param_value = historical_data[historical_key]
+                    
+                    # Track the change
+                    changes[param_name] = {
+                        "old": old_value,
+                        "new": param.param_value,
+                        "type": param.param_type.value
+                    }
+            
+            # Commit changes
+            db.commit()
+            
+            # Delete any existing projection results for this scenario
+            # so they will be recalculated with the new parameters
+            db.query(ProjectionResult).filter(ProjectionResult.scenario_id == base_case.id).delete()
+            db.commit()
+            
+            return {
+                "scenario_id": base_case.id,
+                "scenario_name": base_case.name,
+                "changes": changes,
+                "message": "Base Case parameters updated successfully"
+            }
+            
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error recomputing base case parameters: {str(e)}")
             raise e
     
     @staticmethod

@@ -6,6 +6,17 @@ import {
   ScenarioComparison
 } from '../types/projections';
 
+interface RecomputeResult {
+  scenario_id: number;
+  scenario_name: string;
+  changes: Record<string, {
+    old: number;
+    new: number;
+    type: string;
+  }>;
+  message: string;
+}
+
 // Fetch all scenarios
 export async function fetchScenarios(): Promise<ProjectionScenario[]> {
   const response = await fetch(`${API_BASE_URL}/projections/scenarios`);
@@ -94,6 +105,17 @@ export async function compareScenarios(scenarioIds: number[]): Promise<ScenarioC
   });
   if (!response.ok) {
     throw new Error(`Failed to compare scenarios: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+// Recompute base scenario parameters using latest historical data
+export async function recomputeBaseScenario(): Promise<RecomputeResult> {
+  const response = await fetch(`${API_BASE_URL}/projections/scenarios/base/recompute`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to recompute base scenario: ${response.statusText}`);
   }
   return response.json();
 }

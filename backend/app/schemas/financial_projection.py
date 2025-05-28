@@ -34,6 +34,7 @@ class ProjectionScenarioBase(BaseModel):
     name: str
     description: str
     is_default: bool = False
+    is_base_scenario: bool = False
 
 
 class ProjectionScenarioCreate(ProjectionScenarioBase):

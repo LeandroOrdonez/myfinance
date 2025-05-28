@@ -22,6 +22,7 @@ class ProjectionScenario(Base):
     description = Column(String(1000), nullable=False)
     created_at = Column(Date, nullable=False, default=date.today)
     is_default = Column(Boolean, default=False)
+    is_base_scenario = Column(Boolean, default=False)  # Identifies the base scenario for recomputation
     user_id = Column(Integer, nullable=True)  # For future multi-user support
     
     # Relationships

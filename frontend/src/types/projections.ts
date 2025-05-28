@@ -17,6 +17,7 @@ export interface ProjectionScenarioBase {
   name: string;
   description: string;
   is_default: boolean;
+  is_base_scenario?: boolean;
 }
 
 export interface ProjectionScenarioCreate extends ProjectionScenarioBase {

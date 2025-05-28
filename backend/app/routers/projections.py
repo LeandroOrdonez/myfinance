@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 import logging
 
@@ -297,4 +297,25 @@ def compare_scenarios(
         raise
     except Exception as e:
         logger.error(f"Error comparing scenarios: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/scenarios/base/recompute", response_model=Dict[str, Any])
+def recompute_base_scenario_parameters(db: Session = Depends(get_db)):
+    """Recompute the parameters of the base scenario using the latest historical data
+    
+    This endpoint updates the base scenario to reflect the most recent financial patterns
+    from the user's historical data. It's useful for keeping projections relevant
+    as new financial data is added over time.
+    """
+    try:
+        # Recompute base scenario parameters
+        result = ProjectionService.recompute_base_case_parameters(db)
+        
+        # Calculate projection with new parameters
+        ProjectionService.calculate_projection(db, result["scenario_id"])
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error recomputing base scenario parameters: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Edit, Plus, Trash2, X } from 'lucide-react';
+import { AlertCircle, Edit, Plus, Trash2, X, RefreshCw } from 'lucide-react';
 import { ProjectionScenario, ProjectionParameter, ProjectionParameterCreate } from '../../../types/projections';
-import { createScenario, updateScenario, deleteScenario, calculateProjection } from '../../../services/projectionService';
+import { createScenario, updateScenario, deleteScenario, calculateProjection, recomputeBaseScenario } from '../../../services/projectionService';
 import ParameterEditor from './ParameterEditor';
 
 interface ScenarioManagerProps {
@@ -21,6 +21,7 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCalculating, setIsCalculating] = useState<number | null>(null);
+  const [isRecomputing, setIsRecomputing] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<ProjectionScenario | null>(null);
   const [notification, setNotification] = useState<NotificationProps | null>(null);
   const [formData, setFormData] = useState({
@@ -107,9 +108,9 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
   const handleCreateScenario = async () => {
     try {
       await createScenario(formData);
-      showNotification('success', 'Success', 'Scenario created successfully');
       setIsCreateDialogOpen(false);
       onScenariosChange();
+      showNotification('success', 'Success', 'Scenario created successfully');
     } catch (error) {
       console.error('Error creating scenario:', error);
       showNotification('error', 'Error', 'Failed to create scenario');
@@ -118,13 +119,12 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
 
   // Handle update scenario
   const handleUpdateScenario = async () => {
-    if (!selectedScenario) return;
-    
     try {
+      if (!selectedScenario) return;
       await updateScenario(selectedScenario.id, formData);
-      showNotification('success', 'Success', 'Scenario updated successfully');
       setIsEditDialogOpen(false);
       onScenariosChange();
+      showNotification('success', 'Success', 'Scenario updated successfully');
     } catch (error) {
       console.error('Error updating scenario:', error);
       showNotification('error', 'Error', 'Failed to update scenario');
@@ -151,12 +151,26 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
     try {
       setIsCalculating(scenarioId);
       await calculateProjection(scenarioId);
-      showNotification('success', 'Success', 'Projection calculated successfully');
+      onScenariosChange();
+      showNotification('success', 'Projection Calculated', 'The projection has been calculated successfully.');
     } catch (error) {
-      console.error('Error calculating projection:', error);
-      showNotification('error', 'Error', 'Failed to calculate projection');
+      showNotification('error', 'Calculation Failed', `Failed to calculate projection: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsCalculating(null);
+    }
+  };
+
+  // Handle recompute base scenario parameters
+  const handleRecomputeBaseScenario = async () => {
+    try {
+      setIsRecomputing(true);
+      const result = await recomputeBaseScenario();
+      onScenariosChange();
+      showNotification('success', 'Parameters Updated', `Base scenario parameters have been updated with the latest financial data.`);
+    } catch (error) {
+      showNotification('error', 'Recomputation Failed', `Failed to recompute base scenario parameters: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsRecomputing(false);
     }
   };
 
@@ -264,6 +278,26 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
+                  {scenario.is_base_scenario && (
+                    <button 
+                      onClick={handleRecomputeBaseScenario}
+                      className="px-2 py-1 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 rounded transition-colors flex items-center"
+                      disabled={isRecomputing}
+                      title="Recompute parameters using latest financial data"
+                    >
+                      {isRecomputing ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          <span>Update</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

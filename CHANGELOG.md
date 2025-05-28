@@ -6,6 +6,9 @@
 - Enhanced growth rate calculations using year-over-year comparison method
 - Added separate growth tracking for essential and discretionary expenses
 - Improved base case scenario to use personalized historical growth rates
+- Added `is_base_scenario` field to projection scenarios for better identification
+- Implemented base scenario parameter recomputation with latest financial data
+- Added one-click update button for base scenario in the frontend
 
 ## 2025-05-25
 

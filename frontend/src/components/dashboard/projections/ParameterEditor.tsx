@@ -70,14 +70,14 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
       <div className="overflow-x-auto border rounded-lg">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b">
+            <tr className="bg-gray-50 border-b dark:bg-gray-700">
               <th className="w-[300px] text-left p-3 font-medium">Parameter</th>
               <th className="text-left p-3 font-medium">Value</th>
             </tr>
           </thead>
           <tbody>
             {parameters.map((param, index) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
+              <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="p-3 font-medium">{formatParamName(param.param_name)}</td>
                 <td className="p-3">
                   <div className="flex items-center space-x-2">
@@ -86,7 +86,7 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
                       value={inputValues[index] || ''}
                       onChange={(e) => handleInputChange(index, e.target.value)}
                       onBlur={() => handleInputBlur(index)}
-                      className="w-24 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-24 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700"
                       step={param.param_type === 'percentage' ? '0.1' : '1'}
                     />
                     <span className="text-gray-500 text-sm">
@@ -100,7 +100,7 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
         </table>
       </div>
       
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-500 dark:text-gray-400">
         <p>
           <strong>Note:</strong> For percentage values, enter the number as a percentage (e.g., 3.5 for 3.5%).
         </p>
