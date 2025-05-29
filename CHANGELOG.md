@@ -1,5 +1,15 @@
 # MyFinance Changelog
 
+## 2025-05-29
+
+### API Enhancement
+- Added optional `time_period` parameter to the `/statistics/timeseries` endpoint
+- Created new `TimePeriod` enum in transaction schema to represent relative time periods (3M, 6M, YTD, 1Y, 2Y, ALL_TIME)
+- Implemented dynamic date range calculation based on the latest transaction date
+- Enhanced API flexibility by supporting both explicit date ranges and relative time periods
+- Refined time period filtering to use the last day of the month for more accurate period boundaries
+- Updated frontend components to use the new time period parameter instead of manual date calculations
+
 ## 2025-05-28
 
 ### Projection Functionality Enhancement

@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import * as Tabs from '@radix-ui/react-tabs';
+import { TimePeriod } from '../../types/transaction';
 
 interface TimeseriesData {
     date: string;
@@ -27,9 +28,9 @@ interface TimeseriesData {
 
 interface TimeseriesChartProps {
     data: TimeseriesData[];
-    period: string;
-    setPeriod: (period: string) => void;
-    PERIODS: { label: string; value: string }[];
+    period: TimePeriod;
+    setPeriod: (period: TimePeriod) => void;
+    PERIODS: { label: string; value: TimePeriod }[];
 }
 
 export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, setPeriod, PERIODS }) => {

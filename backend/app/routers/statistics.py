@@ -4,6 +4,7 @@ from sqlalchemy import func, extract, case, and_
 from typing import List, Dict
 import logging
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import calendar
 import numpy as np
 from enum import Enum
@@ -19,6 +20,7 @@ from ..schemas.statistics import (
     ExpenseTypeTimeseriesResponse,
     ExpenseTypeTimeseriesItem
 )
+from ..schemas.transaction import TimePeriod
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -521,24 +523,54 @@ def get_weekday_distribution(
 def get_statistics_timeseries(
     db: Session = Depends(get_db),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    time_period: TimePeriod = Query(None, description="Relative time period (3M, 6M, YTD, 1Y, 2Y, ALL_TIME)")
 ):
     try:
+        # Get the latest transaction date to use as reference for relative time periods
+        latest_transaction = db.query(func.max(Transaction.transaction_date)).scalar()
+        reference_date = latest_transaction if latest_transaction else date.today()
+
+        # Push the reference date the the last day of the month
+        reference_date = reference_date.replace(day=calendar.monthrange(reference_date.year, reference_date.month)[1])
+        
         query = db.query(FinancialStatistics).filter(
             FinancialStatistics.period == StatisticsPeriod.MONTHLY
         )
-        if start_date:
-            try:
-                start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                query = query.filter(FinancialStatistics.date >= start)
-            except Exception:
-                pass
-        if end_date:
-            try:
-                end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                query = query.filter(FinancialStatistics.date <= end)
-            except Exception:
-                pass
+        
+        # Handle relative time period if provided
+        if time_period and not (start_date or end_date):
+            if time_period == TimePeriod.THREE_MONTHS:
+                start = reference_date - relativedelta(months=3)
+                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.SIX_MONTHS:
+                start = reference_date - relativedelta(months=6)
+                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.YEAR_TO_DATE:
+                start = date(reference_date.year, 1, 1)
+                query = query.filter(FinancialStatistics.date > start)
+            elif time_period == TimePeriod.ONE_YEAR:
+                start = reference_date - relativedelta(years=1)
+                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.TWO_YEARS:
+                start = reference_date - relativedelta(years=2)
+                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            # ALL_TIME doesn't need filtering
+        else:
+            # Use explicit date parameters if provided
+            if start_date:
+                try:
+                    start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                    query = query.filter(FinancialStatistics.date >= start)
+                except Exception:
+                    pass
+            if end_date:
+                try:
+                    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                    query = query.filter(FinancialStatistics.date <= end)
+                except Exception:
+                    pass
+                    
         monthly_stats = query.order_by(FinancialStatistics.date).all()
         
         # Convert date objects to ISO format strings for serialization

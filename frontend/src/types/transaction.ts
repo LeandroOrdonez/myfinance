@@ -95,6 +95,15 @@ export enum ActionType {
   UPDATE_CATEGORY = 'UPDATE_CATEGORY'
 }
 
+export enum TimePeriod {
+  THREE_MONTHS = "3M",
+  SIX_MONTHS = "6M",
+  YEAR_TO_DATE = "YTD",
+  ONE_YEAR = "1Y",
+  TWO_YEARS = "2Y",
+  ALL_TIME = "ALL_TIME"
+}
+
 export interface DeleteTransactionAction {
   type: ActionType.DELETE_TRANSACTION;
   transaction: Transaction;

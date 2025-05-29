@@ -1,6 +1,7 @@
 from pydantic import BaseModel, validator
 from datetime import date
-from typing import Optional
+from typing import Optional, Literal
+from enum import Enum
 from ..models.transaction import ExpenseCategory, IncomeCategory, TransactionType
 
 class TransactionBase(BaseModel):
@@ -68,3 +69,13 @@ class TransactionPage(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class TimePeriod(str, Enum):
+    """Represents relative time periods for filtering data."""
+    THREE_MONTHS = "3M"
+    SIX_MONTHS = "6M"
+    YEAR_TO_DATE = "YTD"
+    ONE_YEAR = "1Y"
+    TWO_YEARS = "2Y"
+    ALL_TIME = "ALL_TIME"
