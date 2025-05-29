@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { statisticService } from '../services/statisticService';
-import { TransactionType } from '../types/transaction';
+import { TransactionType, TimePeriod } from '../types/transaction';
 
 export interface CategoryTimeseriesData {
   id: number;
@@ -23,7 +23,8 @@ export const useCategoryTimeseries = (
   transaction_type?: TransactionType,
   category_name?: string,
   start_date?: string, 
-  end_date?: string
+  end_date?: string,
+  time_period?: TimePeriod
 ) => {
   const [timeseriesData, setTimeseriesData] = useState<CategoryTimeseriesData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +37,8 @@ export const useCategoryTimeseries = (
         transaction_type,
         category_name,
         start_date, 
-        end_date
+        end_date,
+        time_period
       );
       
       // Transform data to ensure numeric values
@@ -65,7 +67,7 @@ export const useCategoryTimeseries = (
   useEffect(() => {
     fetchTimeseriesData();
     // eslint-disable-next-line
-  }, [transaction_type, category_name, start_date, end_date]);
+  }, [transaction_type, category_name, start_date, end_date, time_period]);
 
   return {
     timeseriesData,

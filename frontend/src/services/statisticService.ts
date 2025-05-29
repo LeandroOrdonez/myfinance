@@ -2,7 +2,8 @@ import axios from 'axios';
 import { 
   TransactionType,
   WeekdayDistribution,
-  SuggestCategoryResponse
+  SuggestCategoryResponse,
+  TimePeriod
 } from '../types/transaction';
 import { API_BASE_URL } from '../config';
 
@@ -60,13 +61,15 @@ export const statisticService = {
     transaction_type?: TransactionType,
     category_name?: string,
     start_date?: string, 
-    end_date?: string
+    end_date?: string,
+    time_period?: TimePeriod
   ) => {
     const params: Record<string, string> = {};
     if (transaction_type) params.transaction_type = transaction_type;
     if (category_name) params.category_name = category_name;
     if (start_date) params.start_date = start_date;
     if (end_date) params.end_date = end_date;
+    if (time_period) params.time_period = time_period;
     const response = await axios.get(`${API_BASE_URL}/statistics/category/timeseries`, { params });
     return response.data;
   },
@@ -74,12 +77,14 @@ export const statisticService = {
   getExpenseTypeStatisticsTimeseries: async (
     expense_type?: string,
     start_date?: string, 
-    end_date?: string
+    end_date?: string,
+    time_period?: TimePeriod
   ) => {
     const params: Record<string, string> = {};
     if (expense_type) params.expense_type = expense_type;
     if (start_date) params.start_date = start_date;
     if (end_date) params.end_date = end_date;
+    if (time_period) params.time_period = time_period;
     const response = await axios.get(`${API_BASE_URL}/statistics/expense-type/timeseries`, { params });
     return response.data;
   },
@@ -114,12 +119,14 @@ export const statisticService = {
   getCategoryAverages: async (
     transactionType?: TransactionType,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    timePeriod?: TimePeriod
   ) => {
     const params: Record<string, string> = {};
     if (transactionType) params.transaction_type = transactionType;
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
+    if (timePeriod) params.time_period = timePeriod;
     
     const response = await axios.get(`${API_BASE_URL}/statistics/category/averages`, { params });
     return response.data;

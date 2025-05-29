@@ -588,25 +588,53 @@ def get_category_averages(
     db: Session = Depends(get_db),
     transaction_type: TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    time_period: TimePeriod = Query(None, description="Relative time period (3M, 6M, YTD, 1Y, 2Y, ALL_TIME)")
 ):
     """
     Get average income/expenses per category over a specified time period.
     Calculates monthly averages for each category between start_date and end_date.
     """
     try:
-        # Parse dates
-        try:
-            if start_date:
-                start = datetime.strptime(start_date, "%Y-%m-%d").date()
-            else: # default to the date of the first transaction
+        # Get the latest transaction date to use as reference for relative time periods
+        latest_transaction = db.query(func.max(Transaction.transaction_date)).scalar()
+        reference_date = latest_transaction if latest_transaction else date.today()
+
+        # Push the reference date to the last day of the month
+        reference_date = reference_date.replace(day=calendar.monthrange(reference_date.year, reference_date.month)[1])
+        
+        # Handle relative time period if provided
+        if time_period and not (start_date or end_date):
+            end = reference_date
+            if time_period == TimePeriod.THREE_MONTHS:
+                start = reference_date - relativedelta(months=3)
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
+            elif time_period == TimePeriod.SIX_MONTHS:
+                start = reference_date - relativedelta(months=6)
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
+            elif time_period == TimePeriod.YEAR_TO_DATE:
+                start = date(reference_date.year, 1, 1)
+            elif time_period == TimePeriod.ONE_YEAR:
+                start = reference_date - relativedelta(years=1)
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
+            elif time_period == TimePeriod.TWO_YEARS:
+                start = reference_date - relativedelta(years=2)
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
+            else: # ALL_TIME
                 start = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first().transaction_date
-            if end_date:
-                end = datetime.strptime(end_date, "%Y-%m-%d").date()
-            else: # default to the date of the last transaction
-                end = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first().transaction_date
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        else:
+            # Parse dates
+            try:
+                if start_date:
+                    start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                else: # default to the date of the first transaction
+                    start = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first().transaction_date
+                if end_date:
+                    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                else: # default to the date of the last transaction
+                    end = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first().transaction_date
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
             
         if start > end:
             raise HTTPException(status_code=400, detail="Start date must be before end date")
@@ -702,7 +730,8 @@ def get_category_statistics_timeseries(
     transaction_type: TransactionType = Query(None, description="Filter by transaction type (expense, income, or both)"),
     category_name: str = Query(None, description="Filter by category name"),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    time_period: TimePeriod = Query(None, description="Relative time period (3M, 6M, YTD, 1Y, 2Y, ALL_TIME)")
 ):
     """
     Get category statistics time series for trend analysis.
@@ -721,20 +750,46 @@ def get_category_statistics_timeseries(
         if category_name:
             query = query.filter(CategoryStatistics.category_name == category_name)
             
-        # Apply date filters if provided
-        if start_date:
-            try:
-                start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                query = query.filter(CategoryStatistics.date >= start)
-            except Exception:
-                pass
-                
-        if end_date:
-            try:
-                end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                query = query.filter(CategoryStatistics.date <= end)
-            except Exception:
-                pass
+        # Get the latest transaction date to use as reference for relative time periods
+        latest_transaction = db.query(func.max(Transaction.transaction_date)).scalar()
+        reference_date = latest_transaction if latest_transaction else date.today()
+
+        # Push the reference date to the last day of the month
+        reference_date = reference_date.replace(day=calendar.monthrange(reference_date.year, reference_date.month)[1])
+        
+        # Handle relative time period if provided
+        if time_period and not (start_date or end_date):
+            if time_period == TimePeriod.THREE_MONTHS:
+                start = reference_date - relativedelta(months=3)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.SIX_MONTHS:
+                start = reference_date - relativedelta(months=6)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.YEAR_TO_DATE:
+                start = date(reference_date.year, 1, 1)
+                query = query.filter(CategoryStatistics.date > start)
+            elif time_period == TimePeriod.ONE_YEAR:
+                start = reference_date - relativedelta(years=1)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.TWO_YEARS:
+                start = reference_date - relativedelta(years=2)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            # ALL_TIME doesn't need filtering
+        else:
+            # Apply explicit date filters if provided
+            if start_date:
+                try:
+                    start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                    query = query.filter(CategoryStatistics.date >= start)
+                except Exception:
+                    pass
+                    
+            if end_date:
+                try:
+                    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                    query = query.filter(CategoryStatistics.date <= end)
+                except Exception:
+                    pass
                 
         # Get results ordered by date
         monthly_stats = query.order_by(CategoryStatistics.date).all()
@@ -755,7 +810,8 @@ def get_expense_type_statistics_timeseries(
     db: Session = Depends(get_db),
     expense_type: ExpenseType = Query(None, description="Filter by expense type (essential or discretionary)"),
     start_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="End date (YYYY-MM-DD)")
+    end_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    time_period: TimePeriod = Query(None, description="Relative time period (3M, 6M, YTD, 1Y, 2Y, ALL_TIME)")
 ):
     """
     Get expense type (essential vs discretionary) statistics time series for trend analysis.
@@ -778,20 +834,46 @@ def get_expense_type_statistics_timeseries(
         if expense_type:
             query = query.filter(CategoryStatistics.expense_type == expense_type)
             
-        # Apply date filters if provided
-        if start_date:
-            try:
-                start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                query = query.filter(CategoryStatistics.date >= start)
-            except Exception:
-                pass
-                
-        if end_date:
-            try:
-                end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                query = query.filter(CategoryStatistics.date <= end)
-            except Exception:
-                pass
+        # Get the latest transaction date to use as reference for relative time periods
+        latest_transaction = db.query(func.max(Transaction.transaction_date)).scalar()
+        reference_date = latest_transaction if latest_transaction else date.today()
+
+        # Push the reference date to the last day of the month
+        reference_date = reference_date.replace(day=calendar.monthrange(reference_date.year, reference_date.month)[1])
+        
+        # Handle relative time period if provided
+        if time_period and not (start_date or end_date):
+            if time_period == TimePeriod.THREE_MONTHS:
+                start = reference_date - relativedelta(months=3)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.SIX_MONTHS:
+                start = reference_date - relativedelta(months=6)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.YEAR_TO_DATE:
+                start = date(reference_date.year, 1, 1)
+                query = query.filter(CategoryStatistics.date > start)
+            elif time_period == TimePeriod.ONE_YEAR:
+                start = reference_date - relativedelta(years=1)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            elif time_period == TimePeriod.TWO_YEARS:
+                start = reference_date - relativedelta(years=2)
+                query = query.filter(CategoryStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+            # ALL_TIME doesn't need filtering
+        else:
+            # Apply explicit date filters if provided
+            if start_date:
+                try:
+                    start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                    query = query.filter(CategoryStatistics.date >= start)
+                except Exception:
+                    pass
+                    
+            if end_date:
+                try:
+                    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                    query = query.filter(CategoryStatistics.date <= end)
+                except Exception:
+                    pass
                 
         # Group by date and expense type, then order by date
         monthly_stats = query.group_by(

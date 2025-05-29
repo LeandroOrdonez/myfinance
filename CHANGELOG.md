@@ -3,12 +3,25 @@
 ## 2025-05-29
 
 ### API Enhancement
-- Added optional `time_period` parameter to the `/statistics/timeseries` endpoint
+- Added optional `time_period` parameter to multiple endpoints:
+  - `/statistics/timeseries` for overall financial trends
+  - `/statistics/category/timeseries` for category-specific trends
+  - `/statistics/expense-type/timeseries` for essential vs. discretionary analysis
+  - `/statistics/category/averages` for category average calculations
 - Created new `TimePeriod` enum in transaction schema to represent relative time periods (3M, 6M, YTD, 1Y, 2Y, ALL_TIME)
 - Implemented dynamic date range calculation based on the latest transaction date
 - Enhanced API flexibility by supporting both explicit date ranges and relative time periods
 - Refined time period filtering to use the last day of the month for more accurate period boundaries
-- Updated frontend components to use the new time period parameter instead of manual date calculations
+
+### Frontend Enhancement
+- Updated all chart components to use the new time_period parameter:
+  - `FinancialTrends` for overall financial statistics
+  - `CategoryTimeseriesChart` for category-specific trends
+  - `ExpenseTypeTimeseriesChart` for essential vs. discretionary spending
+  - `CategoryAverages` for average spending by category
+- Simplified frontend code by removing manual date range calculations
+- Improved type safety by using the TimePeriod enum throughout the codebase
+- Standardized period selector UI across all chart components
 
 ## 2025-05-28
 

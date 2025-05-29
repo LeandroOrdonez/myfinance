@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Loading } from '../common/Loading';
 import { useExpenseTypeTimeseries } from '../../hooks/useExpenseTypeTimeseries';
-import { subMonths, startOfYear, format as formatDate } from 'date-fns';
+import { format as formatDate } from 'date-fns';
+import { TimePeriod } from '../../types/transaction';
 import {
   AreaChart,
   Area,
@@ -17,12 +18,12 @@ import {
 import { ChartArea, ChartColumnStacked } from 'lucide-react';
 
 const PERIODS = [
-  { label: '3M', value: '3m' },
-  { label: '6M', value: '6m' },
-  { label: 'YTD', value: 'ytd' },
-  { label: '1Y', value: '1y' },
-  { label: '2Y', value: '2y' },
-  { label: 'All', value: 'all' },
+  { label: '3M', value: TimePeriod.THREE_MONTHS },
+  { label: '6M', value: TimePeriod.SIX_MONTHS },
+  { label: 'YTD', value: TimePeriod.YEAR_TO_DATE },
+  { label: '1Y', value: TimePeriod.ONE_YEAR },
+  { label: '2Y', value: TimePeriod.TWO_YEARS },
+  { label: 'All', value: TimePeriod.ALL_TIME },
 ];
 
 const EXPENSE_TYPE_COLORS = {
@@ -31,32 +32,15 @@ const EXPENSE_TYPE_COLORS = {
 };
 
 export const ExpenseTypeTimeseriesChart: React.FC = () => {
-  const [period, setPeriod] = useState('1y');
+  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [chartType, setChartType] = useState<'area' | 'bar'>('bar');
 
-  // Compute start_date and end_date based on selected period
-  const now = new Date();
-  let start_date: string | undefined = undefined;
-  let end_date: string | undefined = undefined;
-
-  if (period === '3m') {
-    start_date = formatDate(subMonths(now, 3), 'yyyy-MM-01');
-  } else if (period === '6m') {
-    start_date = formatDate(subMonths(now, 6), 'yyyy-MM-01');
-  } else if (period === 'ytd') {
-    start_date = formatDate(startOfYear(now), 'yyyy-MM-01');
-  } else if (period === '1y') {
-    start_date = formatDate(subMonths(now, 12), 'yyyy-MM-01');
-  } else if (period === '2y') {
-    start_date = formatDate(subMonths(now, 24), 'yyyy-MM-01');
-  }
-
-  end_date = formatDate(now, 'yyyy-MM-dd');
-
+  // Use the time_period parameter instead of manually calculating date ranges
   const { timeseriesData, loading } = useExpenseTypeTimeseries(
     undefined, // No specific expense type filter
-    start_date,
-    end_date
+    undefined, // No explicit start date
+    undefined, // No explicit end date
+    period     // Use the time_period parameter
   );
 
   // Transform data for chart display

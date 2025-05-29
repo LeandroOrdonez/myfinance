@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { statisticService } from '../services/statisticService';
+import { TimePeriod } from '../types/transaction';
 
 export interface ExpenseTypeTimeseriesItem {
   date: string;
@@ -12,7 +13,8 @@ export interface ExpenseTypeTimeseriesItem {
 export const useExpenseTypeTimeseries = (
   expense_type?: string,
   start_date?: string, 
-  end_date?: string
+  end_date?: string,
+  time_period?: TimePeriod
 ) => {
   const [timeseriesData, setTimeseriesData] = useState<ExpenseTypeTimeseriesItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,8 @@ export const useExpenseTypeTimeseries = (
       const data = await statisticService.getExpenseTypeStatisticsTimeseries(
         expense_type,
         start_date, 
-        end_date
+        end_date,
+        time_period
       );
       
       // The API returns a root array, so we access it directly
@@ -78,7 +81,7 @@ export const useExpenseTypeTimeseries = (
   useEffect(() => {
     fetchTimeseriesData();
     // eslint-disable-next-line
-  }, [expense_type, start_date, end_date]);
+  }, [expense_type, start_date, end_date, time_period]);
 
   return {
     timeseriesData,

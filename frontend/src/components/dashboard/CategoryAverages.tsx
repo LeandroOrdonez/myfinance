@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { statisticService } from '../../services/statisticService';
-import { TransactionType } from '../../types/transaction';
+import { TransactionType, TimePeriod } from '../../types/transaction';
 import { Loading } from '../common/Loading';
-import { subMonths, startOfYear, format as formatDate } from 'date-fns';
+import { format as formatDate } from 'date-fns';
 
 // Define the periods similar to FinancialTrends
 const PERIODS = [
-  { label: '3M', value: '3m' },
-  { label: '6M', value: '6m' },
-  { label: 'YTD', value: 'ytd' },
-  { label: '1Y', value: '1y' },
-  { label: '2Y', value: '2y' },
-  { label: 'All', value: 'all' },
+  { label: '3M', value: TimePeriod.THREE_MONTHS },
+  { label: '6M', value: TimePeriod.SIX_MONTHS },
+  { label: 'YTD', value: TimePeriod.YEAR_TO_DATE },
+  { label: '1Y', value: TimePeriod.ONE_YEAR },
+  { label: '2Y', value: TimePeriod.TWO_YEARS },
+  { label: 'All', value: TimePeriod.ALL_TIME },
 ];
 
 // Define the category average item interface
@@ -35,32 +35,12 @@ interface CategoryAveragesResponse {
 }
 
 export const CategoryAverages: React.FC = () => {
-  const [period, setPeriod] = useState('1y');
+  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [transactionType, setTransactionType] = useState<TransactionType | undefined>(TransactionType.EXPENSE);
   const [categoryData, setCategoryData] = useState<CategoryAveragesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
-
-  // Compute start_date and end_date based on selected period
-  const now = new Date();
-  let start_date: string | undefined = undefined;
-  let end_date: string | undefined = undefined;
-
-  if (period === '3m') {
-    start_date = formatDate(subMonths(now, 3), 'yyyy-MM-01');
-  } else if (period === '6m') {
-    start_date = formatDate(subMonths(now, 6), 'yyyy-MM-01');
-  } else if (period === 'ytd') {
-    start_date = formatDate(startOfYear(now), 'yyyy-MM-01');
-  } else if (period === '1y') {
-    start_date = formatDate(subMonths(now, 12), 'yyyy-MM-01');
-  } else if (period === '2y') {
-    start_date = formatDate(subMonths(now, 24), 'yyyy-MM-01');
-  }
-  // For 'all', we leave start_date undefined to get all data
-
-  end_date = formatDate(now, 'yyyy-MM-dd');
 
   // Fetch category averages data
   useEffect(() => {
@@ -69,8 +49,9 @@ export const CategoryAverages: React.FC = () => {
       try {
         const data = await statisticService.getCategoryAverages(
           transactionType,
-          start_date,
-          end_date
+          undefined, // No explicit start date
+          undefined, // No explicit end date
+          period     // Use the time_period parameter
         );
         setCategoryData(data);
         
@@ -100,7 +81,7 @@ export const CategoryAverages: React.FC = () => {
     };
 
     fetchCategoryAverages();
-  }, [period, transactionType, start_date, end_date]);
+  }, [period, transactionType]);
 
   // Helper function to format currency
   const formatCurrency = (amount: number) => {
@@ -203,7 +184,7 @@ export const CategoryAverages: React.FC = () => {
       {!loading && !error && categoryData && (
         <div>
           <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
-            Showing monthly averages from {categoryData.start_date} to {categoryData.end_date} ({categoryData.months_count-1} months)
+            Showing monthly averages from {categoryData.start_date} to {categoryData.end_date} ({categoryData.months_count} months)
           </div>
           
           <div className="h-[400px]">
@@ -278,7 +259,7 @@ export const CategoryAverages: React.FC = () => {
                   <div className="flex justify-between">
                     <span className="text-sm dark:text-gray-300">Time Period</span>
                     <span className="text-sm font-medium dark:text-gray-300">
-                      {categoryData.months_count-1} months
+                      {categoryData.months_count} months
                     </span>
                   </div>
                   <div className="flex justify-between">
