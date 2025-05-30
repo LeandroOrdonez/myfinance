@@ -99,7 +99,7 @@ const TransactionsView = () => {
           <tbody className="bg-white text-xs dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <tr>
               <td colSpan={7} className="text-center py-4">
-                <div className="text-gray-500">{error}</div>
+                <div className="text-gray-500 dark:text-gray-400">{error}</div>
               </td>
             </tr>
           </tbody>

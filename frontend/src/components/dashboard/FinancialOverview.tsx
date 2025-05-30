@@ -21,31 +21,23 @@ export const FinancialOverview: React.FC = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center">
-              <div className="text-gray-500">{error}</div>
-            </div>
+          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
+            {error}
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center">
-              <div className="text-gray-500">{error}</div>
-            </div>
+          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
+            {error}
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center">
-              <div className="text-gray-500">{error}</div>
-            </div>
+          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
+            {error}
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center">
-              <div className="text-gray-500">{error}</div>
-            </div>
+          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
+            {error}
           </div>
         </div>
       </div>

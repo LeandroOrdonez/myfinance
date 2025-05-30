@@ -109,7 +109,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
           />
         </div>
         <div className="flex justify-center items-center h-64">
-          <p className="text-red-500 dark:text-red-400">{error}</p>
+          <p className="text-gray-500 dark:text-gray-400">{error}</p>
         </div>
       </div>
     );

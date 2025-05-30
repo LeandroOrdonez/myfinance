@@ -171,13 +171,13 @@ export const CategoryAverages: React.FC = () => {
 
       {loading && (
         <div className="flex justify-center items-center h-64">
-          <Loading />
+          <Loading variant="skeleton" size="small" />
         </div>
       )}
 
       {error && !loading && (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-red-500 dark:text-red-400">{error}</p>
+        <div className="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          {error}
         </div>
       )}
 
