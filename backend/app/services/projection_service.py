@@ -220,11 +220,13 @@ class ProjectionService:
                 two_years_ago = latest_transaction.transaction_date - relativedelta(years=2)
             else:
                 two_years_ago = date.today() - relativedelta(years=2)
+
+            two_years_ago = two_years_ago.replace(day=calendar.monthrange(two_years_ago.year, two_years_ago.month)[1])
             
             # Query monthly statistics
             monthly_stats = db.query(FinancialStatistics).filter(
                 FinancialStatistics.period == StatisticsPeriod.MONTHLY,
-                FinancialStatistics.date >= two_years_ago
+                FinancialStatistics.date > two_years_ago
             ).order_by(FinancialStatistics.date).all()
             
             if not monthly_stats:

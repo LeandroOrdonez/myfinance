@@ -534,42 +534,48 @@ def get_statistics_timeseries(
         # Push the reference date the the last day of the month
         reference_date = reference_date.replace(day=calendar.monthrange(reference_date.year, reference_date.month)[1])
         
-        query = db.query(FinancialStatistics).filter(
-            FinancialStatistics.period == StatisticsPeriod.MONTHLY
-        )
-        
         # Handle relative time period if provided
         if time_period and not (start_date or end_date):
+            end = reference_date
             if time_period == TimePeriod.THREE_MONTHS:
                 start = reference_date - relativedelta(months=3)
-                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
             elif time_period == TimePeriod.SIX_MONTHS:
                 start = reference_date - relativedelta(months=6)
-                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
             elif time_period == TimePeriod.YEAR_TO_DATE:
                 start = date(reference_date.year, 1, 1)
-                query = query.filter(FinancialStatistics.date > start)
             elif time_period == TimePeriod.ONE_YEAR:
                 start = reference_date - relativedelta(years=1)
-                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
             elif time_period == TimePeriod.TWO_YEARS:
                 start = reference_date - relativedelta(years=2)
-                query = query.filter(FinancialStatistics.date > start.replace(day=calendar.monthrange(start.year, start.month)[1]))
-            # ALL_TIME doesn't need filtering
+                start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
+            else:
+                start = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first().transaction_date
         else:
-            # Use explicit date parameters if provided
-            if start_date:
-                try:
+            # Parse dates
+            try:
+                if start_date:
                     start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                    query = query.filter(FinancialStatistics.date >= start)
-                except Exception:
-                    pass
-            if end_date:
-                try:
+                else: # default to the date of the first transaction
+                    start = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first().transaction_date
+                if end_date:
                     end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                    query = query.filter(FinancialStatistics.date <= end)
-                except Exception:
-                    pass
+                else: # default to the date of the last transaction
+                    end = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first().transaction_date
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+        if start > end:
+            raise HTTPException(status_code=400, detail="Start date must be before end date")
+        
+        # Query FinancialStatistics in the date range
+        query = db.query(FinancialStatistics).filter(
+            FinancialStatistics.period == StatisticsPeriod.MONTHLY,
+            FinancialStatistics.date >= start,
+            FinancialStatistics.date <= end
+        )
                     
         monthly_stats = query.order_by(FinancialStatistics.date).all()
         
