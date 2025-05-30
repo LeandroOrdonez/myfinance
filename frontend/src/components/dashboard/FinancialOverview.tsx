@@ -7,8 +7,50 @@ import { Loading } from '../common/Loading';
 export const FinancialOverview: React.FC = () => {
   const { statistics, loading, error } = useStatistics();
 
-  if (loading) return <Loading />;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <Loading variant="skeleton" size="small" />
+        <Loading variant="skeleton" size="small" />
+        <Loading variant="skeleton" size="small" />
+        <Loading variant="skeleton" size="small" />
+      </div>
+    </div>
+  );
+  if (error) return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <div className="text-gray-500">{error}</div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <div className="text-gray-500">{error}</div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <div className="text-gray-500">{error}</div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <div className="text-gray-500">{error}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   if (!statistics) return null;
 
   const calculateChange = (current: number, previous: number): string => {

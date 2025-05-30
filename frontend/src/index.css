@@ -20,3 +20,20 @@
 .tooltip-wrapper .recharts-tooltip-label {
   color: var(--color-tooltip-text) !important;
 }
+
+/* Custom animations for Loading component */
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(-10%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-progress {
+  animation: progress 2s ease-in-out infinite;
+}

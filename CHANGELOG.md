@@ -1,5 +1,14 @@
 # MyFinance Changelog
 
+## 2025-05-30
+
+### UI Enhancement
+- Enhanced the Loading component with multiple variants (skeleton, spinner, progress)
+- Added customizable sizes (small, medium, large) to the Loading component
+- Implemented subtle pulsating animations for improved visual feedback
+- Added custom progress animation for a more engaging user experience
+- Improved component flexibility with optional text display
+
 ## 2025-05-29
 
 ### API Enhancement

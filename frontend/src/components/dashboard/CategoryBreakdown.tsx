@@ -44,8 +44,15 @@ export const CategoryBreakdown: React.FC = () => {
   const loading = categoryLoading || statsLoading;
   const error = categoryError || statsError;
 
-  if (loading) return <Loading />;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (loading) return <Loading variant="progress" size="medium" />;
+  if (error) return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+      <div className="flex justify-between items-center mb-5">
+        <div className="text-gray-500">{error}</div>
+      </div>
+    </div>
+  );
+    
   if (!statistics) return null;
 
   // Get current month name from statistics
