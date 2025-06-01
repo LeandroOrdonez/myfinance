@@ -21,6 +21,10 @@ init_database()
 # Initialize the service
 category_suggestion_service = CategorySuggestionService()
 
+# Initialize category suggestions
+with next(get_db()) as db:
+    category_suggestion_service.train_on_existing_transactions(db)
+
 app = FastAPI(title="MyFinance API")
 
 # Configure CORS

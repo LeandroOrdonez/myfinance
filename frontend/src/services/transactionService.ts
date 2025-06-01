@@ -13,7 +13,7 @@ export const transactionService = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await axios.post(`${API_BASE_URL}/upload/`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/transactions/upload/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
