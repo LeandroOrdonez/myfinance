@@ -12,15 +12,11 @@ from ..models.transaction import Transaction, ExpenseCategory, IncomeCategory, T
 from ..schemas import transaction as schemas
 from ..services.csv_parser import CSVParser
 from ..services.statistics_service import StatisticsService
+from ..routers.suggestions import category_suggestion_service
 from datetime import date, datetime
-
-from ..services.category_suggestion_service import CategorySuggestionService
 
 # Set up logging
 logger = logging.getLogger(__name__)
-
-# Initialize the service
-category_suggestion_service = CategorySuggestionService()
 
 # Create router
 router = APIRouter(

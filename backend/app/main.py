@@ -10,20 +10,12 @@ logger = logging.getLogger(__name__)
 
 from .database import get_db
 from .database_manager import init_database, reset_database
-from .services.category_suggestion_service import CategorySuggestionService
 
 # Import routers
 from .routers import transactions, statistics, suggestions, financial_health, projections
 
 # Initialize the database
 init_database()
-
-# Initialize the service
-category_suggestion_service = CategorySuggestionService()
-
-# Initialize category suggestions
-with next(get_db()) as db:
-    category_suggestion_service.train_on_existing_transactions(db)
 
 app = FastAPI(title="MyFinance API")
 
@@ -38,9 +30,9 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(suggestions.router)
 app.include_router(transactions.router)
 app.include_router(statistics.router)
-app.include_router(suggestions.router)
 app.include_router(financial_health.router)
 app.include_router(projections.router)
 
