@@ -534,9 +534,9 @@ def get_statistics_timeseries(
         # Push the reference date the the last day of the month
         reference_date = reference_date.replace(day=calendar.monthrange(reference_date.year, reference_date.month)[1])
         
+        end = reference_date
         # Handle relative time period if provided
         if time_period and not (start_date or end_date):
-            end = reference_date
             if time_period == TimePeriod.THREE_MONTHS:
                 start = reference_date - relativedelta(months=3)
                 start = start.replace(day=calendar.monthrange(start.year, start.month)[1]) + timedelta(days=1)
@@ -562,8 +562,6 @@ def get_statistics_timeseries(
                     start = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first().transaction_date
                 if end_date:
                     end = datetime.strptime(end_date, "%Y-%m-%d").date()
-                else: # default to the date of the last transaction
-                    end = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first().transaction_date
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
