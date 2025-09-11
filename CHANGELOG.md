@@ -1,5 +1,12 @@
 # MyFinance Changelog
 
+## 2025-09-11
+
+### Backend – Projection Robustness
+- Applied winsorization (5th–95th percentiles) to income, expenses, and savings in `ProjectionService.analyze_historical_data` before averaging
+- Added `_winsorize` helper; removed prior IQR-based outlier removal
+- Kept YoY growth on raw data; winsorized per-month sums for essential/discretionary aggregation
+
 ## 2025-05-30
 
 ### UI Enhancement

@@ -271,10 +271,15 @@ class ProjectionService:
                 
                 savings_series.append(stat.period_net_savings)
             
-            # Calculate averages
-            avg_monthly_income = np.mean(income_series)
-            avg_monthly_expenses = np.mean(expense_series)
-            avg_monthly_savings = np.mean(savings_series)
+            # Apply winsorization to handle outliers before calculating averages
+            income_series_w = ProjectionService._winsorize(income_series)
+            expense_series_w = ProjectionService._winsorize(expense_series)
+            savings_series_w = ProjectionService._winsorize(savings_series)
+            
+            # Calculate averages using winsorized data
+            avg_monthly_income = np.mean(income_series_w)
+            avg_monthly_expenses = np.mean(expense_series_w)
+            avg_monthly_savings = np.mean(savings_series_w)
             
             # Calculate annual growth rates using year-over-year comparison method
             # This provides a more stable and accurate growth rate than month-over-month averages
@@ -309,16 +314,16 @@ class ProjectionService:
                     
                 month_key = stat.date.strftime('%Y-%m')
                 if month_key not in monthly_expense_stats:
-                    monthly_expense_stats[month_key] = {'essential': 0, 'discretionary': 0}
+                    monthly_expense_stats[month_key] = {'essential': [], 'discretionary': []}
                 
                 if stat.expense_type == ExpenseType.ESSENTIAL:
-                    monthly_expense_stats[month_key]['essential'] += stat.period_amount
+                    monthly_expense_stats[month_key]['essential'].append(stat.period_amount)
                 else:
-                    monthly_expense_stats[month_key]['discretionary'] += stat.period_amount
+                    monthly_expense_stats[month_key]['discretionary'].append(stat.period_amount)
             
             # Extract monthly totals for each expense type
-            monthly_essential = [month_data['essential'] for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
-            monthly_discretionary = [month_data['discretionary'] for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
+            monthly_essential = [sum(ProjectionService._winsorize(month_data['essential'])) for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
+            monthly_discretionary = [sum(ProjectionService._winsorize(month_data['discretionary'])) for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
             
             # Calculate annual growth for essential and discretionary expenses using year-over-year comparison
             annual_essential_expense_growth = ProjectionService.calculate_annual_growth(monthly_essential)
@@ -588,6 +593,35 @@ class ProjectionService:
             db.rollback()
             logger.error(f"Error recomputing base case parameters: {str(e)}")
             raise e
+    
+    @staticmethod
+    def _winsorize(data_series: List[float], limits: float = 0.05) -> List[float]:
+        """
+        Apply winsorization to a data series by capping extreme values at specified percentile bounds.
+        
+        Args:
+            data_series: List of numerical values.
+            limits: Proportion to cut off on each tail (e.g., 0.05 caps at the 5th and 95th percentiles).
+            
+        Returns:
+            List of values with extremes capped to reduce the impact of outliers.
+        """
+        if not data_series or len(data_series) < 4:
+            return data_series
+        
+        # Convert to numpy array for easier calculations
+        data_array = np.array(data_series)
+        
+        # Compute lower and upper percentile bounds
+        lower_pct = limits * 100.0
+        upper_pct = 100.0 - lower_pct
+        
+        lower_bound = np.percentile(data_array, lower_pct)
+        upper_bound = np.percentile(data_array, upper_pct)
+        
+        # Clamp values to bounds
+        winsorized = [min(max(x, lower_bound), upper_bound) for x in data_series]
+        return winsorized
     
     @staticmethod
     def compare_scenarios(db: Session, scenario_ids: List[int]) -> Dict[str, Any]:
