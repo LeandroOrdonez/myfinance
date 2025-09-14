@@ -6,12 +6,14 @@ import {
   Bars3Icon,
   ChevronRightIcon,
   HeartIcon as HeartIconOutline,
-  PresentationChartLineIcon as PresentationChartLineIconOutline
+  PresentationChartLineIcon as PresentationChartLineIconOutline,
+  ShieldExclamationIcon as ShieldExclamationIconOutline
 } from '@heroicons/react/24/outline';
 import { 
   HeartIcon as HeartIconSolid,
   ChartBarIcon as ChartBarIconSolid,
-  PresentationChartLineIcon as PresentationChartLineIconSolid
+  PresentationChartLineIcon as PresentationChartLineIconSolid,
+  ShieldExclamationIcon as ShieldExclamationIconSolid
 } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
@@ -43,6 +45,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'projections',
       label: 'Projections',
       icon: activeView === 'projections' ? <PresentationChartLineIconSolid className="h-5 w-5" /> : <PresentationChartLineIconOutline className="h-5 w-5" />
+    },
+    {
+      id: 'anomalies',
+      label: 'Anomaly Detection',
+      icon: activeView === 'anomalies' ? <ShieldExclamationIconSolid className="h-5 w-5" /> : <ShieldExclamationIconOutline className="h-5 w-5" />
     },
     {
       id: 'transactions',

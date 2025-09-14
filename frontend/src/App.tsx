@@ -11,6 +11,8 @@ import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 // import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
 import FinancialHealth from './components/dashboard/FinancialHealth';
 import ProjectionDashboard from './components/dashboard/projections/ProjectionDashboard';
+import { AnomalyDashboard } from './components/dashboard/anomalies/AnomalyDashboard';
+import { AnomalyList } from './components/dashboard/anomalies/AnomalyList';
 import { Loading } from './components/common/Loading';
 import { CategoryTimeseriesChart } from './components/dashboard/CategoryTimeseriesChart';
 import { ExpenseTypeTimeseriesChart } from './components/dashboard/ExpenseTypeTimeseriesChart';
@@ -192,6 +194,17 @@ function App() {
               element={
                 <MainLayout onUploadSuccess={handleUploadSuccess}>
                   <ProjectionDashboard />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/anomalies" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <div className="space-y-6">
+                    <AnomalyDashboard />
+                    <AnomalyList />
+                  </div>
                 </MainLayout>
               } 
             />

@@ -1,5 +1,26 @@
 # MyFinance Changelog
 
+## 2025-09-14
+
+### Anomalous Transaction Detection System
+- **New Feature**: Comprehensive anomaly detection system for identifying exceptional transactions
+- **Backend Models**: Added `TransactionAnomaly`, `AnomalyPattern`, and `AnomalyRule` models with support for multiple anomaly types
+- **Detection Methods**: Implemented 6 detection algorithms:
+  - Statistical outliers using Z-score analysis
+  - Temporal anomalies (unusual timing patterns)
+  - Amount anomalies (transactions in top percentiles)
+  - Frequency anomalies (unusual merchant transaction frequency)
+  - Behavioral anomalies (new category usage patterns)
+  - Merchant anomalies (first-time large transactions)
+- **Scoring System**: 0-100 anomaly scores with severity levels (Low, Medium, High, Critical)
+- **API Endpoints**: Complete REST API for anomaly detection, review, and management
+- **Frontend Components**: 
+  - `AnomalyDashboard` for statistics and detection controls
+  - `AnomalyList` for reviewing and managing detected anomalies
+  - Integration with main navigation and routing
+- **Automated Detection**: Anomaly detection runs automatically on new transaction imports and restorations
+- **Review System**: Status tracking (Detected, Reviewed, Confirmed, False Positive) with review notes
+
 ## 2025-09-11
 
 ### Backend – Projection Robustness

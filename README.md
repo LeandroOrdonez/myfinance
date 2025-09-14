@@ -70,6 +70,20 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
   - Investment Growth
 - Scenario comparison for side-by-side analysis
 
+### Anomalous Transaction Detection
+- Comprehensive anomaly detection system for identifying exceptional transactions
+- Multiple detection algorithms:
+  - Statistical outliers using Z-score analysis
+  - Temporal anomalies (unusual timing patterns)
+  - Amount anomalies (transactions in top percentiles)
+  - Frequency anomalies (unusual merchant transaction frequency)
+  - Behavioral anomalies (new category usage patterns)
+  - Merchant anomalies (first-time large transactions)
+- Intelligent scoring system (0-100 scale) with severity levels
+- Automated detection on transaction imports
+- Review and management system with status tracking
+- False positive handling and learning capabilities
+
 ### User Experience
 - PIN-based authentication system (not yet fully implemented, PIN hard-coded to 1234)
 - Dark/light theme support

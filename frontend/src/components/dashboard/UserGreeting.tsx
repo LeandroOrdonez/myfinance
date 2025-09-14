@@ -51,6 +51,8 @@ const getPageTitle = (currentView: string) => {
       return <><span>Financial Health</span>&nbsp;&middot;&nbsp;<span className="italic">Improving your financial wellbeing</span></>;
     case 'projections':
       return <><span>Financial Projections</span>&nbsp;&middot;&nbsp;<span className="italic">Visualize your financial future</span></>;
+    case 'anomalies':
+      return <><span>Anomaly Detection</span>&nbsp;&middot;&nbsp;<span className="italic">Monitor and review unusual transaction patterns</span></>;
     default:
       return 'Smart money management';
   }

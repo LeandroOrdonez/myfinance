@@ -12,6 +12,7 @@ from ..models.transaction import Transaction, ExpenseCategory, IncomeCategory, T
 from ..schemas import transaction as schemas
 from ..services.csv_parser import CSVParser
 from ..services.statistics_service import StatisticsService
+from ..services.anomaly_detection_service import AnomalyDetectionService
 from ..routers.suggestions import category_suggestion_service
 from datetime import date, datetime
 
@@ -105,6 +106,19 @@ async def upload_csv(
                 db.refresh(trans)
                 if trans.expense_category or trans.income_category:
                     category_suggestion_service.add_transaction(trans)
+            
+            # Run anomaly detection on newly imported transactions
+            if db_transactions:
+                try:
+                    transaction_ids = [t.id for t in db_transactions]
+                    AnomalyDetectionService.detect_anomalies(
+                        db=db,
+                        transaction_ids=transaction_ids,
+                        force_redetection=False
+                    )
+                    logger.info(f"Anomaly detection completed for {len(transaction_ids)} new transactions")
+                except Exception as e:
+                    logger.warning(f"Anomaly detection failed for new transactions: {str(e)}")
                     
             return db_transactions
             
@@ -274,6 +288,16 @@ def restore_transaction(
         
         # Update statistics for the affected period
         StatisticsService.update_statistics(db, new_transaction.transaction_date)
+        
+        # Run anomaly detection on restored transaction
+        try:
+            AnomalyDetectionService.detect_anomalies(
+                db=db,
+                transaction_ids=[new_transaction.id],
+                force_redetection=False
+            )
+        except Exception as e:
+            logger.warning(f"Anomaly detection failed for restored transaction: {str(e)}")
         
         return new_transaction
         
