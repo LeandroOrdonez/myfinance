@@ -245,10 +245,10 @@ export const AnomalyList: React.FC<AnomalyListProps> = () => {
                       <Eye className="w-4 h-4" />
                     </button>
                     
-                    {anomaly.status === 'DETECTED' && (
+                    {anomaly.status === 'Detected' && (
                       <>
                         <button
-                          onClick={() => handleStatusUpdate(anomaly.id, 'CONFIRMED')}
+                          onClick={() => handleStatusUpdate(anomaly.id, 'Confirmed')}
                           className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Confirm Anomaly"
                         >
