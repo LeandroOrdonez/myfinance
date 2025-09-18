@@ -1,5 +1,13 @@
 # MyFinance Changelog
 
+## 2025-09-18
+
+### Projection Realism Guardrail
+- Added a guardrail in `ProjectionService.calculate_projection` to cap projected monthly expenses to a share of income based on the historical expense-to-income ratio (with a hard 95% ceiling)
+- Proportionally scales essential and discretionary expenses when the cap is hit to maintain composition
+- Extended `analyze_historical_data` to return `avg_expense_to_income_ratio`
+- Updated README to document this behavior
+
 ## 2025-09-14
 
 ### Anomalous Transaction Detection System

@@ -335,6 +335,9 @@ class ProjectionService:
             
             avg_essential_ratio = np.mean(monthly_essential) / avg_monthly_expenses if avg_monthly_expenses > 0 else 0.6
             avg_discretionary_ratio = np.mean(monthly_discretionary) / avg_monthly_expenses if avg_monthly_expenses > 0 else 0.4
+            
+            avg_expense_to_income_ratio = (avg_monthly_expenses / avg_monthly_income) if avg_monthly_income > 0 else 0.85
+            
             # Calculate seasonality (not implemented in this version)
             # This would identify recurring patterns in income/expenses
             
@@ -349,6 +352,7 @@ class ProjectionService:
                 "avg_investment_rate": avg_investment_rate,
                 "essential_expense_ratio": avg_essential_ratio,
                 "discretionary_expense_ratio": avg_discretionary_ratio,
+                "avg_expense_to_income_ratio": avg_expense_to_income_ratio,
                 "latest_date": dates[-1] if dates else date.today()
             }
             
@@ -401,6 +405,9 @@ class ProjectionService:
             current_discretionary_expenses = historical_data["avg_monthly_expenses"] * historical_data["discretionary_expense_ratio"]
             current_investment_rate = historical_data["avg_investment_rate"] or param_dict.get("investment_rate", 0.10)
             
+            # Guardrail: cap expenses as a share of income using historical ratio (with an absolute ceiling)
+            expense_ratio_cap = min(0.95, historical_data.get("avg_expense_to_income_ratio", 0.85))
+            
             # Initialize investment portfolio with current market value if provided
             investment_portfolio = param_dict.get("holdings_market_value", 0)
             
@@ -435,7 +442,17 @@ class ProjectionService:
                     current_discretionary_expenses *= (1 + monthly_discretionary_growth)
                 
                 # Calculate derived values
-                total_expenses = current_essential_expenses + current_discretionary_expenses
+                total_expenses_pre = current_essential_expenses + current_discretionary_expenses
+                # Apply cap to keep expenses within a realistic share of income
+                cap_amount = current_income * expense_ratio_cap
+                if total_expenses_pre > cap_amount and total_expenses_pre > 0:
+                    scale = cap_amount / total_expenses_pre
+                    current_essential_expenses *= scale
+                    current_discretionary_expenses *= scale
+                    total_expenses = cap_amount
+                else:
+                    total_expenses = total_expenses_pre
+                
                 investment_amount = current_income * current_investment_rate
                 savings = current_income - total_expenses - investment_amount
                 
