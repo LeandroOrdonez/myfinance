@@ -1,11 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query, Body, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import pandas as pd
-from typing import List
+from typing import List, Dict
 import tempfile
 import os
 import logging
+import time
 
 from ..database import get_db
 from ..models.transaction import Transaction, ExpenseCategory, IncomeCategory, TransactionType
@@ -25,6 +26,37 @@ router = APIRouter(
     tags=["transactions"]
 )
 
+# ----------------------------------------------------------------------------
+# Upload guardrail configuration
+# ----------------------------------------------------------------------------
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB limit
+ALLOWED_CONTENT_TYPES = {
+    "text/csv",
+    "application/csv",
+    "application/vnd.ms-excel",
+    "application/octet-stream",  # common fallback in some browsers/OSes
+    "text/plain",               # some systems tag CSV as plain text
+    "",                         # occasionally missing content type
+}
+MAX_ROWS_PER_UPLOAD = 5000
+MAX_NEW_TRANSACTIONS_PER_UPLOAD = 2000
+
+# Simple in-memory rate limiting (per-IP)
+RATE_LIMIT_WINDOW_SECONDS = 60
+MAX_UPLOADS_PER_WINDOW = 3
+_upload_attempts: Dict[str, List[float]] = {}
+
+def _check_rate_limit(client_ip: str) -> None:
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW_SECONDS
+    timestamps = _upload_attempts.get(client_ip, [])
+    # Keep only timestamps within the window
+    timestamps = [t for t in timestamps if t >= window_start]
+    if len(timestamps) >= MAX_UPLOADS_PER_WINDOW:
+        raise HTTPException(status_code=429, detail="Too many uploads. Please wait a minute and try again.")
+    timestamps.append(now)
+    _upload_attempts[client_ip] = timestamps
+
 # Define sort field mapping
 SORT_FIELD_MAPPING = {
     'date': 'transaction_date',
@@ -36,20 +68,44 @@ SORT_FIELD_MAPPING = {
 @router.post("/upload/", response_model=List[schemas.Transaction])
 async def upload_csv(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    request: Request = None,
 ):
     if not file.filename.endswith('.csv'):
         raise HTTPException(400, detail="Invalid file format. Please upload a CSV file.")
 
+    # Check content type (some browsers send application/vnd.ms-excel for CSV)
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=415, detail="Unsupported media type. Please upload a CSV file.")
+
+    # Per-IP rate limiting
+    try:
+        client_ip = request.client.host if request and request.client else "unknown"
+    except Exception:
+        client_ip = "unknown"
+    _check_rate_limit(client_ip)
+
     # Save uploaded file temporarily
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        content = await file.read()
-        temp_file.write(content)
-        temp_file.seek(0)
+        # Stream the incoming upload to avoid loading entire file into memory,
+        # enforcing a maximum allowed size while writing.
+        total_bytes = 0
+        while True:
+            chunk = await file.read(1_048_576)  # 1 MB chunks
+            if not chunk:
+                break
+            total_bytes += len(chunk)
+            if total_bytes > MAX_UPLOAD_BYTES:
+                raise HTTPException(status_code=413, detail=f"File too large. Max allowed size is {MAX_UPLOAD_BYTES // (1024*1024)} MB.")
+            temp_file.write(chunk)
+        temp_file.flush()
         
         try:
             # Parse based on detected format
             transactions = CSVParser.parse_csv(temp_file.name)
+            # Guardrail: hard cap on number of rows parsed
+            if len(transactions) > MAX_ROWS_PER_UPLOAD:
+                raise HTTPException(status_code=400, detail=f"CSV contains {len(transactions)} rows. The maximum allowed per upload is {MAX_ROWS_PER_UPLOAD}.")
             
             # Save to database with category suggestions
             db_transactions = []
@@ -91,6 +147,13 @@ async def upload_csv(
                 db_trans = Transaction(**trans.dict())
                 db.add(db_trans)
                 db_transactions.append(db_trans)
+
+                # Guardrail: cap the number of new transactions created per upload
+                if len(db_transactions) >= MAX_NEW_TRANSACTIONS_PER_UPLOAD:
+                    logger.info(
+                        f"Reached per-upload creation cap of {MAX_NEW_TRANSACTIONS_PER_UPLOAD} new transactions; remaining rows will be ignored."
+                    )
+                    break
             
             if skipped_count > 0:
                 logger.info(f"Skipped {skipped_count} duplicate transactions during import")
@@ -122,9 +185,13 @@ async def upload_csv(
                     
             return db_transactions
             
+        except HTTPException as e:  # Preserve intended error codes like 400/415
+            raise e
+        except ValueError as e:  # CSV format/parse errors
+            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
             logger.error(f"Error processing CSV upload: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Error processing CSV upload")
         finally:
             os.unlink(temp_file.name)
 

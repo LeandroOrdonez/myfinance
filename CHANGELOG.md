@@ -12,6 +12,23 @@
   - `_detect_behavioral_anomalies`: category usage checks use `expense_category` only and expense transactions
   - `_detect_merchant_anomalies`: “new merchant account” logic considers only expense transactions
 - Ensures anomalies reflect unusual spending patterns rather than income inflows
+ 
+### Upload Guardrails
+
+- Implemented comprehensive safeguards for CSV uploads to prevent abuse and improve reliability:
+- Backend:
+  - Enforced CSV content types and `.csv` filename extension
+  - Added 5 MB maximum upload size with streaming writes to temp file (prevents loading whole file in memory)
+  - Basic per-IP rate limiting: max 3 uploads per minute
+  - Row cap: max 5,000 rows parsed per upload
+  - Creation cap: max 2,000 new transactions created per upload; remaining rows ignored
+  - Clear error responses for size (413), type (415), rate limit (429), and invalid CSV (400)
+  - Preserved duplicate skipping and post-import anomaly detection
+- Frontend:
+  - Added client-side validation for type (MIME and extension) and size (5 MB)
+  - Improved error messages based on server status codes
+  - Reset file input after each attempt; success toast shows number of imported transactions
+- Documentation: Added "Upload Limits & Guardrails" section to README.
 
 ## 2025-09-18
 

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import axios from 'axios';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Progress from '@radix-ui/react-progress';
 import * as Toast from '@radix-ui/react-toast';
@@ -12,6 +13,17 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
+  const [importedCount, setImportedCount] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Frontend guardrails to mirror backend limits
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+  const ALLOWED_MIME = new Set([
+    'text/csv',
+    'application/csv',
+    'application/vnd.ms-excel',
+    '' // Some browsers leave this empty; we'll also check extension
+  ]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -21,14 +33,45 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
     setError(null);
 
     try {
-      await transactionService.uploadCSV(file);
+      // Client-side validation: extension and MIME
+      const hasCsvExtension = file.name.toLowerCase().endsWith('.csv');
+      if (!hasCsvExtension) {
+        throw new Error('Invalid file type. Please select a .csv file.');
+      }
+      if (!ALLOWED_MIME.has(file.type)) {
+        throw new Error('Unsupported file type. Please upload a CSV file.');
+      }
+
+      // Client-side validation: size
+      if (file.size > MAX_UPLOAD_BYTES) {
+        throw new Error('File too large. The maximum allowed size is 5 MB.');
+      }
+
+      const result = await transactionService.uploadCSV(file);
+      setImportedCount(Array.isArray(result) ? result.length : null);
       onUploadSuccess();
       setShowToast(true);
     } catch (err) {
-      setError('Error uploading file. Please try again.');
+      let message = 'Error uploading file. Please try again.';
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        const detail = (err.response?.data as any)?.detail;
+        if (status === 413) message = 'File too large. Maximum allowed size is 5 MB.';
+        else if (status === 415) message = 'Unsupported media type. Please upload a CSV file.';
+        else if (status === 429) message = 'Too many uploads in a short time. Please wait and try again.';
+        else if (status === 400) message = detail || 'Invalid CSV. Please check the file and try again.';
+        else if (status && detail) message = detail;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      setError(message);
       console.error(err);
     } finally {
       setLoading(false);
+      // Reset the input so the same file can be re-selected
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -54,6 +97,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
                 accept=".csv"
                 onChange={handleFileChange}
                 disabled={loading}
+                ref={fileInputRef}
                 className="block w-full text-sm text-slate-500
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
@@ -61,6 +105,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
                   file:bg-blue-50 file:text-blue-700
                   hover:file:bg-blue-100"
               />
+
+              <p className="text-xs text-slate-500">
+                Max size: 5 MB. Accepted type: CSV. Uploads are rate-limited.
+              </p>
               
               {loading && (
                 <Progress.Root className="relative overflow-hidden bg-blue-100 rounded-full w-full h-2">
@@ -97,7 +145,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
             Success
           </Toast.Title>
           <Toast.Description className="text-green-800 mt-1">
-            File uploaded successfully
+            {importedCount != null
+              ? `File uploaded successfully. Imported ${importedCount} new transaction${importedCount === 1 ? '' : 's'}.`
+              : 'File uploaded successfully.'}
           </Toast.Description>
         </Toast.Root>
         <Toast.Viewport className="fixed bottom-0 right-0 flex flex-col p-6 gap-2 w-96 m-0 list-none z-50" />

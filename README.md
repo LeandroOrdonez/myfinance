@@ -146,6 +146,26 @@ npm run start
 - Import transactions using the CSV uploader in the frontend
 - Navigate between the Dashboard and Transactions list
 
+### Upload Limits & Guardrails
+
+To ensure reliable and safe CSV imports, the uploader enforces several guardrails:
+
+- **File type**: Only CSV files are accepted. Browsers may report MIME as `text/csv`, `application/csv`, or `application/vnd.ms-excel`.
+- **Max file size**: 5 MB per upload.
+- **Rate limiting**: 3 uploads per minute per IP (basic in-memory limiter on the server).
+- **Row cap**: Maximum 5,000 rows per CSV.
+- **Creation cap**: Maximum 2,000 new transactions created per upload (additional rows will be ignored after the cap is reached).
+- **Duplicate prevention**: Existing transactions are skipped using a uniqueness check on `account_number`, `transaction_date`, `amount`, `description`, and `source_bank`.
+
+If an upload fails, typical error messages include:
+
+- `413 File too large` – Reduce the file size below 5 MB.
+- `415 Unsupported media type` – Ensure the file is a CSV.
+- `429 Too many uploads` – Wait a minute before retrying.
+- `400 Invalid CSV` – Ensure the file is a supported bank export (ING or KBC) and not modified.
+
+Tip: If you have a very large history, consider splitting exports into multiple CSVs and uploading them over time.
+
 ## Project Structure
 
 ```
