@@ -60,6 +60,8 @@ class AnomalyDetectionService:
                 cutoff_date = date.today() - timedelta(days=90)
                 query = query.filter(Transaction.transaction_date >= cutoff_date)
         
+        # Only analyze expense transactions
+        query = query.filter(Transaction.transaction_type == TransactionType.EXPENSE)
         transactions = query.all()
         
         if not transactions:
@@ -146,26 +148,21 @@ class AnomalyDetectionService:
         """Detect statistical outliers using Z-score and IQR methods"""
         anomalies = []
         
-        # Get category for comparison
-        category = transaction.expense_category or transaction.income_category
+        # Only analyze expenses and use expense category
+        if transaction.transaction_type != TransactionType.EXPENSE:
+            return anomalies
+        
+        # Get category for comparison (expenses only)
+        category = transaction.expense_category
         if not category:
             return anomalies
         
-        # Get historical transactions for same category
-        # Build filter based on whether it's an expense or income category
-        category_filter = None
-        if transaction.expense_category:
-            category_filter = Transaction.expense_category == category
-        elif transaction.income_category:
-            category_filter = Transaction.income_category == category
-        
-        if category_filter is None:
-            return anomalies
-            
+        # Get historical expense transactions for same category
         historical = db.query(Transaction).filter(
             and_(
                 Transaction.id != transaction.id,
-                category_filter,
+                Transaction.transaction_type == TransactionType.EXPENSE,
+                Transaction.expense_category == category,
                 Transaction.transaction_date >= transaction.transaction_date - timedelta(days=365)
             )
         ).all()
@@ -256,9 +253,12 @@ class AnomalyDetectionService:
         """Detect amount-based anomalies"""
         anomalies = []
         
-        # Very large transactions (>95th percentile of all user transactions)
+        # Very large expense transactions (>95th percentile of historical expenses)
         all_amounts = db.query(Transaction.amount).filter(
-            Transaction.transaction_date >= transaction.transaction_date - timedelta(days=365)
+            and_(
+                Transaction.transaction_type == TransactionType.EXPENSE,
+                Transaction.transaction_date >= transaction.transaction_date - timedelta(days=365)
+            )
         ).all()
         
         if len(all_amounts) < 20:
@@ -309,13 +309,18 @@ class AnomalyDetectionService:
         """Detect frequency-based anomalies"""
         anomalies = []
         
+        # Only consider expenses
+        if transaction.transaction_type != TransactionType.EXPENSE:
+            return anomalies
+        
         if not transaction.counterparty_account or not transaction.counterparty_account.strip():
             return anomalies
         
-        # Check transaction frequency for this merchant account
+        # Check transaction frequency for this merchant account (expenses only)
         merchant_transactions = db.query(Transaction).filter(
             and_(
                 Transaction.counterparty_account == transaction.counterparty_account,
+                Transaction.transaction_type == TransactionType.EXPENSE,
                 Transaction.transaction_date >= transaction.transaction_date - timedelta(days=30),
                 Transaction.id != transaction.id
             )
@@ -350,25 +355,19 @@ class AnomalyDetectionService:
         """Detect behavioral pattern anomalies"""
         anomalies = []
         
-        # Unusual category for user
-        category = transaction.expense_category or transaction.income_category
+        # Only analyze behavioral anomalies for expenses and expense categories
+        if transaction.transaction_type != TransactionType.EXPENSE:
+            return anomalies
+        
+        category = transaction.expense_category
         if not category:
             return anomalies
         
-        # Check if user has used this category before
-        # Build filter based on whether it's an expense or income category
-        category_filter = None
-        if transaction.expense_category:
-            category_filter = Transaction.expense_category == category
-        elif transaction.income_category:
-            category_filter = Transaction.income_category == category
-        
-        if category_filter is None:
-            return anomalies
-            
+        # Check if user has used this expense category before (expenses only)
         category_usage = db.query(Transaction).filter(
             and_(
-                category_filter,
+                Transaction.expense_category == category,
+                Transaction.transaction_type == TransactionType.EXPENSE,
                 Transaction.id != transaction.id
             )
         ).count()
@@ -402,13 +401,18 @@ class AnomalyDetectionService:
         """Detect merchant-related anomalies"""
         anomalies = []
         
+        # Only consider expenses
+        if transaction.transaction_type != TransactionType.EXPENSE:
+            return anomalies
+        
         if not transaction.counterparty_account or not transaction.counterparty_account.strip():
             return anomalies
         
-        # Check if this is a new merchant account
+        # Check if this is a new merchant account (expenses only)
         merchant_history = db.query(Transaction).filter(
             and_(
                 Transaction.counterparty_account == transaction.counterparty_account,
+                Transaction.transaction_type == TransactionType.EXPENSE,
                 Transaction.id != transaction.id
             )
         ).count()
