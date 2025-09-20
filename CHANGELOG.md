@@ -1,5 +1,18 @@
 # MyFinance Changelog
 
+## 2025-09-20
+
+### Backend – Anomaly Detection Scope Restricted to Expenses
+- Restricted anomaly detection to run only on expense transactions to avoid flagging income entries
+- Updated `AnomalyDetectionService.detect_anomalies` to fetch only `TransactionType.EXPENSE`
+- Adjusted all detectors to operate solely on expenses and expense categories:
+  - `_detect_statistical_outliers`: compares against historical expense transactions in the same `expense_category`
+  - `_detect_amount_anomalies`: percentile baselines now computed from expenses only
+  - `_detect_frequency_anomalies`: merchant frequency checks filtered to expense transactions and `counterparty_account`
+  - `_detect_behavioral_anomalies`: category usage checks use `expense_category` only and expense transactions
+  - `_detect_merchant_anomalies`: “new merchant account” logic considers only expense transactions
+- Ensures anomalies reflect unusual spending patterns rather than income inflows
+
 ## 2025-09-18
 
 ### Projection Realism Guardrail
