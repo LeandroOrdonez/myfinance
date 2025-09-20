@@ -76,7 +76,7 @@ export async function deleteScenario(scenarioId: number): Promise<void> {
 }
 
 // Calculate projection for a scenario
-export async function calculateProjection(scenarioId: number, timeHorizon: number = 60): Promise<void> {
+export async function calculateProjection(scenarioId: number, timeHorizon: number = 120): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/projections/scenarios/${scenarioId}/calculate?time_horizon=${timeHorizon}`, {
     method: 'POST',
   });

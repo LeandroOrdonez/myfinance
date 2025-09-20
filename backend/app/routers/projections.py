@@ -227,7 +227,7 @@ def get_scenario_parameters(
 @router.post("/scenarios/{scenario_id}/calculate", response_model=Dict[str, bool])
 def calculate_projection(
     scenario_id: int,
-    time_horizon: int = Query(60, description="Number of months to project", ge=12, le=120),
+    time_horizon: int = Query(120, description="Number of months to project", ge=12, le=180),
     db: Session = Depends(get_db)
 ):
     """Calculate projection for a scenario"""

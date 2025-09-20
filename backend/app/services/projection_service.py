@@ -361,7 +361,7 @@ class ProjectionService:
             raise e
     
     @staticmethod
-    def calculate_projection(db: Session, scenario_id: int, time_horizon: int = 60) -> List[ProjectionResult]:
+    def calculate_projection(db: Session, scenario_id: int, time_horizon: int = 120) -> List[ProjectionResult]:
         """
         Calculate financial projections for a scenario
         
