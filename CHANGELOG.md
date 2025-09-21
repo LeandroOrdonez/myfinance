@@ -1,5 +1,12 @@
 # MyFinance Changelog
 
+## 2025-09-21
+
+### Backend – Category Suggestions Learn from Manual Edits
+- Manual category edits via `PATCH /transactions/{id}/category` now update the suggestion index
+- Implementation: after commit and refresh in `update_transaction_category()`, call `category_suggestion_service.add_transaction(transaction)`
+- Keeps the vector index consistent with the latest category and learns from corrections
+
 ## 2025-09-20
 
 ### Backend – Anomaly Detection Scope Restricted to Expenses

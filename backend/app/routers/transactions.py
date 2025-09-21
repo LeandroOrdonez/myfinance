@@ -338,6 +338,11 @@ def update_transaction_category(
     
     db.commit()
     db.refresh(transaction)
+    # Update suggestion index to learn from manual category edits
+    try:
+        category_suggestion_service.add_transaction(transaction)
+    except Exception as e:
+        logger.warning(f"Failed to update suggestion index for transaction {transaction.id}: {str(e)}")
     return transaction
 
 @router.post("/restore", response_model=schemas.Transaction)
