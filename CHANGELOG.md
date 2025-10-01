@@ -1,5 +1,13 @@
 # MyFinance Changelog
 
+## 2025-10-01
+
+### Bug Fix – Transaction Deletion Cascade
+- Fixed `IntegrityError` when deleting transactions with associated anomaly records
+- Updated `TransactionAnomaly` model to cascade delete when parent transaction is deleted
+- Added foreign key constraint with `ondelete="CASCADE"` to `transaction_id` field
+- Ensures anomaly records are automatically cleaned up when transactions are deleted
+
 ## 2025-09-21
 
 ### Backend – Category Suggestions Learn from Manual Edits

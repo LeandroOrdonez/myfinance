@@ -10,6 +10,7 @@ import time
 
 from ..database import get_db
 from ..models.transaction import Transaction, ExpenseCategory, IncomeCategory, TransactionType
+from ..models.anomaly import TransactionAnomaly
 from ..schemas import transaction as schemas
 from ..services.csv_parser import CSVParser
 from ..services.statistics_service import StatisticsService
@@ -298,6 +299,9 @@ async def delete_transaction(transaction_id: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Transaction not found")
     
     transaction_date = transaction.transaction_date
+    
+    # Delete associated anomaly records first to avoid foreign key constraint violation
+    db.query(TransactionAnomaly).filter(TransactionAnomaly.transaction_id == transaction_id).delete()
     
     # Delete the transaction
     db.delete(transaction)

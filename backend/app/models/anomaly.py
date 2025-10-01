@@ -29,7 +29,7 @@ class TransactionAnomaly(Base):
     __tablename__ = "transaction_anomalies"
 
     id = Column(Integer, primary_key=True, index=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False, index=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id", ondelete="CASCADE"), nullable=False, index=True)
     anomaly_type = Column(Enum(AnomalyType), nullable=False)
     severity = Column(Enum(AnomalySeverity), nullable=False)
     status = Column(Enum(AnomalyStatus), default=AnomalyStatus.DETECTED)
@@ -57,7 +57,7 @@ class TransactionAnomaly(Base):
     review_notes = Column(Text)
     
     # Relationship to transaction
-    transaction = relationship("Transaction", backref="anomalies")
+    transaction = relationship("Transaction", backref="anomalies", passive_deletes=True)
 
 class AnomalyPattern(Base):
     """Store learned patterns to improve detection accuracy"""
