@@ -1,5 +1,18 @@
 # MyFinance Changelog
 
+## 2025-11-02
+
+### Bug Fix – Backend init order for suggestions
+- Moved `init_database()` to run before router imports in `app/main.py` to ensure tables exist before `routers/suggestions.py` trains on import
+- Resolved startup error: `sqlite3.OperationalError: no such table: transactions`
+- No functional API changes; improves startup stability
+
+### Frontend – Request cancellation under StrictMode
+- Implemented AbortController-based cancellation in Financial Health dashboard to avoid duplicate network work during React StrictMode remounts in development
+- Updated `financialHealthService` GET methods to accept optional `AbortSignal` and forwarded it to axios
+- Updated `FinancialHealth` component effects to pass signals, abort on cleanup, and ignore canceled errors
+- Note: server logs may still show a canceled duplicate if a request left the browser before abort; client state updates are deduplicated
+
 ## 2025-10-01
 
 ### Bug Fix – Transaction Deletion Cascade

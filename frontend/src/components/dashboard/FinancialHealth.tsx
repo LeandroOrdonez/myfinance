@@ -19,12 +19,16 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<string>('6m');
 
-  const fetchHealthData = async () => {
+  const fetchHealthData = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const data = await financialHealthService.getFinancialHealthScore();
+      const data = await financialHealthService.getFinancialHealthScore(undefined, signal);
       setHealthData(data);
     } catch (err) {
+      const e: any = err;
+      if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') {
+        return;
+      }
       console.error('Error fetching health score:', err);
       setError('Failed to load financial health data');
     } finally {
@@ -32,7 +36,7 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
     }
   };
 
-  const fetchHistoryData = async () => {
+  const fetchHistoryData = async (signal?: AbortSignal) => {
     try {
       const months = period === '3m' ? 3 : 
                     period === '6m' ? 6 : 
@@ -40,19 +44,27 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
                     period === '1y' ? 12 : 
                     period === '2y' ? 24 : 36;
                     
-      const data = await financialHealthService.getFinancialHealthHistory(months);
+      const data = await financialHealthService.getFinancialHealthHistory(months, signal);
       setHistoryData(data);
     } catch (err) {
+      const e: any = err;
+      if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') {
+        return;
+      }
       console.error('Error fetching health history:', err);
       setError('Failed to load financial health history');
     }
   };
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (signal?: AbortSignal) => {
     try {
-      const data = await financialHealthService.getRecommendations();
+      const data = await financialHealthService.getRecommendations(true, signal);
       setRecommendations(data);
     } catch (err) {
+      const e: any = err;
+      if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') {
+        return;
+      }
       console.error('Error fetching recommendations:', err);
       setError('Failed to load recommendations');
     }
@@ -75,12 +87,16 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
   };
 
   useEffect(() => {
-    fetchHealthData();
-    fetchRecommendations();
+    const controller = new AbortController();
+    fetchHealthData(controller.signal);
+    fetchRecommendations(controller.signal);
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    fetchHistoryData();
+    const controller = new AbortController();
+    fetchHistoryData(controller.signal);
+    return () => controller.abort();
   }, [period]);
 
   if (loading && !healthData) {
