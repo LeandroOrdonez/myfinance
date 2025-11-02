@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 from .database import get_db
 from .database_manager import init_database, reset_database
 
+# Initialize the database BEFORE importing routers to ensure tables exist
+init_database()
+
 # Import routers
 from .routers import transactions, statistics, suggestions, financial_health, projections, anomalies
-
-# Initialize the database
-init_database()
 
 app = FastAPI(title="MyFinance API")
 
