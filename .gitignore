@@ -35,3 +35,6 @@ mycreds.txt
 *.db
 backup/settings.yaml
 PRD*.md
+
+# Add workspace files
+*.code-workspace
