@@ -169,15 +169,29 @@ class CategorySuggestionService:
         
         collection_name = self._get_collection_name(transaction_type)
         
-        # Search for similar transactions
-        search_result = self.client.search(
-            collection_name=collection_name,
-            query_vector=embedding.tolist(),
-            limit=top_k
-        )
+        # Check if collection has any points
+        try:
+            collection_info = self.client.get_collection(collection_name)
+            if collection_info.points_count == 0:
+                logger.warning(f"No points in {collection_name} collection, returning empty suggestions")
+                return []
+        except Exception as e:
+            logger.warning(f"Error checking collection: {e}, returning empty suggestions")
+            return []
         
-        # Return categories with confidence scores
-        return [(hit.payload["category"], hit.score) for hit in search_result]
+        # Search for similar transactions using search_points
+        try:
+            search_result = self.client.search_points(
+                collection_name=collection_name,
+                query_vector=embedding.tolist(),
+                limit=top_k
+            )
+            
+            # Return categories with confidence scores
+            return [(hit.payload["category"], hit.score) for hit in search_result.points]
+        except Exception as e:
+            logger.error(f"Error searching for similar transactions: {e}")
+            return []
 
     def add_transaction(self, transaction: Transaction):
         """Add a new transaction to the vector database"""
