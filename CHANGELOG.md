@@ -6,6 +6,17 @@
 - Updated `backup/backup_script.py` to name database backups using the latest git tag instead of the last commit message
 - Keeps a timestamp-based fallback when git tags are unavailable or the git command fails
 
+### PR #1: Add Beobank CSV format support and fix QdrantClient API compatibility
+#### Features
+- Added Beobank CSV parser to support imports with `Date;Value date;Debit;Credit;Message;Balance` format
+- Enabled automatic detection of Beobank CSV files alongside existing ING and KBC formats
+- Correctly map Beobank debit/credit columns to expense/income transaction types
+
+#### Bug Fixes
+- Updated deprecated `QdrantClient.search()` usage to `search_points()` for compatibility with current Qdrant client versions
+- Added graceful handling for empty vector collections in category suggestions
+- Improved CSV encoding robustness with fallbacks for latin1 / ISO-8859-1 when UTF-8 decoding fails
+
 ## 2025-11-02
 
 ### Bug Fix – Backend init order for suggestions
