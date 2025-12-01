@@ -118,7 +118,7 @@ export const CategoryAverages: React.FC = () => {
   // Get bar color based on expense type
   const getBarColor = (type: string) => {
     if (type === 'Income') return '#10b981'; // emerald-500
-    if (type === 'Essential') return '#6366f1'; // indigo-500
+    if (type === 'Fixed Essential') return '#6366f1'; // indigo-500
     return '#ec4899'; // pink-500 for Discretionary
   };
 

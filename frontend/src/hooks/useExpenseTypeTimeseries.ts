@@ -36,7 +36,7 @@ export const useExpenseTypeTimeseries = (
       // Transform data to ensure numeric values
       const transformedData = items.map((item: any) => ({
         date: item.date,
-        expense_type: item.expense_type.toLowerCase(),
+        expense_type: item.expense_type.toLowerCase().replace(/\s+/g, '_'),
         period_amount: Number(item.period_amount) || 0,
         period_transaction_count: Number(item.period_transaction_count) || 0,
         period_percentage: Number(item.period_percentage) || 0,

@@ -1,23 +1,47 @@
 export enum TransactionType {
   INCOME = "Income",
-  EXPENSE = "Expense"
+  EXPENSE = "Expense",
+  TRANSFER = "Transfer"
+}
+
+export enum ExpenseType {
+  FIXED_ESSENTIAL = "Fixed Essential",
+  GUILT_FREE_DISCRETIONARY = "Discretionary",
+  SAVINGS_INVESTMENT = "Savings & Investment",
+  NEUTRAL = "Neutral"
 }
 
 export enum ExpenseCategory {
+  // Fixed Essentials (Survival & Obligations)
   HOUSING = "Housing",
   UTILITIES = "Utilities",
   GROCERIES = "Groceries",
-  EATING_OUT = "Eating Out",
   TRANSPORTATION = "Transportation",
   INSURANCE = "Insurance",
+  HEALTH = "Health",
+  
+  // Debt & Financial Obligations (Essential)
+  LOAN_REPAYMENT = "Loan Repayment",
+  CREDIT_PAYMENT = "Credit Payment",
   DEBT = "Debt",
+  FINANCIAL_FEES = "Financial Fees",
+  
+  // Savings & Investments (Future Wealth)
   INVESTMENTS = "Investments",
+  SAVINGS = "Savings",
+  
+  // Guilt-Free Discretionary (Lifestyle)
+  EATING_OUT = "Eating Out",
   PERSONAL = "Personal",
+  SHOPPING = "Shopping",
   GIFTS = "Gifts",
   DONATIONS = "Donations",
   EDUCATION = "Education",
   TRAVEL = "Travel",
   ENTERTAINMENT = "Entertainment",
+  
+  // Neutral/Operational
+  INTERNAL_TRANSFER = "Internal Transfer",
   OTHERS = "Others"
 }
 
@@ -31,6 +55,8 @@ export enum IncomeCategory {
   BENEFITS = "Benefits",
   GIFTS = "Gifts Received",
   REFUNDS = "Refunds",
+  LOAN_DISBURSEMENT = "Loan Disbursement",
+  INTERNAL_TRANSFER = "Internal Transfer",
   OTHER = "Other Income"
 }
 

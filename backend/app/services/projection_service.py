@@ -316,7 +316,7 @@ class ProjectionService:
                 if month_key not in monthly_expense_stats:
                     monthly_expense_stats[month_key] = {'essential': [], 'discretionary': []}
                 
-                if stat.expense_type == ExpenseType.ESSENTIAL:
+                if stat.expense_type == ExpenseType.FIXED_ESSENTIAL:
                     monthly_expense_stats[month_key]['essential'].append(stat.period_amount)
                 else:
                     monthly_expense_stats[month_key]['discretionary'].append(stat.period_amount)

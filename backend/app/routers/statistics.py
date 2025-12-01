@@ -96,7 +96,7 @@ def get_expense_type_statistics(
             # Return empty results for each expense type
             return [
                 {
-                    "expense_type": ExpenseType.ESSENTIAL.value,
+                    "expense_type": ExpenseType.FIXED_ESSENTIAL.value,
                     "period": stat_period.value,
                     "date": target_date.isoformat() if target_date else None,
                     "period_amount": 0.0,
@@ -112,7 +112,7 @@ def get_expense_type_statistics(
                     "categories": []
                 },
                 {
-                    "expense_type": ExpenseType.DISCRETIONARY.value,
+                    "expense_type": ExpenseType.GUILT_FREE_DISCRETIONARY.value,
                     "period": stat_period.value,
                     "date": target_date.isoformat() if target_date else None,
                     "period_amount": 0.0,
@@ -130,8 +130,8 @@ def get_expense_type_statistics(
             ]
         
         # Group by expense type
-        essential_stats = [s for s in stats if s.expense_type == ExpenseType.ESSENTIAL]
-        discretionary_stats = [s for s in stats if s.expense_type == ExpenseType.DISCRETIONARY]
+        essential_stats = [s for s in stats if s.expense_type == ExpenseType.FIXED_ESSENTIAL]
+        discretionary_stats = [s for s in stats if s.expense_type == ExpenseType.GUILT_FREE_DISCRETIONARY]
         
         # Aggregate results by expense type
         results = []
@@ -139,7 +139,7 @@ def get_expense_type_statistics(
         # Process essential expenses
         if essential_stats:
             essential_result = {
-                "expense_type": ExpenseType.ESSENTIAL.value,
+                "expense_type": ExpenseType.FIXED_ESSENTIAL.value,
                 "period": stat_period.value,
                 "date": essential_stats[0].date.isoformat() if essential_stats[0].date else None,
                 "period_amount": sum(float(s.period_amount) for s in essential_stats),
@@ -166,7 +166,7 @@ def get_expense_type_statistics(
         # Process discretionary expenses
         if discretionary_stats:
             discretionary_result = {
-                "expense_type": ExpenseType.DISCRETIONARY.value,
+                "expense_type": ExpenseType.GUILT_FREE_DISCRETIONARY.value,
                 "period": stat_period.value,
                 "date": discretionary_stats[0].date.isoformat() if discretionary_stats[0].date else None,
                 "period_amount": sum(float(s.period_amount) for s in discretionary_stats),

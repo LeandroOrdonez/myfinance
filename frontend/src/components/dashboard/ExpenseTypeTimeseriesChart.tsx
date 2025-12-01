@@ -48,22 +48,22 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
     // Get unique dates
     const uniqueDates = Array.from(new Set(timeseriesData.map(item => item.date))).sort();
     
-    // Create a map of date -> { essential: amount1, discretionary: amount2 }
+    // Create a map of date -> { fixed_essential: amount1, discretionary: amount2 }
     const dataByDate = uniqueDates.map(date => {
       const dateData = timeseriesData.filter(item => item.date === date);
       const entry: Record<string, any> = { date };
       
       // Initialize with zeros
-      entry.essential = 0;
+      entry.fixed_essential = 0;
       entry.discretionary = 0;
-      entry.essential_count = 0;
+      entry.fixed_essential_count = 0;
       entry.discretionary_count = 0;
-      entry.essential_percentage = 0;
+      entry.fixed_essential_percentage = 0;
       entry.discretionary_percentage = 0;
       
       // Fill in actual values
       dateData.forEach(item => {
-        if (item.expense_type === 'essential' || item.expense_type === 'discretionary') {
+        if (item.expense_type === 'fixed_essential' || item.expense_type === 'discretionary') {
           // For bar chart we'll use the amount
           entry[item.expense_type] = item.period_amount;
           entry[`${item.expense_type}_count`] = item.period_transaction_count;
@@ -73,8 +73,8 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
       });
       
       // Calculate total and percentages
-      entry.total = entry.essential + entry.discretionary;
-      entry.essential_percentage = entry.total > 0 ? (entry.essential / entry.total) * 100 : 0;
+      entry.total = entry.fixed_essential + entry.discretionary;
+      entry.fixed_essential_percentage = entry.total > 0 ? (entry.fixed_essential / entry.total) * 100 : 0;
       entry.discretionary_percentage = entry.total > 0 ? (entry.discretionary / entry.total) * 100 : 0;
       
       return entry;
@@ -134,7 +134,7 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
             <Legend />
             <Area
               type="monotone"
-              dataKey="essential_percentage"
+              dataKey="fixed_essential_percentage"
               name="Essential"
               stackId="1"
               stroke={EXPENSE_TYPE_COLORS.essential}
@@ -190,7 +190,7 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
             />
             <Legend />
             <Bar
-              dataKey="essential"
+              dataKey="fixed_essential"
               name="Essential"
               stackId="a"
               fill={EXPENSE_TYPE_COLORS.essential}
