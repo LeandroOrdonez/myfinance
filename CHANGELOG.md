@@ -1,5 +1,11 @@
 # MyFinance Changelog
 
+## 2025-12-01
+
+### Backup – Database backup script uses git tags
+- Updated `backup/backup_script.py` to name database backups using the latest git tag instead of the last commit message
+- Keeps a timestamp-based fallback when git tags are unavailable or the git command fails
+
 ## 2025-11-02
 
 ### Bug Fix – Backend init order for suggestions
