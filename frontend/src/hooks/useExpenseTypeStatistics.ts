@@ -56,7 +56,7 @@ export const useExpenseTypeStatistics = (initialPeriod: StatisticsPeriod = 'mont
 
   // Helper functions to extract and process the data
   const getEssentialExpenses = () => {
-    return expenseTypeStats.find(stat => stat.expense_type === 'Essential') || null;
+    return expenseTypeStats.find(stat => stat.expense_type === 'Fixed Essential') || null;
   };
 
   const getDiscretionaryExpenses = () => {
