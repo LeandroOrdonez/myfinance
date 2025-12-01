@@ -51,7 +51,7 @@ def backup_database(source_path, backup_dir):
     # Create backup directory if it doesn't exist
     os.makedirs(backup_dir, exist_ok=True)
     
-    # Generate backup filename with date and commit message
+    # Generate backup filename with date and tag
     date_str = datetime.now().strftime("%Y%m%d")
     tag = get_last_tag()
     backup_filename = f"myfinance-{date_str}-{tag}.db"
