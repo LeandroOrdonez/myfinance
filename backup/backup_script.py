@@ -23,22 +23,22 @@ except ImportError:
     from pydrive2.drive import GoogleDrive
 
 
-def get_last_commit_message():
-    """Get the last commit message from git."""
+def get_last_tag():
+    """Get the last git tag."""
     try:
         result = subprocess.run(
-            ["git", "log", "-1", "--pretty=%B"], 
-            capture_output=True, 
-            text=True, 
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True,
+            text=True,
             check=True
         )
-        commit_msg = result.stdout.strip()
+        tag = result.stdout.strip()
         # Remove the 'v' prefix if it exists
-        if commit_msg.startswith('v'):
-            commit_msg = commit_msg[1:]
-        return commit_msg
+        if tag.startswith('v'):
+            tag = tag[1:]
+        return tag if tag else datetime.now().strftime("%H%M%S")
     except subprocess.SubprocessError as e:
-        print(f"Error getting git commit message: {e}")
+        print(f"Error getting git tag: {e}")
         return datetime.now().strftime("%H%M%S")  # Fallback to timestamp
 
 
@@ -53,8 +53,8 @@ def backup_database(source_path, backup_dir):
     
     # Generate backup filename with date and commit message
     date_str = datetime.now().strftime("%Y%m%d")
-    commit_msg = get_last_commit_message()
-    backup_filename = f"myfinance-{date_str}-{commit_msg}.db"
+    tag = get_last_tag()
+    backup_filename = f"myfinance-{date_str}-{tag}.db"
     backup_path = os.path.join(backup_dir, backup_filename)
     
     # Copy the database file
