@@ -2,6 +2,12 @@
 
 ## 2025-12-16
 
+### Frontend – Money Flows Sankey Diagram
+- Added new `MoneyFlows` component visualizing income-to-expense category flows as a Sankey diagram
+- Shows how income categories flow through to expense categories with a savings node when income exceeds expenses
+- Uses the same period selector (3M, 6M, YTD, 1Y, 2Y, All) and data source as `CategoryAverages`
+- Integrated into the Analytics dashboard alongside `CategoryAverages`
+
 ### Frontend – Responsive dashboard fix
 - Fixed overlap between `CategoryTrends` and `MonthlyHeatmap` on small screens by removing fixed-height constraints below the `md` breakpoint and ensuring charts have explicit responsive heights
 
