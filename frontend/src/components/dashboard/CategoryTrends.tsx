@@ -221,15 +221,15 @@ export const CategoryTrends: React.FC = () => {
 
         </Tabs.List>
 
-        <Tabs.Content value="expense-types" className="h-[400px]">
+        <Tabs.Content value="expense-types" className="md:h-[400px]">
           <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
             {selectedPeriod === 'monthly' && `Essential vs Discretionary spending for ${currentMonth} ${currentYear}`}
             {selectedPeriod === 'yearly' && `Essential vs Discretionary spending for ${currentYear}`}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[calc(100%-2rem)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:h-[calc(100%-2rem)]">
             {/* Pie Chart */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col h-full max-h-[370px]">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:h-full md:max-h-[370px]">
               <h3 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Spending Distribution</h3>
               <div className="flex-1 flex items-center justify-center min-h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -284,7 +284,7 @@ export const CategoryTrends: React.FC = () => {
             {/* Category Breakdown */}
             <div className="flex flex-col space-y-4">
               {/* Essential Categories */}
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full max-h-[180px]">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 md:h-full md:max-h-[180px]">
                 <h5 className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-3">Essential Expenses</h5>
                 <div className="space-y-2">
                   {topEssentialCategories.map((category, index) => {
@@ -317,7 +317,7 @@ export const CategoryTrends: React.FC = () => {
               </div>
                 
               {/* Discretionary Categories */}
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full max-h-[180px]">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 md:h-full md:max-h-[180px]">
                 <h5 className="text-sm font-medium text-pink-600 dark:text-pink-400 mb-3">Discretionary Expenses</h5>
                 <div className="space-y-2">
                   {topDiscretionaryCategories.map((category, index) => {
@@ -352,50 +352,52 @@ export const CategoryTrends: React.FC = () => {
           </div>
         </Tabs.Content>
 
-        <Tabs.Content value="periods" className="h-[400px]">
+        <Tabs.Content value="periods" className="md:h-[400px]">
           <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
             {selectedPeriod === 'monthly' && `Comparing ${currentMonth} ${currentYear} with monthly average for the year`}
             {selectedPeriod === 'yearly' && `Comparing yearly averages for ${currentYear} with last year's averages`}
           </div>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={selectedPeriod === 'monthly' ? monthlyData : yearlyData}
-              margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fontSize: 12, fill: 'currentColor' }}
-                stroke="#9ca3af"
-                className="dark:text-gray-400"
-              />
-              <YAxis 
-                tickFormatter={(value) => formatCurrency(value)} 
-                tick={{ fontSize: 12, fill: 'currentColor' }}
-                stroke="#9ca3af"
-                className="dark:text-gray-400"
-              />
-              <Tooltip 
-                formatter={(value: number) => formatCurrency(value)}
-                labelFormatter={(value) => value}
-                contentStyle={{ 
-                  backgroundColor: 'var(--color-tooltip-bg)', 
-                  borderColor: 'var(--color-tooltip-border)',
-                  color: 'var(--color-tooltip-text)'
-                }}
-                itemStyle={{ color: 'inherit' }}
-                wrapperClassName="tooltip-wrapper"
-              />
-              <Legend 
-                align="center" 
-                verticalAlign="bottom"
-                wrapperStyle={{ paddingTop: 10 }}
-                height={50}
-              />
-              <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly' : 'Yearly'} fill="#6366F1" name={selectedPeriod === 'monthly' ? `${currentMonth} ${currentYear}` : `${currentYear}`} />
-              <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly Average' : 'Previous Year'} fill="#9CA3AF" name={selectedPeriod === 'monthly' ? `Monthly Average (${currentYear})` : `${currentYear - 1}`} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[320px] md:h-[calc(100%-2rem)]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={selectedPeriod === 'monthly' ? monthlyData : yearlyData}
+                margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                  stroke="#9ca3af"
+                  className="dark:text-gray-400"
+                />
+                <YAxis 
+                  tickFormatter={(value) => formatCurrency(value)} 
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                  stroke="#9ca3af"
+                  className="dark:text-gray-400"
+                />
+                <Tooltip 
+                  formatter={(value: number) => formatCurrency(value)}
+                  labelFormatter={(value) => value}
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-tooltip-bg)', 
+                    borderColor: 'var(--color-tooltip-border)',
+                    color: 'var(--color-tooltip-text)'
+                  }}
+                  itemStyle={{ color: 'inherit' }}
+                  wrapperClassName="tooltip-wrapper"
+                />
+                <Legend 
+                  align="center" 
+                  verticalAlign="bottom"
+                  wrapperStyle={{ paddingTop: 10 }}
+                  height={50}
+                />
+                <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly' : 'Yearly'} fill="#6366F1" name={selectedPeriod === 'monthly' ? `${currentMonth} ${currentYear}` : `${currentYear}`} />
+                <Bar dataKey={selectedPeriod === 'monthly' ? 'Monthly Average' : 'Previous Year'} fill="#9CA3AF" name={selectedPeriod === 'monthly' ? `Monthly Average (${currentYear})` : `${currentYear - 1}`} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </Tabs.Content>
 
 

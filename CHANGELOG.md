@@ -1,5 +1,10 @@
 # MyFinance Changelog
 
+## 2025-12-16
+
+### Frontend – Responsive dashboard fix
+- Fixed overlap between `CategoryTrends` and `MonthlyHeatmap` on small screens by removing fixed-height constraints below the `md` breakpoint and ensuring charts have explicit responsive heights
+
 ## 2025-12-01
 
 ### Backup – Database backup script uses git tags
