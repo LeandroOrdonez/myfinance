@@ -30,10 +30,9 @@ export interface SankeyData {
  * Builds Sankey diagram data from income and expense category averages.
  * 
  * Structure:
- * [Income Categories] → [Total Income] → [Total Expenses] → [Expense Categories]
+ * [Income Categories] → [Total Income] → [Expense Categories + Savings]
  * 
  * If there's a surplus (income > expenses), it flows to a "Savings" node.
- * If there's a deficit (expenses > income), the diagram still shows the flow.
  */
 export function buildSankeyData(
   incomeCategories: CategoryAverageItem[],
@@ -55,7 +54,7 @@ export function buildSankeyData(
   const savings = Math.max(0, totalIncome - totalExpenses);
 
   // Build nodes array
-  // Order: Income categories, "Total Income", "Total Expenses", Expense categories, optionally "Savings"
+  // Order: Income categories, "Total Income", Expense categories, optionally "Savings"
   const nodes: SankeyNode[] = [];
   
   // Add income category nodes
@@ -63,12 +62,9 @@ export function buildSankeyData(
     nodes.push({ name: cat.category_name });
   });
   
-  // Add central nodes
+  // Add central node
   const totalIncomeIndex = nodes.length;
   nodes.push({ name: 'Total Income' });
-  
-  const totalExpensesIndex = nodes.length;
-  nodes.push({ name: 'Total Expenses' });
   
   // Add expense category nodes
   const expenseStartIndex = nodes.length;
@@ -97,15 +93,16 @@ export function buildSankeyData(
     }
   });
   
-  // Link from Total Income to Total Expenses (the amount that flows to expenses)
-  const flowToExpenses = Math.min(totalIncome, totalExpenses);
-  if (flowToExpenses > 0) {
-    links.push({
-      source: totalIncomeIndex,
-      target: totalExpensesIndex,
-      value: flowToExpenses
-    });
-  }
+  // Links from Total Income directly to expense categories
+  topExpenses.forEach((cat, index) => {
+    if (cat.average_amount > 0) {
+      links.push({
+        source: totalIncomeIndex,
+        target: expenseStartIndex + index,
+        value: cat.average_amount
+      });
+    }
+  });
   
   // Link from Total Income to Savings (if surplus)
   if (savings > 0 && savingsIndex >= 0) {
@@ -115,60 +112,42 @@ export function buildSankeyData(
       value: savings
     });
   }
-  
-  // Links from Total Expenses to expense categories
-  topExpenses.forEach((cat, index) => {
-    if (cat.average_amount > 0) {
-      links.push({
-        source: totalExpensesIndex,
-        target: expenseStartIndex + index,
-        value: cat.average_amount
-      });
-    }
-  });
 
   return { nodes, links };
 }
 
 /**
- * Get node color based on its position/type in the Sankey diagram
+ * Get node color based on its position/type in the Sankey diagram.
+ * Structure: [income cats...] [Total Income] [expense cats...] [Savings?]
  */
-export function getNodeColor(index: number, totalNodes: number, hasSavings: boolean): string {
+export function getNodeColor(
+  index: number, 
+  incomeCatCount: number, 
+  hasSavings: boolean, 
+  totalNodes: number
+): string {
   // Income categories (green shades)
   const incomeColors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669', '#047857', '#065f46', '#064e3b'];
   
   // Expense categories (pink/red shades)  
   const expenseColors = ['#ec4899', '#f472b6', '#f9a8d4', '#fbcfe8', '#db2777', '#be185d', '#9d174d', '#831843'];
   
-  // Central nodes
   const centralIncomeColor = '#059669'; // emerald-600
-  const centralExpenseColor = '#db2777'; // pink-600
   const savingsColor = '#3b82f6'; // blue-500
 
-  // Determine node type based on index
-  // Structure: [income cats...] [Total Income] [Total Expenses] [expense cats...] [Savings?]
+  const totalIncomeIdx = incomeCatCount;
+  const expenseStartIdx = incomeCatCount + 1;
   
+  // Savings is always the last node if present
   if (hasSavings && index === totalNodes - 1) {
     return savingsColor;
   }
-  
-  // Find the central node indices by working backwards
-  const expenseCatCount = hasSavings ? 
-    Math.floor((totalNodes - 3) / 2) : 
-    Math.floor((totalNodes - 2) / 2);
-  const incomeCatCount = totalNodes - 2 - expenseCatCount - (hasSavings ? 1 : 0);
-  
-  const totalIncomeIdx = incomeCatCount;
-  const totalExpensesIdx = incomeCatCount + 1;
-  const expenseStartIdx = incomeCatCount + 2;
   
   if (index < totalIncomeIdx) {
     // Income category
     return incomeColors[index % incomeColors.length];
   } else if (index === totalIncomeIdx) {
     return centralIncomeColor;
-  } else if (index === totalExpensesIdx) {
-    return centralExpenseColor;
   } else if (index >= expenseStartIdx) {
     // Expense category
     const expenseIdx = index - expenseStartIdx;
