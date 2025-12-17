@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Sankey, Tooltip, ResponsiveContainer, Layer, Rectangle } from 'recharts';
+import { Sankey, Tooltip, ResponsiveContainer } from 'recharts';
 import { statisticService } from '../../services/statisticService';
 import { TransactionType, TimePeriod } from '../../types/transaction';
 import { Loading } from '../common/Loading';
@@ -14,13 +14,6 @@ const PERIODS = [
   { label: 'All', value: TimePeriod.ALL_TIME },
 ];
 
-interface CategoryAveragesResponse {
-  start_date: string;
-  end_date: string;
-  months_count: number;
-  categories: CategoryAverageItem[];
-}
-
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -34,7 +27,7 @@ const formatCurrency = (amount: number) => {
 const INCOME_COLORS = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669', '#047857', '#065f46', '#064e3b'];
 const EXPENSE_COLORS = ['#ec4899', '#f472b6', '#f9a8d4', '#fbcfe8', '#db2777', '#be185d', '#9d174d', '#831843'];
 const CENTRAL_INCOME_COLOR = '#059669';
-const CENTRAL_EXPENSE_COLOR = '#db2777';
+const EXPENSE_PRIMARY_COLOR = '#ec4899';
 const SAVINGS_COLOR = '#3b82f6';
 
 export const MoneyFlows: React.FC = () => {
@@ -49,13 +42,11 @@ export const MoneyFlows: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch both income and expense category averages
         const [incomeData, expenseData] = await Promise.all([
           statisticService.getCategoryAverages(TransactionType.INCOME, undefined, undefined, period),
           statisticService.getCategoryAverages(TransactionType.EXPENSE, undefined, undefined, period),
         ]);
 
-        // Build Sankey data structure
         const data = buildSankeyData(incomeData.categories, expenseData.categories, 6);
         setSankeyData(data);
         setMetadata({
@@ -64,7 +55,6 @@ export const MoneyFlows: React.FC = () => {
           months_count: incomeData.months_count,
         });
         
-        // Calculate node info for coloring
         const totalIncome = incomeData.categories.reduce((sum: number, cat: CategoryAverageItem) => sum + cat.average_amount, 0);
         const totalExpenses = expenseData.categories.reduce((sum: number, cat: CategoryAverageItem) => sum + cat.average_amount, 0);
         const hasSavings = totalIncome > totalExpenses;
@@ -88,11 +78,8 @@ export const MoneyFlows: React.FC = () => {
     
     const { incomeCatCount, hasSavings } = nodeInfo;
     const totalNodes = sankeyData.nodes.length;
-    
-    // Node structure: [income cats] [Total Income] [Total Expenses] [expense cats] [Savings?]
     const totalIncomeIdx = incomeCatCount;
-    const totalExpensesIdx = incomeCatCount + 1;
-    const expenseStartIdx = incomeCatCount + 2;
+    const expenseStartIdx = incomeCatCount + 1;
     
     if (hasSavings && index === totalNodes - 1) {
       return SAVINGS_COLOR;
@@ -102,8 +89,6 @@ export const MoneyFlows: React.FC = () => {
       return INCOME_COLORS[index % INCOME_COLORS.length];
     } else if (index === totalIncomeIdx) {
       return CENTRAL_INCOME_COLOR;
-    } else if (index === totalExpensesIdx) {
-      return CENTRAL_EXPENSE_COLOR;
     } else if (index >= expenseStartIdx) {
       const expenseIdx = index - expenseStartIdx;
       return EXPENSE_COLORS[expenseIdx % EXPENSE_COLORS.length];
@@ -131,8 +116,7 @@ export const MoneyFlows: React.FC = () => {
           y={y + height / 2}
           textAnchor="start"
           dominantBaseline="middle"
-          className="text-xs fill-current text-gray-700 dark:text-gray-300"
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: '11px', fill: '#374151' }}
         >
           {payload.name}
         </text>
@@ -140,57 +124,34 @@ export const MoneyFlows: React.FC = () => {
     );
   };
 
-  const CustomLink = ({ sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index }: any) => {
-    const gradientId = `gradient-${index}`;
-    
-    return (
-      <g>
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
-            <stop offset="100%" stopColor="#ec4899" stopOpacity={0.4} />
-          </linearGradient>
-        </defs>
-        <path
-          d={`
-            M${sourceX},${sourceY}
-            C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
-            L${targetX},${targetY + linkWidth}
-            C${targetControlX},${targetY + linkWidth} ${sourceControlX},${sourceY + linkWidth} ${sourceX},${sourceY + linkWidth}
-            Z
-          `}
-          fill={`url(#${gradientId})`}
-          strokeWidth={0}
-        />
-      </g>
-    );
-  };
-
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      if (data.source && data.target) {
-        // Link tooltip
+      const data = payload[0];
+      // Check if this is a link (has source and target in payload)
+      if (data.payload?.source && data.payload?.target) {
         return (
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {data.source.name} → {data.target.name}
+              {data.payload.source.name} → {data.payload.target.name}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {formatCurrency(data.value)}/month
+              {formatCurrency(data.payload.value)}/month
             </p>
           </div>
         );
-      } else {
-        // Node tooltip
+      } else if (data.name) {
+        // Node tooltip - calculate value from links
+        const nodeValue = data.value || 0;
         return (
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
               {data.name}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {formatCurrency(data.value)}/month
-            </p>
+            {nodeValue > 0 && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {formatCurrency(nodeValue)}/month
+              </p>
+            )}
           </div>
         );
       }
@@ -247,39 +208,39 @@ export const MoneyFlows: React.FC = () => {
                 margin={{ top: 20, right: 140, bottom: 20, left: 20 }}
                 node={<CustomNode />}
                 link={(props: any) => {
-                  const { sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index, payload } = props;
+                  const { sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, payload } = props;
+                  const isSavingsLink = payload?.target?.name === 'Savings';
+                  const isIncomeLink = payload?.source?.name !== 'Total Income';
                   
-                  // Determine gradient colors based on source/target
-                  let startColor = '#10b981';
-                  let endColor = '#ec4899';
-                  
-                  if (payload.target?.name === 'Savings') {
-                    endColor = SAVINGS_COLOR;
+                  // Color based on link type
+                  let fillColor = EXPENSE_PRIMARY_COLOR;
+                  if (isSavingsLink) {
+                    fillColor = SAVINGS_COLOR;
+                  } else if (isIncomeLink) {
+                    fillColor = CENTRAL_INCOME_COLOR;
                   }
                   
-                  const gradientId = `link-gradient-${index}`;
+                  // sourceY/targetY are centers, so offset by half linkWidth
+                  const halfWidth = linkWidth / 2;
+                  const sy0 = sourceY - halfWidth;
+                  const sy1 = sourceY + halfWidth;
+                  const ty0 = targetY - halfWidth;
+                  const ty1 = targetY + halfWidth;
                   
                   return (
-                    <g>
-                      <defs>
-                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor={startColor} stopOpacity={0.3} />
-                          <stop offset="100%" stopColor={endColor} stopOpacity={0.3} />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d={`
-                          M${sourceX},${sourceY}
-                          C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
-                          L${targetX},${targetY + linkWidth}
-                          C${targetControlX},${targetY + linkWidth} ${sourceControlX},${sourceY + linkWidth} ${sourceX},${sourceY + linkWidth}
-                          Z
-                        `}
-                        fill={`url(#${gradientId})`}
-                        strokeWidth={0}
-                        style={{ cursor: 'pointer' }}
-                      />
-                    </g>
+                    <path
+                      d={`
+                        M${sourceX},${sy0}
+                        C${sourceControlX},${sy0} ${targetControlX},${ty0} ${targetX},${ty0}
+                        L${targetX},${ty1}
+                        C${targetControlX},${ty1} ${sourceControlX},${sy1} ${sourceX},${sy1}
+                        Z
+                      `}
+                      fill={fillColor}
+                      fillOpacity={0.3}
+                      stroke="none"
+                      style={{ cursor: 'pointer' }}
+                    />
                   );
                 }}
               >
@@ -295,7 +256,7 @@ export const MoneyFlows: React.FC = () => {
               <span className="text-gray-600 dark:text-gray-400">Income</span>
             </div>
             <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: CENTRAL_EXPENSE_COLOR }}></div>
+              <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: EXPENSE_PRIMARY_COLOR }}></div>
               <span className="text-gray-600 dark:text-gray-400">Expenses</span>
             </div>
             <div className="flex items-center">
