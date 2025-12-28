@@ -1,5 +1,19 @@
 # MyFinance Changelog
 
+## 2025-12-28
+
+### Backend – Financial Summary Endpoint
+- Added `GET /financial-summary` endpoint for comprehensive, LLM-friendly financial state overview
+- Implemented `FinancialSummaryService` to aggregate data from:
+  - `TransactionService`: Account overview, volume, and large transactions
+  - `StatisticsService`: Income/expense trends and category analysis
+  - `FinancialHealthService`: Overall health score and component metrics
+  - `ProjectionService`: Future outlook and assumptions
+  - `AnomalyDetectionService`: Recent spending outliers
+- Created dedicated Pydantic schemas in `app/schemas/financial_summary.py`
+- Optimized aggregation logic to minimize database hits
+- Included narrative summary generation for quick insights
+
 ## 2025-12-16
 
 ### Frontend – Money Flows Sankey Diagram
