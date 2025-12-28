@@ -88,6 +88,13 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - PIN-based authentication system (not yet fully implemented, PIN hard-coded to 1234)
 - Dark/light theme support
 
+### Financial Insights & Summaries
+- **New Feature**: LLM-friendly financial summary endpoint (`GET /financial-summary`)
+- Aggregates data from all services (Transactions, Statistics, Health, Projections, Anomalies)
+- Provides a structured, comprehensive overview optimized for AI processing
+- Includes narrative summaries and key performance indicators
+- Integration of projections and historical trends for future outlook
+
 ## Architecture
 
 - **Monorepo** layout with separate `backend` and `frontend` directories
