@@ -31,7 +31,17 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip 
+                formatter={(val: number) => formatCurrency(val)}
+                contentStyle={{ 
+                  backgroundColor: 'var(--color-tooltip-bg)', 
+                  borderColor: 'var(--color-tooltip-border)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-tooltip-border)'
+                }}
+                itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
+              />
               <Legend verticalAlign="bottom" height={36}/>
             </PieChart>
           </ResponsiveContainer>
@@ -45,7 +55,18 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
               <XAxis type="number" hide />
               <YAxis dataKey="source" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 500, fill: '#94a3b8'}} width={120} />
-              <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '12px' }} />
+              <Tooltip 
+                cursor={{fill: 'transparent'}} 
+                formatter={(val: number) => formatCurrency(val)}
+                contentStyle={{ 
+                  backgroundColor: 'var(--color-tooltip-bg)', 
+                  borderColor: 'var(--color-tooltip-border)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-tooltip-border)'
+                }}
+                itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
+              />
               <Bar dataKey="amount" fill="#6366f1" radius={[0, 8, 8, 0]} barSize={32} />
             </BarChart>
           </ResponsiveContainer>
@@ -69,7 +90,17 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
                 <Cell fill="#10b981" />
                 <Cell fill="#6366f1" />
               </Pie>
-              <Tooltip formatter={(val: number) => `${(val * 100).toFixed(1)}%`} />
+              <Tooltip 
+                formatter={(val: number) => `${(val * 100).toFixed(2)}%`}
+                contentStyle={{ 
+                  backgroundColor: 'var(--color-tooltip-bg)', 
+                  borderColor: 'var(--color-tooltip-border)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-tooltip-border)'
+                }}
+                itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
+              />
               <Legend verticalAlign="bottom" height={36}/>
             </PieChart>
           </ResponsiveContainer>

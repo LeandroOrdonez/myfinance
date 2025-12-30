@@ -98,15 +98,20 @@ export const CategoryAverages: React.FC = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white border rounded p-2 shadow-md dark:bg-gray-800">
-          <p className="font-medium">{label}</p>
-          <p className="text-blue-500">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg"
+             style={{ 
+               backgroundColor: 'var(--color-tooltip-bg)', 
+               borderColor: 'var(--color-tooltip-border)',
+               color: 'var(--color-tooltip-text)'
+             }}>
+          <p className="font-bold mb-1" style={{ color: 'var(--color-tooltip-text)' }}>{label}</p>
+          <p className="text-indigo-600 dark:text-indigo-400 font-medium">
             Monthly Average: {formatCurrency(data.average)}
           </p>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             Total: {formatCurrency(data.total)}
           </p>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-500 dark:text-gray-500 text-xs mt-1 italic">
             {data.percentage.toFixed(1)}% of {data.type === 'Income' ? 'Income' : 'Expenses'}
           </p>
         </div>
@@ -125,7 +130,7 @@ export const CategoryAverages: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Category Averages</h3>
+        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Category Averages</h3>
         
         <div className="flex space-x-2">
           {/* Transaction Type Selector */}

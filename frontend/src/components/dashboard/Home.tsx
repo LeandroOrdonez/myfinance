@@ -53,7 +53,7 @@ export const Home: React.FC = () => {
       {/* Header Section */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Wealth Dashboard</h1>
+          <h1 className="text-xl font-medium tracking-tight text-slate-900 dark:text-white">Financial Snapshot</h1>
           <p className="text-slate-500 dark:text-gray-400 flex items-center gap-2 mt-1 text-sm">
             <Calendar size={16} /> Reporting Period: {data.data_period.start_date} to {data.data_period.end_date}
           </p>
@@ -62,7 +62,7 @@ export const Home: React.FC = () => {
           <div className="px-4 py-2 border-r border-slate-100 dark:border-gray-700 text-center">
             <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase font-bold tracking-wider text-center">Health Score</p>
             <div className="flex items-baseline justify-center gap-1">
-              <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{data.financial_health.overall_score.toFixed(1)}</span>
+              <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{data.financial_health.overall_score.toFixed(0)}</span>
               <span className="text-[10px] text-slate-400 dark:text-gray-500">/ 100</span>
             </div>
           </div>

@@ -164,7 +164,7 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
   };
 
   const formatValue = (value: number, isPercentage: boolean = true) => {
-    if (!value && value !== 0) return isPercentage ? '0%' : '€0';
+    if (!value && value !== 0) return isPercentage ? '0.0%' : '€0.0';
     
     if (isPercentage) {
       // Format as percentage for area chart
@@ -201,8 +201,11 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
             contentStyle={{ 
               backgroundColor: 'var(--color-tooltip-bg)', 
               borderColor: 'var(--color-tooltip-border)',
-              color: 'var(--color-tooltip-text)'
+              borderRadius: '12px',
+              border: '1px solid var(--color-tooltip-border)'
             }}
+            itemStyle={{ color: 'var(--color-tooltip-text)' }}
+            labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
             labelFormatter={(label) => {
               const d = new Date(label);
               return formatDate(d, 'MMMM yyyy');
@@ -262,8 +265,11 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
           contentStyle={{ 
             backgroundColor: 'var(--color-tooltip-bg)', 
             borderColor: 'var(--color-tooltip-border)',
-            color: 'var(--color-tooltip-text)'
+            borderRadius: '12px',
+            border: '1px solid var(--color-tooltip-border)'
           }}
+          itemStyle={{ color: 'var(--color-tooltip-text)' }}
+          labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
           labelFormatter={(label) => {
             const d = new Date(label);
             return formatDate(d, 'MMMM yyyy');

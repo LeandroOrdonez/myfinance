@@ -112,7 +112,8 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'EUR',
-            notation: 'compact'
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         }).format(value);
     };
 
@@ -192,11 +193,13 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
                                     metrics[activeMetric as keyof typeof metrics].series.find(series => series.name === name)?.name || 'Amount'
                                 ]}
                                 contentStyle={{ 
-                                backgroundColor: 'var(--color-tooltip-bg)', 
-                                borderColor: 'var(--color-tooltip-border)',
-                                color: 'var(--color-tooltip-text)'
+                                  backgroundColor: 'var(--color-tooltip-bg)', 
+                                  borderColor: 'var(--color-tooltip-border)',
+                                  borderRadius: '12px',
+                                  border: '1px solid var(--color-tooltip-border)'
                                 }}
-                                itemStyle={{ color: 'inherit' }}
+                                itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                                labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
                                 wrapperClassName="tooltip-wrapper"
                             />
                             <Legend 

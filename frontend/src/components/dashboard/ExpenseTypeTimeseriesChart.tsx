@@ -84,7 +84,7 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
   }, [timeseriesData]);
 
   const formatValue = (value: number, isPercentage: boolean = false) => {
-    if (!value && value !== 0) return isPercentage ? '0%' : '€0';
+    if (!value && value !== 0) return isPercentage ? '0.0%' : '€0.0';
     
     if (isPercentage) {
       return `${value.toFixed(1)}%`;
@@ -124,8 +124,11 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
               contentStyle={{ 
                 backgroundColor: 'var(--color-tooltip-bg)', 
                 borderColor: 'var(--color-tooltip-border)',
-                color: 'var(--color-tooltip-text)'
+                borderRadius: '12px',
+                border: '1px solid var(--color-tooltip-border)'
               }}
+              itemStyle={{ color: 'var(--color-tooltip-text)' }}
+              labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
               labelFormatter={(label) => {
                 const d = new Date(label);
                 return formatDate(d, 'MMMM yyyy');
@@ -181,8 +184,11 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
               contentStyle={{ 
                 backgroundColor: 'var(--color-tooltip-bg)', 
                 borderColor: 'var(--color-tooltip-border)',
-                color: 'var(--color-tooltip-text)'
+                borderRadius: '12px',
+                border: '1px solid var(--color-tooltip-border)'
               }}
+              itemStyle={{ color: 'var(--color-tooltip-text)' }}
+              labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
               labelFormatter={(label) => {
                 const d = new Date(label);
                 return formatDate(d, 'MMMM yyyy');
