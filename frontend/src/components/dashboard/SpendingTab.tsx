@@ -25,6 +25,7 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
                 outerRadius={120}
                 paddingAngle={5}
                 dataKey="amount"
+                isAnimationActive={false}
                 nameKey="category"
               >
                 {data.transaction_summary.top_categories.map((entry, index) => (
@@ -67,7 +68,7 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
                 itemStyle={{ color: 'var(--color-tooltip-text)' }}
                 labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
               />
-              <Bar dataKey="amount" fill="#6366f1" radius={[0, 8, 8, 0]} barSize={32} />
+              <Bar dataKey="amount" isAnimationActive={false} fill="#6366f1" radius={[0, 8, 8, 0]} barSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -86,6 +87,7 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
                 outerRadius={120}
                 paddingAngle={5}
                 dataKey="value"
+                isAnimationActive={false}
               >
                 <Cell fill="#10b981" />
                 <Cell fill="#6366f1" />

@@ -30,6 +30,7 @@ const AnalyticsDashboard = () => {
   return (
     <div className="space-y-6 mt-4">
       <FinancialOverview />
+      <CashFlows />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CategoryBreakdown />
         <div className="space-y-6">
@@ -42,10 +43,7 @@ const AnalyticsDashboard = () => {
         <CategoryTimeseriesChart title="Category Trends Over Time" />
         <ExpenseTypeTimeseriesChart />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CategoryAverages />
-        <CashFlows />
-      </div>
+      <CategoryAverages />
     </div>
   );
 };

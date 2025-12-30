@@ -9,7 +9,7 @@ import logging
 from ..models.transaction import Transaction, TransactionType, ExpenseCategory, IncomeCategory
 from ..models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from ..models.financial_health import FinancialHealth, FinancialRecommendation
-from ..models.anomaly import TransactionAnomaly
+from ..models.anomaly import TransactionAnomaly, AnomalyStatus
 from ..models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult
 from ..services.statistics_service import StatisticsService
 from ..services.financial_health_service import FinancialHealthService
@@ -33,16 +33,17 @@ class FinancialSummaryService:
         """
         try:
             # 1. Basic Data Info
-            first_transaction = db.query(Transaction).order_by(Transaction.transaction_date.asc()).first()
             last_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
             
             if not last_transaction:
                 raise ValueError("No transaction data found")
                 
-            start_date = first_transaction.transaction_date
             # Set end_date to the last day of the month of the last transaction
             last_date = last_transaction.transaction_date
             end_date = last_date.replace(day=calendar.monthrange(last_date.year, last_date.month)[1])
+            
+            # Start date is the beginning of the 12-month period ending at end_date
+            start_date = end_date.replace(year=end_date.year - 1)
             
             # 2. Account Overview
             all_time_stats = db.query(FinancialStatistics).filter(
@@ -62,8 +63,7 @@ class FinancialSummaryService:
             total_count = db.query(Transaction).count()
             
             # Monthly volume for last 12 months
-            twelve_months_ago = end_date - relativedelta(months=11)
-            twelve_months_ago = twelve_months_ago.replace(day=1)
+            twelve_months_ago = start_date
             
             monthly_stats = db.query(FinancialStatistics).filter(
                 FinancialStatistics.period == StatisticsPeriod.MONTHLY,
@@ -78,15 +78,18 @@ class FinancialSummaryService:
                 ) for stat in monthly_stats
             ]
             
-            avg_trans_amount = db.query(func.avg(func.abs(Transaction.amount))).scalar() or 0
+            avg_trans_amount = db.query(func.avg(func.abs(Transaction.amount))).filter(
+                Transaction.transaction_date >= twelve_months_ago
+            ).scalar() or 0
             
-            # Top categories
+            # Top categories (last 12 months)
             top_cats_data = db.query(
                 CategoryStatistics.category_name,
                 func.sum(CategoryStatistics.period_amount).label('total_amount')
             ).filter(
                 CategoryStatistics.period == StatisticsPeriod.MONTHLY,
-                CategoryStatistics.transaction_type == TransactionType.EXPENSE
+                CategoryStatistics.transaction_type == TransactionType.EXPENSE,
+                CategoryStatistics.date >= twelve_months_ago
             ).group_by(CategoryStatistics.category_name).order_by(desc('total_amount')).limit(5).all()
             
             top_categories = [{"category": row[0], "amount": row[1]} for row in top_cats_data]
@@ -113,7 +116,8 @@ class FinancialSummaryService:
                 func.sum(CategoryStatistics.period_amount).label('total_amount')
             ).filter(
                 CategoryStatistics.period == StatisticsPeriod.MONTHLY,
-                CategoryStatistics.transaction_type == TransactionType.INCOME
+                CategoryStatistics.transaction_type == TransactionType.INCOME,
+                CategoryStatistics.date >= twelve_months_ago
             ).group_by(CategoryStatistics.category_name).order_by(desc('total_amount')).all()
             
             primary_sources = [{"source": row[0], "amount": row[1]} for row in primary_sources_data]
@@ -130,7 +134,7 @@ class FinancialSummaryService:
             discretionary_ratio = historical_data.get("discretionary_expense_ratio", 0.4)
             
             anomalies = db.query(TransactionAnomaly).filter(
-                TransactionAnomaly.status == "detected"
+                TransactionAnomaly.status == AnomalyStatus.DETECTED,
             ).order_by(desc(TransactionAnomaly.anomaly_score)).limit(5).all()
             
             # 6. Financial Health Metrics
@@ -222,13 +226,14 @@ class FinancialSummaryService:
                 } for stat in monthly_stats
             ]
 
-            # Get investment allocation
+            # Get investment allocation (last 12 months)
             invest_alloc_data = db.query(
                 CategoryStatistics.category_name,
                 func.sum(CategoryStatistics.period_amount).label('total_amount')
             ).filter(
                 CategoryStatistics.period == StatisticsPeriod.MONTHLY,
-                CategoryStatistics.category_name.in_([ExpenseCategory.INVESTMENTS.value, ExpenseCategory.SAVINGS.value])
+                CategoryStatistics.category_name.in_([ExpenseCategory.INVESTMENTS.value, ExpenseCategory.SAVINGS.value]),
+                CategoryStatistics.date >= twelve_months_ago
             ).group_by(CategoryStatistics.category_name).all()
             
             # Narrative Summary

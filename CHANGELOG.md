@@ -1,5 +1,10 @@
 # MyFinance Changelog
 
+## 2025-12-30
+
+### Backend – Financial Summary Refinement
+- Modified `FinancialSummaryService.generate_summary` to use a 12-month rolling window (last 12 months) instead of starting from the first transaction ever.
+
 ## 2025-12-29
 
 ### Frontend – New Wealth Dashboard

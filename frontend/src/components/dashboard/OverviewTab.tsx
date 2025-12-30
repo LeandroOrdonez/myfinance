@@ -81,7 +81,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
                   labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
                   formatter={(val: number) => formatCurrency(val)}
                 />
-                <Line type="linear" dataKey="cumulative_savings" stroke="#6366f1" strokeWidth={4} dot={false} />
+                <Line type="linear" dataKey="cumulative_savings" isAnimationActive={false} stroke="#6366f1" strokeWidth={4} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
