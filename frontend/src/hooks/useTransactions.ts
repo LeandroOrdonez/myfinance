@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Transaction, 
   ExpenseCategory, 
@@ -40,13 +40,6 @@ export const useTransactions = () => {
     field: 'date',
     direction: 'desc'
   });
-
-  // Helper to format date to YYYY-MM-DD
-const formatDate = (date: Date | string | undefined) => {
-  if (!date) return undefined;
-  if (typeof date === 'string') return date;
-  return date.toISOString().split('T')[0];
-};
 
 const fetchData = async (filtersOverride?: {
   search?: string;
@@ -179,6 +172,15 @@ const fetchData = async (filtersOverride?: {
   // Fetch when filters or pagination change
   useEffect(() => {
     fetchData();
+
+    const handleDataUpdate = () => {
+      fetchData();
+    };
+
+    window.addEventListener('finance-data-updated', handleDataUpdate);
+    return () => {
+      window.removeEventListener('finance-data-updated', handleDataUpdate);
+    };
     // eslint-disable-next-line
   }, [currentPage, sortParams, debouncedSearch, categoryFilter, dateRange]);
 

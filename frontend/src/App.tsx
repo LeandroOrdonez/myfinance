@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
+import { Home } from './components/dashboard/Home';
 import { TransactionList } from './components/TransactionList';
 import { TransactionFilters } from './components/TransactionFilters';
 import { FinancialOverview } from './components/dashboard/FinancialOverview';
@@ -143,7 +144,8 @@ function App() {
   const handleUploadSuccess = async () => {
     try {
       await statisticService.initializeStatistics();
-      // No need to explicitly refresh data as components will handle this with their hooks
+      // Dispatch global event to refresh components using useSummary or other shared data
+      window.dispatchEvent(new CustomEvent('finance-data-updated'));
     } catch (error) {
       console.error('Failed to initialize statistics:', error);
     }
@@ -159,7 +161,15 @@ function App() {
               path="/" 
               element={
                 <MainLayout onUploadSuccess={handleUploadSuccess}>
-                  <Navigate to="/analytics" replace />
+                  <Home />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <Home />
                 </MainLayout>
               } 
             />
@@ -209,7 +219,7 @@ function App() {
                 </MainLayout>
               } 
             />
-            <Route path="*" element={<Navigate to="/analytics" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </BrowserRouter>
         </AuthWrapper>
