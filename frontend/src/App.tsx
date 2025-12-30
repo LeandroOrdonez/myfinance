@@ -23,7 +23,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
 import { CategoryAverages } from './components/dashboard/CategoryAverages';
-import { MoneyFlows } from './components/dashboard/MoneyFlows';
+import { CashFlows } from './components/dashboard/CashFlows';
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
@@ -44,7 +44,7 @@ const AnalyticsDashboard = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CategoryAverages />
-        <MoneyFlows />
+        <CashFlows />
       </div>
     </div>
   );

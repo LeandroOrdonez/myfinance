@@ -27,7 +27,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
       <div className="lg:col-span-2 space-y-6">
-        <DashboardCard title="Cash Flow Trends" headerExtra={trendHeaderExtra}>
+        <DashboardCard title="Cash Flow" headerExtra={trendHeaderExtra}>
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={combinedTrendData}>
@@ -45,11 +45,19 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
                 <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => `€${v/1000}k`} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-tooltip-bg)', 
+                    borderColor: 'var(--color-tooltip-border)',
+                    borderRadius: '16px', 
+                    border: '1px solid var(--color-tooltip-border)',
+                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                  }}
+                  itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                  labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
                   formatter={(val: number) => formatCurrency(val)}
                 />
-                <Area type="monotone" dataKey="income" stroke="#10b981" fillOpacity={1} fill="url(#colorInc)" strokeWidth={3} />
-                <Area type="monotone" dataKey="expense" stroke="#ef4444" fillOpacity={1} fill="url(#colorExp)" strokeWidth={3} />
+                <Area type="monotone" dataKey="income" isAnimationActive={false} stroke="#10b981" fillOpacity={1} fill="url(#colorInc)" strokeWidth={3} />
+                <Area type="monotone" dataKey="expense" isAnimationActive={false} stroke="#ef4444" fillOpacity={1} fill="url(#colorExp)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -62,8 +70,18 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
                 <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => `€${Math.round(v/1000)}k`} />
-                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none' }} />
-                <Line type="stepAfter" dataKey="cumulative_savings" stroke="#6366f1" strokeWidth={4} dot={false} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-tooltip-bg)', 
+                    borderColor: 'var(--color-tooltip-border)',
+                    borderRadius: '16px', 
+                    border: '1px solid var(--color-tooltip-border)' 
+                  }}
+                  itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                  labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
+                  formatter={(val: number) => formatCurrency(val)}
+                />
+                <Line type="linear" dataKey="cumulative_savings" stroke="#6366f1" strokeWidth={4} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

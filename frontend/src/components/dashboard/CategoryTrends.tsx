@@ -382,9 +382,11 @@ export const CategoryTrends: React.FC = () => {
                   contentStyle={{ 
                     backgroundColor: 'var(--color-tooltip-bg)', 
                     borderColor: 'var(--color-tooltip-border)',
-                    color: 'var(--color-tooltip-text)'
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-tooltip-border)'
                   }}
-                  itemStyle={{ color: 'inherit' }}
+                  itemStyle={{ color: 'var(--color-tooltip-text)' }}
+                  labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
                   wrapperClassName="tooltip-wrapper"
                 />
                 <Legend 

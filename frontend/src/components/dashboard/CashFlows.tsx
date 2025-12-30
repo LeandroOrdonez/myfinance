@@ -30,7 +30,7 @@ const CENTRAL_INCOME_COLOR = '#059669';
 const EXPENSE_PRIMARY_COLOR = '#ec4899';
 const SAVINGS_COLOR = '#3b82f6';
 
-export const MoneyFlows: React.FC = () => {
+export const CashFlows: React.FC = () => {
   const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +63,8 @@ export const MoneyFlows: React.FC = () => {
         
         setError(null);
       } catch (err) {
-        console.error('Error fetching money flow data:', err);
-        setError('Failed to load money flow data');
+        console.error('Error fetching cash flow data:', err);
+        setError('Failed to load cash flow data');
       } finally {
         setLoading(false);
       }
@@ -130,11 +130,16 @@ export const MoneyFlows: React.FC = () => {
       // Check if this is a link (has source and target in payload)
       if (data.payload?.source && data.payload?.target) {
         return (
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg"
+               style={{ 
+                 backgroundColor: 'var(--color-tooltip-bg)', 
+                 borderColor: 'var(--color-tooltip-border)',
+                 color: 'var(--color-tooltip-text)'
+               }}>
+            <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-tooltip-text)' }}>
               {data.payload.source.name} → {data.payload.target.name}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm font-medium" style={{ color: 'var(--color-tooltip-text)' }}>
               {formatCurrency(data.payload.value)}/month
             </p>
           </div>
@@ -143,12 +148,17 @@ export const MoneyFlows: React.FC = () => {
         // Node tooltip - calculate value from links
         const nodeValue = data.value || 0;
         return (
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg"
+               style={{ 
+                 backgroundColor: 'var(--color-tooltip-bg)', 
+                 borderColor: 'var(--color-tooltip-border)',
+                 color: 'var(--color-tooltip-text)'
+               }}>
+            <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-tooltip-text)' }}>
               {data.name}
             </p>
             {nodeValue > 0 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium" style={{ color: 'var(--color-tooltip-text)' }}>
                 {formatCurrency(nodeValue)}/month
               </p>
             )}
@@ -162,7 +172,7 @@ export const MoneyFlows: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Money Flows</h3>
+        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Cash Flow Trends</h3>
         
         <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
           {PERIODS.map((p) => (
