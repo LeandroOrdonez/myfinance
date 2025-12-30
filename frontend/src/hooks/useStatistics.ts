@@ -47,6 +47,15 @@ export const useStatistics = () => {
 
   useEffect(() => {
     fetchStatistics();
+
+    const handleDataUpdate = () => {
+      fetchStatistics();
+    };
+
+    window.addEventListener('finance-data-updated', handleDataUpdate);
+    return () => {
+      window.removeEventListener('finance-data-updated', handleDataUpdate);
+    };
   }, []);
 
   return {

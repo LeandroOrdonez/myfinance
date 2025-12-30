@@ -25,7 +25,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   
   // Extract the current view from the URL path
   const currentPath = location.pathname;
-  const currentView = currentPath.split('/')[1] || 'analytics';
+  const currentView = currentPath === '/' ? 'dashboard' : (currentPath.split('/')[1] || 'dashboard');
   
   // For the undo functionality on the transactions page
   const { handleUndo, canUndo } = useTransactions();

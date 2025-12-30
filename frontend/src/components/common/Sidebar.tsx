@@ -1,6 +1,7 @@
 import React from 'react';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { 
+  HomeIcon as HomeIconOutline,
   ChartBarIcon as ChartBarIconOutline, 
   ListBulletIcon,
   Bars3Icon,
@@ -10,6 +11,7 @@ import {
   ShieldExclamationIcon as ShieldExclamationIconOutline
 } from '@heroicons/react/24/outline';
 import { 
+  HomeIcon as HomeIconSolid,
   HeartIcon as HeartIconSolid,
   ChartBarIcon as ChartBarIconSolid,
   PresentationChartLineIcon as PresentationChartLineIconSolid,
@@ -31,6 +33,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse
 }) => {
   const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Home',
+      icon: activeView === 'dashboard' ? <HomeIconSolid className="h-5 w-5" /> : <HomeIconOutline className="h-5 w-5" />
+    },
     {
       id: 'analytics',
       label: 'Analytics',

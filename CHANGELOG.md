@@ -1,5 +1,14 @@
 # MyFinance Changelog
 
+## 2025-12-29
+
+### Frontend – New Wealth Dashboard
+- **Wealth Dashboard**: New modular landing page with Overview, Spending, and Health tabs.
+- **Data Sync**: Global event-driven system to auto-refresh all views after CSV uploads.
+- **UI/UX**: Rebranded navigation to "Home", standardized EUR formatting, and optimized mobile layouts.
+- **Smart Insights**: Integrated prioritized recommendations and narrative summaries with refined typography.
+- **Components**: Added reusable DashboardCard and SummaryCard systems for consistent styling.
+
 ## 2025-12-28
 
 ### Backend – Financial Summary Endpoint

@@ -43,6 +43,8 @@ const greetingVariations: GreetingVariation = {
 // Get page title based on current view
 const getPageTitle = (currentView: string) => {
   switch (currentView) {
+    case 'dashboard':
+      return <><span>Home</span>&nbsp;&middot;&nbsp;<span className="italic">Your financial situation at a glance</span></>;
     case 'analytics':
       return <><span>Analytics</span>&nbsp;&middot;&nbsp;<span className="italic">Your financial insights at a glance</span></>;
     case 'transactions':
