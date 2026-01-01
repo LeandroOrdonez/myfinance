@@ -179,16 +179,16 @@ class CategorySuggestionService:
             logger.warning(f"Error checking collection: {e}, returning empty suggestions")
             return []
         
-        # Search for similar transactions using search_points
+        # Search for similar transactions using search
         try:
-            search_result = self.client.search_points(
+            search_result = self.client.search(
                 collection_name=collection_name,
                 query_vector=embedding.tolist(),
                 limit=top_k
             )
             
             # Return categories with confidence scores
-            return [(hit.payload["category"], hit.score) for hit in search_result.points]
+            return [(hit.payload["category"], hit.score) for hit in search_result]
         except Exception as e:
             logger.error(f"Error searching for similar transactions: {e}")
             return []
