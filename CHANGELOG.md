@@ -1,5 +1,27 @@
 # MyFinance Changelog
 
+## 2026-01-28 – Financial Projections Refactoring
+
+Improved performance, maintainability, and user value of the financial projections feature through caching, validation, code organization, and inflation-adjusted views.
+
+### Performance
+- Added 5-minute in-memory cache for historical data analysis to reduce redundant database queries
+- Cache invalidation support with `force_refresh` parameter
+
+### Data Integrity
+- Backend and frontend parameter validation with bounds checking
+- Auto-clamping of out-of-range values with visual feedback
+- Bounds hints displayed in parameter editor
+
+### Code Quality
+- Extracted reusable dialog components from `ScenarioManager`
+- Created `Dialog`, `ScenarioFormDialog`, and `DeleteConfirmDialog` components
+
+### User Features
+- **Inflation-Adjusted Projections**: All charts now support toggling between nominal and real (inflation-adjusted) values
+- Real values show true purchasing power over time
+- Toggle buttons with inflation rate display on all projection charts
+
 ## 2025-12-30
 
 ### Backend – Financial Summary Refinement

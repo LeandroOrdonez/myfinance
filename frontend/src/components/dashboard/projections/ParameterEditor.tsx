@@ -6,11 +6,25 @@ interface ParameterEditorProps {
   onChange: (parameters: ProjectionParameterCreate[]) => void;
 }
 
+// Validation bounds for projection parameters (must match backend)
+const PARAMETER_BOUNDS: Record<string, { min: number; max: number; displayMin: number; displayMax: number }> = {
+  income_growth_rate: { min: -0.80, max: 0.80, displayMin: -80, displayMax: 80 },
+  essential_expenses_growth_rate: { min: -0.80, max: 0.80, displayMin: -80, displayMax: 80 },
+  discretionary_expenses_growth_rate: { min: -0.80, max: 0.80, displayMin: -80, displayMax: 80 },
+  investment_rate: { min: 0.0, max: 0.90, displayMin: 0, displayMax: 90 },
+  inflation_rate: { min: -0.10, max: 0.30, displayMin: -10, displayMax: 30 },
+  investment_return_rate: { min: -0.80, max: 0.80, displayMin: -80, displayMax: 80 },
+  emergency_fund_target: { min: 0.0, max: 36.0, displayMin: 0, displayMax: 36 },
+  holdings_market_value: { min: 0.0, max: 1e12, displayMin: 0, displayMax: 1e12 },
+};
+
 const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange }) => {
   // State to track input values separately from parameter values
   const [inputValues, setInputValues] = useState<string[]>([]);
+  // State to track validation errors
+  const [validationErrors, setValidationErrors] = useState<(string | null)[]>([]);
 
-  // Initialize input values when parameters change
+  // Initialize input values and clear errors when parameters change
   useEffect(() => {
     const initialInputs = parameters.map(param => {
       if (param.param_type === 'percentage') {
@@ -19,6 +33,7 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
       return param.param_value.toString();
     });
     setInputValues(initialInputs);
+    setValidationErrors(parameters.map(() => null));
   }, [parameters]); // Re-initialize when parameters change
 
   // Format parameter name for display
@@ -36,13 +51,55 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
     setInputValues(newInputValues);
   };
 
+  // Validate a parameter value against its bounds
+  const validateValue = (paramName: string, value: number, isPercentage: boolean): string | null => {
+    const bounds = PARAMETER_BOUNDS[paramName];
+    if (!bounds) return null;
+    
+    // For percentage types, compare against display bounds (user enters %, we store decimal)
+    const compareValue = isPercentage ? value : value;
+    const minBound = isPercentage ? bounds.displayMin : bounds.min;
+    const maxBound = isPercentage ? bounds.displayMax : bounds.max;
+    
+    if (compareValue < minBound || compareValue > maxBound) {
+      return `Must be between ${minBound} and ${maxBound}`;
+    }
+    return null;
+  };
+
   // Handle blur event to update the actual parameter value
   const handleInputBlur = (index: number) => {
     const newParams = [...parameters];
+    const param = newParams[index];
     let parsedValue = parseFloat(inputValues[index]) || 0;
     
+    // Validate the input value
+    const error = validateValue(param.param_name, parsedValue, param.param_type === 'percentage');
+    const newErrors = [...validationErrors];
+    newErrors[index] = error;
+    setValidationErrors(newErrors);
+    
+    // If there's an error, clamp the value to bounds
+    if (error) {
+      const bounds = PARAMETER_BOUNDS[param.param_name];
+      if (bounds) {
+        const minBound = param.param_type === 'percentage' ? bounds.displayMin : bounds.min;
+        const maxBound = param.param_type === 'percentage' ? bounds.displayMax : bounds.max;
+        parsedValue = Math.max(minBound, Math.min(maxBound, parsedValue));
+        
+        // Update the input value to show the clamped value
+        const newInputValues = [...inputValues];
+        newInputValues[index] = parsedValue.toString();
+        setInputValues(newInputValues);
+        
+        // Clear the error after clamping
+        newErrors[index] = null;
+        setValidationErrors(newErrors);
+      }
+    }
+    
     // Convert percentage inputs back to decimal form for storage
-    if (newParams[index].param_type === 'percentage') {
+    if (param.param_type === 'percentage') {
       newParams[index].param_value = parsedValue / 100;
     } else {
       newParams[index].param_value = parsedValue;
@@ -76,26 +133,49 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
             </tr>
           </thead>
           <tbody>
-            {parameters.map((param, index) => (
-              <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td className="p-3 font-medium">{formatParamName(param.param_name)}</td>
-                <td className="p-3">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      value={inputValues[index] || ''}
-                      onChange={(e) => handleInputChange(index, e.target.value)}
-                      onBlur={() => handleInputBlur(index)}
-                      className="w-24 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700"
-                      step={param.param_type === 'percentage' ? '0.1' : '1'}
-                    />
-                    <span className="text-gray-500 text-sm">
-                      {getValueSuffix(param.param_type)}
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {parameters.map((param, index) => {
+              const bounds = PARAMETER_BOUNDS[param.param_name];
+              const minVal = bounds ? (param.param_type === 'percentage' ? bounds.displayMin : bounds.min) : undefined;
+              const maxVal = bounds ? (param.param_type === 'percentage' ? bounds.displayMax : bounds.max) : undefined;
+              const hasError = validationErrors[index] !== null;
+              
+              return (
+                <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="p-3 font-medium">
+                    {formatParamName(param.param_name)}
+                    {bounds && (
+                      <span className="block text-xs text-gray-400 font-normal">
+                        {minVal} to {maxVal}{param.param_type === 'percentage' ? '%' : ''}
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={inputValues[index] || ''}
+                        onChange={(e) => handleInputChange(index, e.target.value)}
+                        onBlur={() => handleInputBlur(index)}
+                        min={minVal}
+                        max={maxVal}
+                        className={`w-24 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 ${
+                          hasError 
+                            ? 'border-red-500 focus:ring-red-500' 
+                            : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-600'
+                        }`}
+                        step={param.param_type === 'percentage' ? '0.1' : '1'}
+                      />
+                      <span className="text-gray-500 text-sm">
+                        {getValueSuffix(param.param_type)}
+                      </span>
+                    </div>
+                    {hasError && (
+                      <p className="text-red-500 text-xs mt-1">{validationErrors[index]}</p>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

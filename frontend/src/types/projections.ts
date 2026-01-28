@@ -54,6 +54,13 @@ export interface ProjectionTimeseries {
   projected_investments: number[];
   projected_savings: number[];
   projected_net_worth: number[];
+  // Real (inflation-adjusted) values in today's purchasing power
+  real_projected_income: number[];
+  real_projected_expenses: number[];
+  real_projected_investments: number[];
+  real_projected_savings: number[];
+  real_projected_net_worth: number[];
+  inflation_rate: number;
 }
 
 export interface ScenarioComparison {
@@ -62,4 +69,9 @@ export interface ScenarioComparison {
   net_worth_series: Record<string, number[]>;
   savings_series: Record<string, number[]>;
   investment_series: Record<string, number[]>;
+  // Real (inflation-adjusted) series
+  real_net_worth_series: Record<string, number[]>;
+  real_savings_series: Record<string, number[]>;
+  real_investment_series: Record<string, number[]>;
+  inflation_rates: Record<string, number>;
 }

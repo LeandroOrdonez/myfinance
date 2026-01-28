@@ -6,6 +6,7 @@ import copy
 import calendar
 import numpy as np
 import logging
+import time
 from typing import List, Dict, Optional, Tuple, Any
 
 from ..models.transaction import Transaction, TransactionType, ExpenseCategory, ExpenseType
@@ -20,6 +21,11 @@ logger = logging.getLogger(__name__)
 
 class ProjectionService:
     """Service for analyzing financial data and creating future projections"""
+    
+    # Cache for historical data analysis (avoids redundant DB queries)
+    _historical_data_cache: Dict[str, Any] = {}
+    _cache_timestamp: float = 0
+    _cache_ttl_seconds: int = 300  # 5 minutes TTL
     
     # Default parameters for projection scenarios
     DEFAULT_PARAMETERS = {
@@ -210,8 +216,33 @@ class ProjectionService:
     
     
     @staticmethod
-    def analyze_historical_data(db: Session) -> Dict[str, Any]:
-        """Analyze historical financial data to extract patterns and trends"""
+    def invalidate_historical_data_cache() -> None:
+        """Invalidate the historical data cache, forcing a fresh analysis on next call"""
+        ProjectionService._historical_data_cache = {}
+        ProjectionService._cache_timestamp = 0
+        logger.info("Historical data cache invalidated")
+    
+    @staticmethod
+    def analyze_historical_data(db: Session, force_refresh: bool = False) -> Dict[str, Any]:
+        """Analyze historical financial data to extract patterns and trends
+        
+        Args:
+            db: Database session
+            force_refresh: If True, bypass cache and fetch fresh data
+            
+        Returns:
+            Dictionary containing historical analysis metrics
+        """
+        # Check cache validity
+        current_time = time.time()
+        cache_age = current_time - ProjectionService._cache_timestamp
+        
+        if (not force_refresh 
+            and ProjectionService._historical_data_cache 
+            and cache_age < ProjectionService._cache_ttl_seconds):
+            logger.debug(f"Using cached historical data (age: {cache_age:.1f}s)")
+            return ProjectionService._historical_data_cache
+        
         try:
             # Get the last 2 years of data
             # Use the date from the last transaction if available otherwise use today
@@ -341,7 +372,7 @@ class ProjectionService:
             # Calculate seasonality (not implemented in this version)
             # This would identify recurring patterns in income/expenses
             
-            return {
+            result = {
                 "avg_monthly_income": avg_monthly_income,
                 "avg_monthly_expenses": avg_monthly_expenses,
                 "avg_monthly_savings": avg_monthly_savings,
@@ -355,6 +386,13 @@ class ProjectionService:
                 "avg_expense_to_income_ratio": avg_expense_to_income_ratio,
                 "latest_date": dates[-1] if dates else date.today()
             }
+            
+            # Cache the result
+            ProjectionService._historical_data_cache = result
+            ProjectionService._cache_timestamp = time.time()
+            logger.debug("Historical data cache updated")
+            
+            return result
             
         except Exception as e:
             logger.error(f"Error analyzing historical data: {str(e)}")
@@ -488,7 +526,11 @@ class ProjectionService:
     
     @staticmethod
     def get_projection_results(db: Session, scenario_id: int) -> Dict[str, Any]:
-        """Get projection results in a format suitable for visualization"""
+        """Get projection results in a format suitable for visualization
+        
+        Returns both nominal and real (inflation-adjusted) values.
+        Real values are expressed in today's purchasing power.
+        """
         try:
             results = db.query(ProjectionResult).filter(
                 ProjectionResult.scenario_id == scenario_id
@@ -496,6 +538,14 @@ class ProjectionService:
             
             if not results:
                 raise ValueError(f"No projection results found for scenario {scenario_id}")
+            
+            # Get the inflation rate from scenario parameters
+            params = db.query(ProjectionParameter).filter(
+                ProjectionParameter.scenario_id == scenario_id
+            ).all()
+            param_dict = {p.param_name: p.param_value for p in params}
+            annual_inflation_rate = param_dict.get("inflation_rate", 0.02)
+            monthly_inflation_rate = (1 + annual_inflation_rate) ** (1/12) - 1
             
             # Format results for visualization
             dates = []
@@ -505,14 +555,34 @@ class ProjectionService:
             savings_series = []
             net_worth_series = []
             
-            for result in results:
+            # Real (inflation-adjusted) series
+            real_income_series = []
+            real_expense_series = []
+            real_investment_series = []
+            real_savings_series = []
+            real_net_worth_series = []
+            
+            for i, result in enumerate(results):
                 date_str = f"{result.year}-{result.month:02d}"
                 dates.append(date_str)
+                
+                # Nominal values
                 income_series.append(round(result.projected_income, 2))
                 expense_series.append(round(result.projected_expenses, 2))
                 investment_series.append(round(result.projected_investments, 2))
                 savings_series.append(round(result.projected_savings, 2))
                 net_worth_series.append(round(result.projected_net_worth, 2))
+                
+                # Calculate cumulative inflation factor (discount factor for real values)
+                # Month i+1 because results start from month 1
+                cumulative_inflation = (1 + monthly_inflation_rate) ** (i + 1)
+                
+                # Real values (in today's purchasing power)
+                real_income_series.append(round(result.projected_income / cumulative_inflation, 2))
+                real_expense_series.append(round(result.projected_expenses / cumulative_inflation, 2))
+                real_investment_series.append(round(result.projected_investments / cumulative_inflation, 2))
+                real_savings_series.append(round(result.projected_savings / cumulative_inflation, 2))
+                real_net_worth_series.append(round(result.projected_net_worth / cumulative_inflation, 2))
             
             return {
                 "dates": dates,
@@ -520,7 +590,13 @@ class ProjectionService:
                 "projected_expenses": expense_series,
                 "projected_investments": investment_series,
                 "projected_savings": savings_series,
-                "projected_net_worth": net_worth_series
+                "projected_net_worth": net_worth_series,
+                "real_projected_income": real_income_series,
+                "real_projected_expenses": real_expense_series,
+                "real_projected_investments": real_investment_series,
+                "real_projected_savings": real_savings_series,
+                "real_projected_net_worth": real_net_worth_series,
+                "inflation_rate": annual_inflation_rate
             }
             
         except Exception as e:
@@ -556,8 +632,8 @@ class ProjectionService:
                     "type": param.param_type
                 }
             
-            # Get latest historical data
-            historical_data = ProjectionService.analyze_historical_data(db)
+            # Get latest historical data (force refresh to ensure we have the most recent data)
+            historical_data = ProjectionService.analyze_historical_data(db, force_refresh=True)
             
             # Define parameters to update with their corresponding historical data keys
             param_mapping = {
@@ -642,14 +718,21 @@ class ProjectionService:
     
     @staticmethod
     def compare_scenarios(db: Session, scenario_ids: List[int]) -> Dict[str, Any]:
-        """Compare multiple scenarios side by side"""
+        """Compare multiple scenarios side by side
+        
+        Returns both nominal and real (inflation-adjusted) values for each scenario.
+        """
         try:
             comparison = {
                 "scenario_names": [],
                 "dates": [],
                 "net_worth_series": {},
                 "savings_series": {},
-                "investment_series": {}
+                "investment_series": {},
+                "real_net_worth_series": {},
+                "real_savings_series": {},
+                "real_investment_series": {},
+                "inflation_rates": {}
             }
             
             # Get the first scenario's dates to use as reference
@@ -676,6 +759,15 @@ class ProjectionService:
                     
                 comparison["scenario_names"].append(scenario.name)
                 
+                # Get inflation rate for this scenario
+                params = db.query(ProjectionParameter).filter(
+                    ProjectionParameter.scenario_id == scenario_id
+                ).all()
+                param_dict = {p.param_name: p.param_value for p in params}
+                annual_inflation_rate = param_dict.get("inflation_rate", 0.02)
+                monthly_inflation_rate = (1 + annual_inflation_rate) ** (1/12) - 1
+                comparison["inflation_rates"][scenario.name] = annual_inflation_rate
+                
                 results = db.query(ProjectionResult).filter(
                     ProjectionResult.scenario_id == scenario_id
                 ).order_by(ProjectionResult.year, ProjectionResult.month).all()
@@ -683,14 +775,31 @@ class ProjectionService:
                 if not results:
                     continue
                     
-                # Extract series
-                net_worth_series = [round(r.projected_net_worth, 2) for r in results]
-                savings_series = [round(r.projected_savings, 2) for r in results]
-                investment_series = [round(r.projected_investments, 2) for r in results]
+                # Extract nominal series
+                net_worth_series = []
+                savings_series = []
+                investment_series = []
+                real_net_worth_series = []
+                real_savings_series = []
+                real_investment_series = []
+                
+                for i, r in enumerate(results):
+                    net_worth_series.append(round(r.projected_net_worth, 2))
+                    savings_series.append(round(r.projected_savings, 2))
+                    investment_series.append(round(r.projected_investments, 2))
+                    
+                    # Calculate real values
+                    cumulative_inflation = (1 + monthly_inflation_rate) ** (i + 1)
+                    real_net_worth_series.append(round(r.projected_net_worth / cumulative_inflation, 2))
+                    real_savings_series.append(round(r.projected_savings / cumulative_inflation, 2))
+                    real_investment_series.append(round(r.projected_investments / cumulative_inflation, 2))
                 
                 comparison["net_worth_series"][scenario.name] = net_worth_series
                 comparison["savings_series"][scenario.name] = savings_series
                 comparison["investment_series"][scenario.name] = investment_series
+                comparison["real_net_worth_series"][scenario.name] = real_net_worth_series
+                comparison["real_savings_series"][scenario.name] = real_savings_series
+                comparison["real_investment_series"][scenario.name] = real_investment_series
             
             return comparison
             

@@ -29,12 +29,6 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
     calculateAll: handleCalculateAll
   } = useScenarioComparison(selectedScenarioIds);
 
-  // Simple toast notification function for displaying errors
-  const showToast = (message: string) => {
-    if (error) {
-      alert(message);
-    }
-  };
 
   return (
     <div className="space-y-4">

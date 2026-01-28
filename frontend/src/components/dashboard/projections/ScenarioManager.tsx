@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Edit, Plus, Trash2, X, RefreshCw } from 'lucide-react';
+import { AlertCircle, Edit, Plus, Trash2, RefreshCw, X } from 'lucide-react';
 import { ProjectionScenario, ProjectionParameter, ProjectionParameterCreate } from '../../../types/projections';
 import { createScenario, updateScenario, deleteScenario, calculateProjection, recomputeBaseScenario } from '../../../services/projectionService';
-import ParameterEditor from './ParameterEditor';
+import { ScenarioFormDialog, DeleteConfirmDialog } from './dialogs';
 
 interface ScenarioManagerProps {
   scenarios: ProjectionScenario[];
@@ -306,242 +306,41 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
       )}
 
       {/* Create Scenario Dialog */}
-      {isCreateDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-lg font-medium">Create New Scenario</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Create a new projection scenario with custom parameters.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="name" className="text-right text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                  <input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="col-span-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="description" className="text-right text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="col-span-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="is_default" className="text-right text-sm font-medium text-gray-700 dark:text-gray-300">Default Scenario</label>
-                  <div className="flex items-center space-x-2 col-span-3">
-                    <div className="relative inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        id="is_default"
-                        checked={formData.is_default}
-                        onChange={(e) => handleSwitchChange(e.target.checked)}
-                        className="sr-only"
-                      />
-                      <div 
-                        className={`w-11 h-6 rounded-full transition ${formData.is_default ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
-                        onClick={() => handleSwitchChange(!formData.is_default)}
-                      >
-                        <div 
-                          className={`transform transition-transform duration-200 ease-in-out h-5 w-5 rounded-full bg-white shadow-md ${formData.is_default ? 'translate-x-6' : 'translate-x-1'} mt-0.5`}
-                        />
-                      </div>
-                    </div>
-                    <label htmlFor="is_default" className="text-sm text-gray-700 dark:text-gray-300">Make this a default scenario</label>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-4 mt-4">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Parameters</label>
-                  <ParameterEditor
-                    parameters={formData.parameters}
-                    onChange={handleParametersChange}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCreateScenario}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors"
-                >
-                  Create Scenario
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ScenarioFormDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        title="Create New Scenario"
+        description="Create a new projection scenario with custom parameters."
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSwitchChange={handleSwitchChange}
+        onParametersChange={handleParametersChange}
+        onSubmit={handleCreateScenario}
+        submitLabel="Create Scenario"
+      />
 
       {/* Edit Scenario Dialog */}
-      {isEditDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-lg font-medium">Edit Scenario</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Modify this projection scenario's details and parameters.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setIsEditDialogOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="edit-name" className="text-right text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                  <input
-                    id="edit-name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="col-span-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="edit-description" className="text-right text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                  <textarea
-                    id="edit-description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="col-span-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="edit-is_default" className="text-right text-sm font-medium text-gray-700 dark:text-gray-300">Default Scenario</label>
-                  <div className="flex items-center space-x-2 col-span-3">
-                    <div className="relative inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        id="edit-is_default"
-                        checked={formData.is_default}
-                        onChange={(e) => handleSwitchChange(e.target.checked)}
-                        className="sr-only"
-                      />
-                      <div 
-                        className={`w-11 h-6 rounded-full transition ${formData.is_default ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
-                        onClick={() => handleSwitchChange(!formData.is_default)}
-                      >
-                        <div 
-                          className={`transform transition-transform duration-200 ease-in-out h-5 w-5 rounded-full bg-white shadow-md ${formData.is_default ? 'translate-x-6' : 'translate-x-1'} mt-0.5`}
-                        />
-                      </div>
-                    </div>
-                    <label htmlFor="edit-is_default" className="text-sm text-gray-700 dark:text-gray-300">Make this a default scenario</label>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-4 mt-4">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Parameters</label>
-                  <ParameterEditor
-                    parameters={formData.parameters}
-                    onChange={handleParametersChange}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  onClick={() => setIsEditDialogOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleUpdateScenario}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors"
-                >
-                  Update Scenario
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ScenarioFormDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        title="Edit Scenario"
+        description="Modify this projection scenario's details and parameters."
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSwitchChange={handleSwitchChange}
+        onParametersChange={handleParametersChange}
+        onSubmit={handleUpdateScenario}
+        submitLabel="Update Scenario"
+        idPrefix="edit-"
+      />
 
       {/* Delete Scenario Dialog */}
-      {isDeleteDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-lg font-medium">Delete Scenario</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Are you sure you want to delete this scenario? This action cannot be undone.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setIsDeleteDialogOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              
-              {selectedScenario && (
-                <div className="py-4 space-y-2 text-sm">
-                  <p><span className="font-medium">Name:</span> {selectedScenario.name}</p>
-                  <p><span className="font-medium">Description:</span> {selectedScenario.description}</p>
-                </div>
-              )}
-              
-              <div className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  onClick={() => setIsDeleteDialogOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleDeleteScenario}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-md transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        scenario={selectedScenario}
+        onConfirm={handleDeleteScenario}
+      />
     </div>
   );
 };
