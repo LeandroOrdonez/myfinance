@@ -13,6 +13,7 @@ from ..models.transaction import Transaction, TransactionType, ExpenseCategory, 
 from ..models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from ..models.financial_health import FinancialHealth
 from ..models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult, ParamType
+from ..schemas.financial_projection import PARAMETER_BOUNDS
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -82,6 +83,21 @@ class ProjectionService:
     }
     
     @staticmethod
+    def _clamp_to_bounds(param_name: str, value: float) -> float:
+        """Clamp a parameter value to its defined bounds.
+        
+        This is used for calculated values from historical data which may exceed
+        the validation bounds due to unusual real-world patterns.
+        """
+        if param_name in PARAMETER_BOUNDS:
+            bounds = PARAMETER_BOUNDS[param_name]
+            original = value
+            value = max(bounds["min"], min(bounds["max"], value))
+            if value != original:
+                logger.info(f"Clamped {param_name} from {original:.4f} to {value:.4f} (bounds: {bounds['min']} to {bounds['max']})")
+        return value
+
+    @staticmethod
     def create_default_scenarios(db: Session) -> List[ProjectionScenario]:
         """Create the default projection scenarios if they don't exist"""
         scenarios = []
@@ -98,22 +114,22 @@ class ProjectionService:
         base_case_params = copy.deepcopy(ProjectionService.DEFAULT_PARAMETERS["base_case"])
 
         # Update specific parameter values using historical data
-        # Fallback to original default from DEFAULT_PARAMETERS if key not in historical_data
-        base_case_params["income_growth_rate"]["value"] = historical_data.get(
-            "avg_annual_income_growth", 
-            base_case_params["income_growth_rate"]["value"]
+        # Values are clamped to PARAMETER_BOUNDS to handle extreme historical patterns
+        base_case_params["income_growth_rate"]["value"] = ProjectionService._clamp_to_bounds(
+            "income_growth_rate",
+            historical_data.get("avg_annual_income_growth", base_case_params["income_growth_rate"]["value"])
         )
-        base_case_params["essential_expenses_growth_rate"]["value"] = historical_data.get(
-            "avg_annual_essential_expense_growth", 
-            base_case_params["essential_expenses_growth_rate"]["value"]
+        base_case_params["essential_expenses_growth_rate"]["value"] = ProjectionService._clamp_to_bounds(
+            "essential_expenses_growth_rate",
+            historical_data.get("avg_annual_essential_expense_growth", base_case_params["essential_expenses_growth_rate"]["value"])
         )
-        base_case_params["discretionary_expenses_growth_rate"]["value"] = historical_data.get(
-            "avg_annual_discretionary_expense_growth", 
-            base_case_params["discretionary_expenses_growth_rate"]["value"]
+        base_case_params["discretionary_expenses_growth_rate"]["value"] = ProjectionService._clamp_to_bounds(
+            "discretionary_expenses_growth_rate",
+            historical_data.get("avg_annual_discretionary_expense_growth", base_case_params["discretionary_expenses_growth_rate"]["value"])
         )
-        base_case_params["investment_rate"]["value"] = historical_data.get(
-            "avg_investment_rate", 
-            base_case_params["investment_rate"]["value"]
+        base_case_params["investment_rate"]["value"] = ProjectionService._clamp_to_bounds(
+            "investment_rate",
+            historical_data.get("avg_investment_rate", base_case_params["investment_rate"]["value"])
         )
 
         scenario_definitions = {
@@ -657,8 +673,10 @@ class ProjectionService:
                     # Record old value
                     old_value = param.param_value
                     
-                    # Update with new value
-                    param.param_value = historical_data[historical_key]
+                    # Update with new value (clamped to bounds to handle extreme historical patterns)
+                    param.param_value = ProjectionService._clamp_to_bounds(
+                        param_name, historical_data[historical_key]
+                    )
                     
                     # Track the change
                     changes[param_name] = {
