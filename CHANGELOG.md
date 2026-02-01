@@ -1,5 +1,13 @@
 # MyFinance Changelog
 
+## 2026-02-01
+
+### Bug Fix – Parameter Bounds Validation
+- Fixed validation error when calculated base case parameters from historical data exceed bounds
+- Added `_clamp_to_bounds()` helper to gracefully handle extreme historical patterns (e.g., 113% expense growth)
+- Clamping applied in `create_default_scenarios()` and `recompute_base_case_parameters()`
+- User-submitted values still validated strictly; only calculated values are clamped
+
 ## 2026-01-28 – Financial Projections Refactoring
 
 Improved performance, maintainability, and user value of the financial projections feature through caching, validation, code organization, and inflation-adjusted views.
