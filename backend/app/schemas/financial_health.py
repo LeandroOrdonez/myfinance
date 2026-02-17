@@ -5,6 +5,8 @@ from datetime import date
 
 class FinancialHealthBase(BaseModel):
     date: date
+    score_year: int
+    score_month: int
     overall_score: float
     savings_rate_score: float
     expense_ratio_score: float

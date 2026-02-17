@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, and_, or_, desc, text
+from sqlalchemy import func, extract, and_, or_, desc
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
@@ -72,6 +72,19 @@ class FinancialHealthService:
     }
     
     @staticmethod
+    def get_health_score(db: Session, target_date: date = None) -> Optional[FinancialHealth]:
+        """Read-only lookup of a pre-computed health score for the given month.
+        
+        Returns None if no score exists for that month.
+        """
+        if target_date is None:
+            target_date = date.today()
+        return db.query(FinancialHealth).filter(
+            FinancialHealth.score_year == target_date.year,
+            FinancialHealth.score_month == target_date.month
+        ).first()
+
+    @staticmethod
     def calculate_health_score(db: Session, target_date: date = None, force: bool = False) -> FinancialHealth:
         """Calculate the financial health score for a given date
         
@@ -91,15 +104,20 @@ class FinancialHealthService:
         
         # Check if we already have a health score for this month
         existing_score = db.query(FinancialHealth).filter(
-            extract('year', FinancialHealth.date) == target_date.year,
-            extract('month', FinancialHealth.date) == target_date.month
+            FinancialHealth.score_year == target_date.year,
+            FinancialHealth.score_month == target_date.month
         ).first()
         
         if existing_score and not force:
             return existing_score
             
-        # If we're forcing recalculation and a score exists, delete it
+        # If forcing recalculation, delete old score and its recommendations first
         if existing_score and force:
+            month_start = last_day.replace(day=1)
+            db.query(FinancialRecommendation).filter(
+                FinancialRecommendation.date_created >= month_start,
+                FinancialRecommendation.date_created <= last_day
+            ).delete()
             db.delete(existing_score)
             db.flush()
             
@@ -114,6 +132,8 @@ class FinancialHealthService:
             logger.warning(f"No monthly statistics found for {target_date}. Creating empty health score.")
             health_score = FinancialHealth(
                 date=last_day,
+                score_year=target_date.year,
+                score_month=target_date.month,
                 overall_score=0,
                 savings_rate_score=0,
                 expense_ratio_score=0,
@@ -213,6 +233,8 @@ class FinancialHealthService:
         # Create and save the financial health record
         health_score = FinancialHealth(
             date=last_day,
+            score_year=target_date.year,
+            score_month=target_date.month,
             overall_score=overall_score,
             savings_rate_score=savings_rate_score,
             expense_ratio_score=expense_ratio_score,
@@ -232,21 +254,6 @@ class FinancialHealthService:
         )
         
         db.add(health_score)
-        db.commit()
-        db.refresh(health_score)
-        
-        # Clear existing recommendations for this month if we're recalculating
-        if force:
-            # Delete any existing recommendations for this month
-            # We identify them by date range (within the same month)
-            month_start = last_day.replace(day=1)
-            month_end = last_day
-            
-            db.query(FinancialRecommendation).filter(
-                FinancialRecommendation.date_created >= month_start,
-                FinancialRecommendation.date_created <= month_end
-            ).delete()
-            db.flush()
         
         # Create separate FinancialRecommendation records for each recommendation
         for rec_data in recommendations:
@@ -263,8 +270,9 @@ class FinancialHealthService:
             )
             db.add(recommendation)
         
-        # Commit the recommendations
+        # Single commit: health score + recommendations are atomic
         db.commit()
+        db.refresh(health_score)
         
         return health_score
     
@@ -342,10 +350,9 @@ class FinancialHealthService:
         """Initialize financial health scores for all historical months with transactions"""
         try:
             logger.info("Initializing financial health scores for all historical data...")
-            # Lock the database to prevent any concurrent modifications during initialization
-            db.execute(text("BEGIN"))
             
-            # Clear existing financial health scores
+            # Clear existing financial health scores and recommendations
+            db.query(FinancialRecommendation).delete()
             db.query(FinancialHealth).delete()
             db.flush()
             
@@ -371,15 +378,11 @@ class FinancialHealthService:
                 logger.info(f"Calculating financial health score for {last_day}")
                 
                 try:
-                    # Calculate health score for this month
-                    # We're passing force=True to ensure calculation even if statistics aren't perfect
                     FinancialHealthService.calculate_health_score(db, last_day, force=True)
                 except Exception as e:
                     logger.warning(f"Error calculating health score for {last_day}: {str(e)}")
-                    # Continue with other months even if one fails
                     continue
             
-            db.commit()
             logger.info("Financial health initialization completed successfully")
         except Exception as e:
             db.rollback()

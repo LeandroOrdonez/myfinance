@@ -29,6 +29,16 @@ const FinancialHealth: React.FC<FinancialHealthProps> = ({ className }) => {
       if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') {
         return;
       }
+      // If no pre-computed score exists (404), trigger a recalculation
+      if (e?.response?.status === 404) {
+        try {
+          const data = await financialHealthService.recalculateHealthScore();
+          setHealthData(data);
+          return;
+        } catch (recalcErr) {
+          console.error('Error recalculating health score:', recalcErr);
+        }
+      }
       console.error('Error fetching health score:', err);
       setError('Failed to load financial health data');
     } finally {

@@ -1,5 +1,30 @@
 # MyFinance Changelog
 
+## 2026-02-17 – Financial Health P0 Fixes
+
+Addressed race conditions, data integrity issues, and transaction safety in the financial health feature.
+
+### Race Conditions & Data Integrity
+- Added `score_year`/`score_month` columns with a unique constraint to `FinancialHealth` model, preventing duplicate scores per month
+- `GET /financial-health/score` is now read-only (returns 404 if no pre-computed score exists, no longer triggers writes)
+- `FinancialSummaryService` reads pre-computed health scores first, only falls back to calculation if none exists
+- Frontend handles 404 by auto-triggering `POST /recalculate` as a one-time fallback
+
+### Transaction Safety
+- Merged double `db.commit()` in `calculate_health_score` into a single atomic commit (score + recommendations together)
+- Fixed recommendation deletion order on `force=True`: old recommendations are now deleted **before** inserting the new score
+- Removed redundant manual `db.execute(text("BEGIN"))` in `initialize_financial_health` that conflicted with SQLAlchemy's transaction management
+
+### Bug Fixes
+- Fixed `date_obj.replace(day=31)` crash in the `/recalculate` endpoint for months with fewer than 31 days
+- Recalculate endpoint now delegates entirely to `calculate_health_score(force=True)` instead of doing a separate delete-commit-calculate cycle
+
+### Tests
+- Added 5 regression tests covering: read-only GET, score creation via recalculate, no-duplicate guarantee, atomic score+recommendations, and recommendation replacement on force recalculate
+
+### Migration
+- `migrate_financial_health_unique`: adds `score_year`/`score_month` columns, backfills from existing `date`, deduplicates, and creates unique index
+
 ## 2026-02-01
 
 ### Bug Fix – Parameter Bounds Validation

@@ -170,6 +170,8 @@ export interface WeekdayDistribution {
 export interface FinancialHealthScore {
   id: number;
   date: string;
+  score_year: number;
+  score_month: number;
   overall_score: number;
   savings_rate_score: number;
   expense_ratio_score: number;

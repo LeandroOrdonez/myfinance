@@ -6,7 +6,6 @@ import logging
 
 from ..database import get_db
 from ..models.transaction import Transaction
-from ..models.financial_health import FinancialHealth, FinancialRecommendation
 from ..schemas import financial_health as schemas
 from ..services.financial_health_service import FinancialHealthService
 
@@ -25,8 +24,9 @@ def get_health_score(
     db: Session = Depends(get_db)
 ):
     """
-    Get the financial health score for a specific date.
+    Get the pre-computed financial health score for a specific date.
     If no date is provided, uses the date from the latest available transaction.
+    Returns 404 if no score has been computed for the requested month yet.
     """
     try:
         if target_date:
@@ -35,10 +35,18 @@ def get_health_score(
             latest_transaction = db.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
             date_obj = latest_transaction.transaction_date if latest_transaction else date.today()
             
-        health_score = FinancialHealthService.calculate_health_score(db, date_obj)
+        health_score = FinancialHealthService.get_health_score(db, date_obj)
+        if not health_score:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No financial health score found for {date_obj.strftime('%Y-%m')}. "
+                       f"Use POST /financial-health/recalculate to compute it."
+            )
         return health_score
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error calculating financial health score: {str(e)}")
+        logger.error(f"Error retrieving financial health score: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/history", response_model=schemas.FinancialHealthHistory)
@@ -110,19 +118,8 @@ def recalculate_health_score(
         else:
             date_obj = date.today()
             
-        # Delete existing score for the month if it exists
-        month_start = date_obj.replace(day=1)
-        month_end = date_obj.replace(day=31)  # This will work even for months with fewer days
-        
-        db.query(FinancialHealth).filter(
-            FinancialHealth.date >= month_start,
-            FinancialHealth.date <= month_end
-        ).delete()
-        
-        db.commit()
-        
-        # Calculate new score
-        health_score = FinancialHealthService.calculate_health_score(db, date_obj)
+        # Force recalculation (calculate_health_score handles delete + insert atomically)
+        health_score = FinancialHealthService.calculate_health_score(db, date_obj, force=True)
         return health_score
     except Exception as e:
         logger.error(f"Error recalculating financial health score: {str(e)}")

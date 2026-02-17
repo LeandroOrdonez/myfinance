@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, JSON, Boolean, UniqueConstraint
 from ..database import Base
 import enum
 from datetime import date
@@ -6,9 +6,14 @@ from datetime import date
 
 class FinancialHealth(Base):
     __tablename__ = "financial_health"
+    __table_args__ = (
+        UniqueConstraint('score_year', 'score_month', name='uq_financial_health_year_month'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, nullable=False, index=True)
+    score_year = Column(Integer, nullable=False)
+    score_month = Column(Integer, nullable=False)
     
     # Overall score (0-100)
     overall_score = Column(Float, default=0)

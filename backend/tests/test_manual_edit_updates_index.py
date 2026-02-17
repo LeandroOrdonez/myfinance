@@ -18,11 +18,6 @@ def _reset_rate_limiter():
         pass
 
 
-def _reset_database():
-    # Use the debug endpoint to reset the DB between tests
-    resp = client.post('/debug/reset-database')
-    assert resp.status_code == 200
-
 
 def _clear_vector_collections():
     # Ensure vector DB is empty and deterministic for the test
@@ -66,7 +61,6 @@ def _make_minimal_ing_csv_row(*, description: str, amount: str = "-10.00") -> by
 
 def test_manual_category_edit_updates_suggestion_index():
     _reset_rate_limiter()
-    _reset_database()
     _clear_vector_collections()
 
     # 1) Upload a single expense transaction (no initial category will be set)

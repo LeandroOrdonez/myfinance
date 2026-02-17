@@ -137,8 +137,11 @@ class FinancialSummaryService:
                 TransactionAnomaly.status == AnomalyStatus.DETECTED,
             ).order_by(desc(TransactionAnomaly.anomaly_score)).limit(5).all()
             
-            # 6. Financial Health Metrics
-            health = FinancialHealthService.calculate_health_score(db, end_date)
+            # 6. Financial Health Metrics (read-only: use pre-computed score)
+            health = FinancialHealthService.get_health_score(db, end_date)
+            if not health:
+                # Fall back to calculating if no pre-computed score exists
+                health = FinancialHealthService.calculate_health_score(db, end_date)
             
             def get_status(score):
                 if score >= 80: return "excellent"
