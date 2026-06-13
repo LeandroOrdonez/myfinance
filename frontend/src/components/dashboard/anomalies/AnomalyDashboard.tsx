@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Shield, TrendingUp, Clock, Filter, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Shield, TrendingUp, Clock, Filter, RefreshCw, User, Store } from 'lucide-react';
 import { anomalyService, AnomalyStatistics, AnomalyDetectionResult } from '../../../services/anomalyService';
 
 interface AnomalyDashboardProps {}
@@ -60,6 +60,9 @@ export const AnomalyDashboard: React.FC<AnomalyDashboardProps> = () => {
       case 'statistical_outlier': return <TrendingUp className="w-4 h-4" />;
       case 'temporal_anomaly': return <Clock className="w-4 h-4" />;
       case 'amount_anomaly': return <AlertTriangle className="w-4 h-4" />;
+      case 'frequency_anomaly': return <RefreshCw className="w-4 h-4" />;
+      case 'behavioral_anomaly': return <User className="w-4 h-4" />;
+      case 'merchant_anomaly': return <Store className="w-4 h-4" />;
       default: return <Shield className="w-4 h-4" />;
     }
   };

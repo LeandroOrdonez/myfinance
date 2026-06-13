@@ -5,6 +5,7 @@ from app.migrations.migrate_statistics_periods import migrate_statistics_periods
 from app.migrations.migrate_expense_type import migrate_expense_type
 from app.migrations.migrate_expense_type_values import migrate_expense_type_values
 from app.migrations.migrate_financial_health_unique import migrate_financial_health_unique
+from app.migrations.migrate_anomaly_config import migrate_anomaly_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,7 +18,8 @@ def run_migrations():
         # migrate_statistics_periods()
         # migrate_expense_type()
         # migrate_expense_type_values()
-        migrate_financial_health_unique()
+        # migrate_financial_health_unique()
+        migrate_anomaly_config()
         logger.info("All migrations completed successfully")
     except Exception as e:
         logger.error(f"Migration failed: {str(e)}")

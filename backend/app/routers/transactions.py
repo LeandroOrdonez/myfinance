@@ -347,6 +347,19 @@ def update_transaction_category(
         category_suggestion_service.add_transaction(transaction)
     except Exception as e:
         logger.warning(f"Failed to update suggestion index for transaction {transaction.id}: {str(e)}")
+    # Re-run anomaly detection so any existing anomalies reflect the new category
+    # (stale anomalies referencing the old category are replaced/cleared)
+    try:
+        AnomalyDetectionService.detect_anomalies(
+            db=db,
+            transaction_ids=[transaction.id],
+            force_redetection=True
+        )
+    except Exception as e:
+        logger.warning(f"Anomaly detection failed after category update for transaction {transaction.id}: {str(e)}")
+    # Detection commits internally, which expires the instance; refresh so the
+    # serialized response includes the transaction's fields.
+    db.refresh(transaction)
     return transaction
 
 @router.post("/restore", response_model=schemas.Transaction)

@@ -1,5 +1,40 @@
 # MyFinance Changelog
 
+## 2026-06-13 – Anomaly Detection Refactoring & Hardening
+
+Improved configurability, performance, and correctness of the transaction anomaly detection feature, and added a comprehensive test suite.
+
+### Configurability
+- Added `AnomalyConfig` model centralizing all detection thresholds (Z-score, percentiles, lookback windows, frequency limits, default scores/confidences, merchant large-amount threshold)
+- Replaced hardcoded "magic numbers" across all six detectors with config-driven values
+- Added validation on `AnomalyConfig`: 0–100 for percentile/score fields, 0–1 for confidence fields, strictly positive for thresholds/windows
+
+### Performance
+- Added `_precompute_statistics()` to eliminate the N+1 query problem in the detection loop
+- Per-category/per-merchant aggregates are now computed with a small, fixed number of bulk `IN`/`GROUP BY` queries instead of one query per transaction
+
+### Bug Fixes & Correctness
+- Fixed stale anomalies after a category edit: `PATCH /transactions/{id}/category` now re-runs detection so anomalies no longer reference the old category
+- Fixed `force_redetection` deletion logic: existing anomalies are now cleared once per transaction *before* detection, so stale records are removed even when no new anomaly is produced (previously only deleted when at least one new anomaly was found, and could drop all-but-last when multiple were detected)
+- Fixed potential `-1` count bug in behavioral and merchant detectors when a category/merchant was missing from precomputed stats (now falls back to a direct query)
+- `get_or_create_default()` uses `db.flush()` instead of `db.commit()` so it no longer breaks the caller's transaction boundary
+- Added `statistics.StatisticsError` handling around mean/stdev calculations
+- `_precompute_statistics([])` now always returns the `config` key so callers can rely on it
+- Frequency detection retains its correct per-transaction date-window query (removed unused precomputed `merchant_counts`)
+- Replaced deprecated `datetime.utcnow()` with timezone-aware `datetime.now(timezone.utc)`
+
+### Frontend
+- Added missing anomaly type icons for `frequency_anomaly`, `behavioral_anomaly`, and `merchant_anomaly` in both `AnomalyDashboard` and `AnomalyList`
+
+### Tests
+- Added 20 tests covering all six detectors, config creation/validation, API endpoints (detect, list, status update, statistics), precompute behavior, force/skip redetection, stale-anomaly clearing on force redetection, and anomaly refresh after a category edit
+
+### Migration
+- `migrate_anomaly_config`: creates the `anomaly_config` table with default values and a singleton trigger preventing multiple configuration rows
+
+### Known Limitations / Future Work
+- Category edits re-run detection synchronously for the single edited transaction. This is cheap for one-off edits, but if bulk re-categorization is added later, the `transaction_ids` should be batched into a single `detect_anomalies` call rather than one call per transaction.
+
 ## 2026-02-17 – Financial Health P0 Fixes
 
 Addressed race conditions, data integrity issues, and transaction safety in the financial health feature.

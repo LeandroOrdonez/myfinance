@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Eye, Check, X, Clock, TrendingUp, Shield, Filter } from 'lucide-react';
+import { AlertTriangle, Eye, Check, X, Clock, TrendingUp, Shield, Filter, RefreshCw, User, Store } from 'lucide-react';
 import { anomalyService, Anomaly, AnomalyPage } from '../../../services/anomalyService';
 import { Pagination } from '../../common/Pagination';
 
@@ -85,6 +85,9 @@ export const AnomalyList: React.FC<AnomalyListProps> = () => {
       case 'statistical_outlier': return <TrendingUp className="w-4 h-4" />;
       case 'temporal_anomaly': return <Clock className="w-4 h-4" />;
       case 'amount_anomaly': return <AlertTriangle className="w-4 h-4" />;
+      case 'frequency_anomaly': return <RefreshCw className="w-4 h-4" />;
+      case 'behavioral_anomaly': return <User className="w-4 h-4" />;
+      case 'merchant_anomaly': return <Store className="w-4 h-4" />;
       default: return <Shield className="w-4 h-4" />;
     }
   };
