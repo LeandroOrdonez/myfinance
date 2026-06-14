@@ -4,6 +4,7 @@ import { FileUpload } from '../components/FileUpload';
 import { UndoButton } from '../components/UndoButton';
 import { Sidebar } from '../components/common/Sidebar';
 import { ThemeToggle } from '../components/common/ThemeToggle';
+import { PrivacyToggle } from '../components/common/PrivacyToggle';
 import { LogoutButton } from '../components/auth/LogoutButton';
 import { useTransactions } from '../hooks/useTransactions';
 import { UserGreeting } from '../components/dashboard/UserGreeting';
@@ -129,6 +130,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
                 <div className="w-px h-6 bg-[var(--color-border)] mx-1" />
 
+                <PrivacyToggle />
                 <ThemeToggle />
 
                 {showUndoButton && (

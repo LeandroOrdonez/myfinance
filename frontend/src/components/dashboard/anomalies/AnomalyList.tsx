@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Eye, Check, X, Clock, TrendingUp, Shield, Filter, RefreshCw, User, Store } from 'lucide-react';
 import { anomalyService, Anomaly, AnomalyPage } from '../../../services/anomalyService';
 import { Pagination } from '../../common/Pagination';
+import { usePrivacyMode } from '../../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../../utils/formatPrivateAmount';
 
 interface AnomalyListProps {}
 
 export const AnomalyList: React.FC<AnomalyListProps> = () => {
+  const { privacyMode } = usePrivacyMode();
   const [anomalies, setAnomalies] = useState<AnomalyPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,12 +95,12 @@ export const AnomalyList: React.FC<AnomalyListProps> = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-EU', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(Math.abs(amount));
-  };
+  const formatCurrency = (amount: number) =>
+    formatPrivateAmount(
+      amount,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-EU', { style: 'currency', currency: 'EUR' }).format(n)
+    );
 
   if (isLoading) {
     return (

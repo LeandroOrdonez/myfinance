@@ -4,6 +4,8 @@ import { statisticService } from '../../services/statisticService';
 import { TransactionType, TimePeriod } from '../../types/transaction';
 import { Loading } from '../common/Loading';
 import { buildSankeyData, CategoryAverageItem, SankeyData } from './sankey/buildSankeyData';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 const PERIODS = [
   { label: '3M', value: TimePeriod.THREE_MONTHS },
@@ -14,14 +16,7 @@ const PERIODS = [
   { label: 'All', value: TimePeriod.ALL_TIME },
 ];
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
+
 
 // Color schemes
 const INCOME_COLORS = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669', '#047857', '#065f46', '#064e3b'];
@@ -31,6 +26,18 @@ const EXPENSE_PRIMARY_COLOR = '#ec4899';
 const SAVINGS_COLOR = '#3b82f6';
 
 export const CashFlows: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
+  const formatCurrency = (amount: number) =>
+    formatPrivateAmount(
+      amount,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(n)
+    );
   const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

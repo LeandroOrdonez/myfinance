@@ -22,6 +22,7 @@ import { statisticService } from './services/statisticService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
+import { PrivacyProvider } from './contexts/PrivacyContext';
 import { CategoryAverages } from './components/dashboard/CategoryAverages';
 import { CashFlows } from './components/dashboard/CashFlows';
 
@@ -152,8 +153,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AuthWrapper>
-          <BrowserRouter>
+        <PrivacyProvider>
+          <AuthWrapper>
+            <BrowserRouter>
             <Routes>
             <Route 
               path="/" 
@@ -219,8 +221,9 @@ function App() {
             />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
-          </BrowserRouter>
-        </AuthWrapper>
+            </BrowserRouter>
+          </AuthWrapper>
+        </PrivacyProvider>
       </AuthProvider>
     </ThemeProvider>
   );

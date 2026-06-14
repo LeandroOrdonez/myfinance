@@ -13,15 +13,8 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { statisticService } from '../../services/statisticService';
 import { WeekdayDistribution as WeekdayDistributionType } from '../../types/transaction';
 import { subMonths, startOfYear, format as formatDate } from 'date-fns';
-
-// Format currency values
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2
-  }).format(value);
-};
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 // Define periods similar to FinancialTrends component
 const PERIODS = [
@@ -34,6 +27,17 @@ const PERIODS = [
 ];
 
 const WeekdayDistribution: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+      }).format(n)
+    );
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<WeekdayDistributionType | null>(null);
   const [period, setPeriod] = useState('1y');

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { usePrivacyMode } from '../../../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../../../utils/formatPrivateAmount';
 
 interface ComparisonInvestmentChartProps {
   data: {
@@ -12,6 +14,7 @@ interface ComparisonInvestmentChartProps {
 }
 
 const ComparisonInvestmentChart: React.FC<ComparisonInvestmentChartProps> = ({ data }) => {
+  const { privacyMode } = usePrivacyMode();
   const [showReal, setShowReal] = useState(false);
   const hasRealData = data?.real_investment_series && Object.keys(data.real_investment_series).length > 0;
 
@@ -37,12 +40,12 @@ const ComparisonInvestmentChart: React.FC<ComparisonInvestmentChartProps> = ({ d
   });
 
   // Format currency for tooltip
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n)
+    );
 
   // Format date for display
   const formatDate = (dateStr: string) => {

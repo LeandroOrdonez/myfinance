@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchProjectionResults, calculateProjection } from '../services/projectionService';
+import { usePrivacyMode } from '../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../utils/formatPrivateAmount';
 
 export const useProjectionResults = (selectedScenarioId: number | null) => {
+  const { privacyMode } = usePrivacyMode();
   const [projectionData, setProjectionData] = useState<any>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,14 +52,12 @@ export const useProjectionResults = (selectedScenarioId: number | null) => {
   }, [selectedScenarioId]);
 
   // Format currency helper
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
+    );
 
   // Get projection summary data
   const getSummaryData = useCallback(() => {

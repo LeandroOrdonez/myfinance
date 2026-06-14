@@ -11,6 +11,8 @@ import {
 } from 'recharts';
 import { Transaction, TransactionType } from '../../types/transaction';
 import { format, parseISO } from 'date-fns';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 interface MonthlyTrendsProps {
   transactions: Transaction[];
@@ -24,6 +26,19 @@ interface MonthlyData {
 }
 
 export const MonthlyTrends: React.FC<MonthlyTrendsProps> = ({ transactions }) => {
+  const { privacyMode } = usePrivacyMode();
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(n)
+    );
+  const formatCurrencyCompact = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR', notation: 'compact' }).format(n)
+    );
   const monthlyData = transactions.reduce((acc: Record<string, MonthlyData>, transaction) => {
     const date = format(parseISO(transaction.transaction_date), 'yyyy-MM');
     
@@ -60,22 +75,11 @@ export const MonthlyTrends: React.FC<MonthlyTrendsProps> = ({ transactions }) =>
             tickFormatter={(date) => format(parseISO(date), 'MMM yyyy')}
           />
           <YAxis
-            tickFormatter={(value) => 
-              new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'EUR',
-                notation: 'compact'
-              }).format(value)
-            }
+            tickFormatter={(value) => formatCurrencyCompact(value)}
           />
           <Tooltip
             labelFormatter={(date) => format(parseISO(date), 'MMMM yyyy')}
-            formatter={(value: number) => 
-              new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'EUR'
-              }).format(value)
-            }
+            formatter={(value: number) => formatCurrency(value)}
           />
           <Legend />
           <Line 

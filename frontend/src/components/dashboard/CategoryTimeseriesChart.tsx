@@ -3,6 +3,8 @@ import { Loading } from '../common/Loading';
 import { useCategoryTimeseries } from '../../hooks/useCategoryTimeseries';
 import { TransactionType, TimePeriod } from '../../types/transaction';
 import { format as formatDate } from 'date-fns';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 import {
   AreaChart,
   Area,
@@ -35,6 +37,7 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
   title = "Category Trends Over Time",
   defaultTransactionType = TransactionType.EXPENSE
 }) => {
+  const { privacyMode } = usePrivacyMode();
   const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [transactionType, setTransactionType] = useState<TransactionType>(defaultTransactionType);
   const [chartType, setChartType] = useState<'area' | 'bar'>('area');
@@ -171,11 +174,15 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
       return `${value.toFixed(1)}%`;
     } else {
       // Format as currency for bar chart
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'EUR',
-        notation: 'compact'
-      }).format(value);
+      return formatPrivateAmount(
+        value,
+        privacyMode,
+        (n) => new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'EUR',
+          notation: 'compact',
+        }).format(n)
+      );
     }
   };
 
