@@ -38,3 +38,4 @@ PRD*.md
 
 # Add workspace files
 *.code-workspace
+*.windsurf

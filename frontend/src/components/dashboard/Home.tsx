@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Wallet, Activity, Target, CheckCircle, 
+import clsx from 'clsx';
+import {
+  Wallet, Activity, Target, CheckCircle,
   TrendingUp, TrendingDown, ArrowUpRight, Calendar,
-  AlertTriangle, Loader2
+  AlertTriangle, Loader2, Sparkles
 } from 'lucide-react';
 import { useSummary } from '../../hooks/useSummary';
 import { SummaryCard } from './SummaryCard';
@@ -26,14 +27,19 @@ export const Home: React.FC = () => {
     });
   }, [data]);
 
-  const formatCurrency = (val: number) => 
+  const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-12 w-12 text-indigo-500 animate-spin mb-4" />
-        <p className="text-slate-500 dark:text-gray-400 font-medium">Generating your financial summary...</p>
+        <div className="relative">
+          <Loader2 className="h-12 w-12 text-accent animate-spin" />
+          <div className="absolute inset-0 h-12 w-12 bg-accent/20 blur-xl rounded-full" />
+        </div>
+        <p className="text-[var(--color-text-muted)] font-medium mt-6 animate-pulse">
+          Generating your financial summary...
+        </p>
       </div>
     );
   }
@@ -41,126 +47,157 @@ export const Home: React.FC = () => {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-        <AlertTriangle className="h-12 w-12 text-rose-500 mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Something went wrong</h2>
-        <p className="text-slate-500 dark:text-gray-400">{error || 'No data available'}</p>
+        <div className="w-16 h-16 rounded-2xl bg-danger/10 flex items-center justify-center mb-4">
+          <AlertTriangle className="h-8 w-8 text-danger" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Something went wrong</h2>
+        <p className="text-[var(--color-text-muted)]">{error || 'No data available'}</p>
       </div>
     );
   }
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: TrendingUp },
+    { id: 'spending', label: 'Spending Analysis', icon: Activity },
+    { id: 'health', label: 'Financial Health', icon: Sparkles },
+  ];
+
   return (
-    <div className="space-y-8 pb-8">
-      {/* Header Section */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-medium tracking-tight text-slate-900 dark:text-white">Financial Snapshot</h1>
-          <p className="text-slate-500 dark:text-gray-400 flex items-center gap-2 mt-1 text-sm">
-            <Calendar size={16} /> Reporting Period: {data.data_period.start_date} to {data.data_period.end_date}
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
+            Financial Overview
+          </h1>
+          <p className="text-[var(--color-text-muted)] flex items-center gap-2 mt-1 text-sm">
+            <Calendar size={14} />
+            Reporting Period: {data.data_period.start_date} to {data.data_period.end_date}
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
-          <div className="px-4 py-2 border-r border-slate-100 dark:border-gray-700 text-center">
-            <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase font-bold tracking-wider text-center">Health Score</p>
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{data.financial_health.overall_score.toFixed(0)}</span>
-              <span className="text-[10px] text-slate-400 dark:text-gray-500">/ 100</span>
+
+        {/* Health & Net Worth Cards */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 bg-[var(--color-surface)] p-3 rounded-2xl border border-[var(--color-border)] shadow-sm">
+            <div className="px-3 py-1 border-r border-[var(--color-border)]">
+              <p className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold tracking-wider">
+                Health Score
+              </p>
+              <div className="flex items-baseline justify-center gap-1 mt-1">
+                <span className="text-2xl font-black text-accent">
+                  {data.financial_health.overall_score.toFixed(0)}
+                </span>
+                <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
+              </div>
             </div>
-          </div>
-          <div className="px-4 py-2 text-center">
-            <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase font-bold tracking-wider text-center">Net Worth</p>
-            <p className="text-2xl font-black text-slate-800 dark:text-white">{formatCurrency(data.account_overview.net_worth)}</p>
+            <div className="px-3 py-1">
+              <p className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold tracking-wider">
+                Net Worth
+              </p>
+              <p className="text-xl font-black text-[var(--color-text-primary)] mt-1">
+                {formatCurrency(data.account_overview.net_worth)}
+              </p>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard 
+        <SummaryCard
           title="Emergency Fund"
           value={`${data.financial_health.metrics.emergency_fund.value.toFixed(1)} Mo`}
           subtitle={data.financial_health.metrics.emergency_fund.score >= 80 ? "Target achieved" : "Build to 6 months"}
-          icon={<Wallet size={24} />}
-          iconBg="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-          subtitleColor={data.financial_health.metrics.emergency_fund.score >= 80 ? "text-emerald-600" : "text-amber-600"}
+          icon={<Wallet size={22} />}
+          variant={data.financial_health.metrics.emergency_fund.score >= 80 ? 'success' : 'warning'}
           trendIcon={data.financial_health.metrics.emergency_fund.score >= 80 ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
         />
 
-        <SummaryCard 
+        <SummaryCard
           title="Savings Rate"
           value={`${(data.financial_health.metrics.savings_rate.value * 100).toFixed(1)}%`}
           subtitle={data.financial_health.metrics.savings_rate.score >= 60 ? "On track" : "Below 15% target"}
-          icon={<Activity size={24} />}
-          iconBg="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
-          subtitleColor={data.financial_health.metrics.savings_rate.score >= 60 ? "text-emerald-600" : "text-rose-600"}
+          icon={<Activity size={22} />}
+          variant={data.financial_health.metrics.savings_rate.score >= 60 ? 'success' : 'danger'}
           trendIcon={data.financial_health.metrics.savings_rate.score >= 60 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
         />
 
-        <SummaryCard 
+        <SummaryCard
           title="Invested Assets"
           value={formatCurrency(data.savings_investment.investment_portfolio_value)}
           subtitle="Total Portfolio"
-          icon={<Target size={24} />}
-          iconBg="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-          subtitleColor="text-indigo-600 dark:text-indigo-400"
+          icon={<Target size={22} />}
+          variant="info"
           trendIcon={<ArrowUpRight size={12} />}
         />
 
-        <SummaryCard 
+        <SummaryCard
           title="Debt-to-Income"
           value={`${(data.financial_health.metrics.debt_to_income.value * 100).toFixed(1)}%`}
           subtitle={data.financial_health.metrics.debt_to_income.score >= 80 ? "Excellent ratio" : "Manageable"}
-          icon={<TrendingUp size={24} />}
-          iconBg="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-          subtitleColor="text-emerald-600 dark:text-emerald-400"
+          icon={<TrendingUp size={22} />}
+          variant="success"
           trendIcon={<CheckCircle size={12} />}
         />
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex border-b border-slate-200 dark:border-gray-700 gap-8 overflow-x-auto no-scrollbar">
-        {['overview', 'spending', 'health'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-4 text-sm font-semibold capitalize transition-all relative whitespace-nowrap ${
-              activeTab === tab ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:text-gray-500 dark:hover:text-gray-300'
-            }`}
-          >
-            {tab}
-            {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" />}
-          </button>
-        ))}
+      {/* Modern Tabs Navigation */}
+      <div className="flex border-b border-[var(--color-border)] gap-1 overflow-x-auto">
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200',
+                'relative whitespace-nowrap rounded-t-lg',
+                isActive
+                  ? 'text-accent'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
+              )}
+            >
+              <Icon size={16} className={isActive ? 'text-accent' : ''} />
+              {tab.label}
+              {isActive && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content Sections */}
       <div className="min-h-[400px]">
         {activeTab === 'overview' && (
-          <OverviewTab 
-            data={data} 
-            combinedTrendData={combinedTrendData} 
-            formatCurrency={formatCurrency} 
+          <OverviewTab
+            data={data}
+            combinedTrendData={combinedTrendData}
+            formatCurrency={formatCurrency}
           />
         )}
 
         {activeTab === 'spending' && (
-          <SpendingTab 
-            data={data} 
-            formatCurrency={formatCurrency} 
-            colors={COLORS} 
+          <SpendingTab
+            data={data}
+            formatCurrency={formatCurrency}
+            colors={COLORS}
           />
         )}
 
         {activeTab === 'health' && (
-          <HealthTab 
-            data={data} 
-            formatCurrency={formatCurrency} 
+          <HealthTab
+            data={data}
+            formatCurrency={formatCurrency}
           />
         )}
       </div>
 
-      <footer className="text-center pt-8">
-        <p className="text-xs text-slate-400 dark:text-gray-500 font-medium tracking-widest uppercase">
-          Data Analysis Generated by MyFinance Intelligence &bull; {new Date(data.generated_at).toLocaleDateString()}
+      <footer className="text-center pt-8 pb-4">
+        <p className="text-xs text-[var(--color-text-muted)] font-medium tracking-widest uppercase">
+          Powered by MyFinance Intelligence &bull; {new Date(data.generated_at).toLocaleDateString()}
         </p>
       </footer>
     </div>

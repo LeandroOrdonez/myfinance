@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
+import clsx from 'clsx';
 
 interface GreetingVariation {
   morning: string[];
@@ -42,33 +43,30 @@ const greetingVariations: GreetingVariation = {
 
 // Get page title based on current view
 const getPageTitle = (currentView: string) => {
-  switch (currentView) {
-    case 'dashboard':
-      return <><span>Home</span>&nbsp;&middot;&nbsp;<span className="italic">Your financial situation at a glance</span></>;
-    case 'analytics':
-      return <><span>Analytics</span>&nbsp;&middot;&nbsp;<span className="italic">Your financial insights at a glance</span></>;
-    case 'transactions':
-      return <><span>Transactions</span>&nbsp;&middot;&nbsp;<span className="italic">Track your money movements</span></>;
-    case 'financial-health':
-      return <><span>Financial Health</span>&nbsp;&middot;&nbsp;<span className="italic">Improving your financial wellbeing</span></>;
-    case 'projections':
-      return <><span>Financial Projections</span>&nbsp;&middot;&nbsp;<span className="italic">Visualize your financial future</span></>;
-    case 'anomalies':
-      return <><span>Anomaly Detection</span>&nbsp;&middot;&nbsp;<span className="italic">Monitor and review unusual transaction patterns</span></>;
-    default:
-      return 'Smart money management';
-  }
+  const pageInfo: Record<string, { title: string; subtitle: string }> = {
+    'dashboard': { title: 'Home', subtitle: 'Your financial situation at a glance' },
+    'analytics': { title: 'Analytics', subtitle: 'Your financial insights at a glance' },
+    'transactions': { title: 'Transactions', subtitle: 'Track your money movements' },
+    'financial-health': { title: 'Financial Health', subtitle: 'Improving your financial wellbeing' },
+    'projections': { title: 'Financial Projections', subtitle: 'Visualize your financial future' },
+    'anomalies': { title: 'Anomaly Detection', subtitle: 'Monitor unusual transaction patterns' },
+  };
+
+  const info = pageInfo[currentView];
+  if (!info) return { title: 'MyFinance', subtitle: 'Smart money management' };
+
+  return info;
 };
 
 export const UserGreeting: React.FC = () => {
   const { userName } = useAuth();
   const location = useLocation();
-  const currentView = location.pathname.split('/')[1];
-  
-  const { greeting, timeOfDay } = useMemo(() => {
+  const currentView = location.pathname.split('/')[1] || 'dashboard';
+
+  const { greeting } = useMemo(() => {
     const now = new Date();
     const hour = now.getHours();
-    
+
     let timeOfDay: keyof GreetingVariation;
     if (hour >= 5 && hour < 12) {
       timeOfDay = 'morning';
@@ -79,29 +77,38 @@ export const UserGreeting: React.FC = () => {
     } else {
       timeOfDay = 'night';
     }
-    
+
     // Get a random greeting from the appropriate time of day
     const variations = greetingVariations[timeOfDay];
     const randomIndex = Math.floor(Math.random() * variations.length);
     const greeting = variations[randomIndex];
-    
+
     return { greeting, timeOfDay };
   }, []);
-  
 
+  const pageInfo = getPageTitle(currentView);
 
   if (!userName) {
-    return <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{getPageTitle(currentView)}</h1>;
+    return (
+      <div>
+        <h1 className="text-xl font-bold text-[var(--color-text-primary)]">
+          {pageInfo.title}
+        </h1>
+        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{pageInfo.subtitle}</p>
+      </div>
+    );
   }
-  
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-        {greeting}, {userName}
+      <h1 className={clsx(
+        "text-xl font-bold text-[var(--color-text-primary)]",
+        "flex items-baseline gap-2"
+      )}>
+        {greeting},
+        <span className="text-accent">{userName}</span>
       </h1>
-      <p className="text-sm text-gray-600 dark:text-gray-400">
-        {getPageTitle(currentView)}
-      </p>
+      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{pageInfo.subtitle}</p>
     </div>
   );
 };

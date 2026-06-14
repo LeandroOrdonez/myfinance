@@ -56,13 +56,14 @@ export const AnomalyDashboard: React.FC<AnomalyDashboardProps> = () => {
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'statistical_outlier': return <TrendingUp className="w-4 h-4" />;
-      case 'temporal_anomaly': return <Clock className="w-4 h-4" />;
-      case 'amount_anomaly': return <AlertTriangle className="w-4 h-4" />;
-      case 'frequency_anomaly': return <RefreshCw className="w-4 h-4" />;
-      case 'behavioral_anomaly': return <User className="w-4 h-4" />;
-      case 'merchant_anomaly': return <Store className="w-4 h-4" />;
+    // Match the API response format (title case from AnomalyType enum values)
+    switch (type) {
+      case 'Statistical Outlier': return <TrendingUp className="w-4 h-4" />;
+      case 'Temporal Anomaly': return <Clock className="w-4 h-4" />;
+      case 'Amount Anomaly': return <AlertTriangle className="w-4 h-4" />;
+      case 'Frequency Anomaly': return <RefreshCw className="w-4 h-4" />;
+      case 'Behavioral Anomaly': return <User className="w-4 h-4" />;
+      case 'Merchant Anomaly': return <Store className="w-4 h-4" />;
       default: return <Shield className="w-4 h-4" />;
     }
   };
