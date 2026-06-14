@@ -1,5 +1,20 @@
 # MyFinance Changelog
 
+## 2026-06-14 – Frontend Design System Modernization
+
+Implemented a comprehensive fintech design system with custom color palette (Slate/Indigo/Emerald/Rose), IBM Plex Sans typography, and CSS variable-based theming.
+
+### UI Updates
+- **Sidebar**: Glass morphism design, animated collapse/expand, dynamic user name display with initials avatar
+- **MainLayout**: Improved responsive breakpoints and visual hierarchy
+- **Dashboard Components**: Modernized cards (DashboardCard, SummaryCard, BaseMetricCard) with hover effects and consistent elevation
+- **Theme System**: Dark mode via semantic CSS variables, focus-visible accessibility, reduced-motion support
+
+### Bug Fixes
+- Fixed hardcoded "John Doe" in sidebar – now uses `userName` from auth context
+- Fixed anomaly type mapping in `AnomalyDashboard` (API title case → frontend icons)
+- Fixed collapse button z-index to prevent occlusion by nav items
+
 ## 2026-06-13 – Anomaly Detection Refactoring & Hardening
 
 Improved configurability, performance, and correctness of the transaction anomaly detection feature, and added a comprehensive test suite.
