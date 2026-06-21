@@ -10,9 +10,10 @@ interface OverviewTabProps {
   data: FinancialSummaryResponse;
   combinedTrendData: any[];
   formatCurrency: (val: number) => string;
+  formatCurrencyCompact: (val: number) => string;
 }
 
-export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendData, formatCurrency }) => {
+export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendData, formatCurrency, formatCurrencyCompact }) => {
   const trendHeaderExtra = (
     <div className="flex gap-4 text-xs font-medium">
       <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
@@ -43,7 +44,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => `€${v/1000}k`} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => formatCurrencyCompact(v)} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'var(--color-tooltip-bg)', 
@@ -69,7 +70,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
               <LineChart data={data.savings_investment.savings_growth_trend}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => `€${Math.round(v/1000)}k`} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => formatCurrencyCompact(v)} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'var(--color-tooltip-bg)', 

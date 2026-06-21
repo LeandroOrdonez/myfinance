@@ -37,6 +37,13 @@ export const Home: React.FC = () => {
       (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(n)
     );
 
+  const formatCurrencyCompact = (val: number) =>
+    formatPrivateAmount(
+      val,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 1 }).format(n)
+    );
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -183,6 +190,7 @@ export const Home: React.FC = () => {
             data={data}
             combinedTrendData={combinedTrendData}
             formatCurrency={formatCurrency}
+            formatCurrencyCompact={formatCurrencyCompact}
           />
         )}
 

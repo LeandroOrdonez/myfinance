@@ -186,11 +186,15 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
                                     if (activeMetric === 'savings_rate') {
                                         return `${value}%`;
                                     }
-                                    return new Intl.NumberFormat('en-US', {
-                                        notation: 'compact',
-                                        style: 'currency',
-                                        currency: 'EUR'
-                                    }).format(value);
+                                    return formatPrivateAmount(
+                                        value,
+                                        privacyMode,
+                                        (n) => new Intl.NumberFormat('en-US', {
+                                            notation: 'compact',
+                                            style: 'currency',
+                                            currency: 'EUR',
+                                        }).format(n)
+                                    );
                                 }}
                             />
                             <Tooltip
