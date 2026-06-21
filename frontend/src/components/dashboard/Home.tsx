@@ -10,12 +10,15 @@ import { SummaryCard } from './SummaryCard';
 import { OverviewTab } from './OverviewTab';
 import { SpendingTab } from './SpendingTab';
 import { HealthTab } from './HealthTab';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export const Home: React.FC = () => {
   const { data, loading, error } = useSummary();
   const [activeTab, setActiveTab] = useState('overview');
+  const { privacyMode } = usePrivacyMode();
 
   const combinedTrendData = useMemo(() => {
     if (!data) return [];
@@ -28,7 +31,18 @@ export const Home: React.FC = () => {
   }, [data]);
 
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
+    formatPrivateAmount(
+      val,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(n)
+    );
+
+  const formatCurrencyCompact = (val: number) =>
+    formatPrivateAmount(
+      val,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 1 }).format(n)
+    );
 
   if (loading) {
     return (
@@ -176,6 +190,7 @@ export const Home: React.FC = () => {
             data={data}
             combinedTrendData={combinedTrendData}
             formatCurrency={formatCurrency}
+            formatCurrencyCompact={formatCurrencyCompact}
           />
         )}
 

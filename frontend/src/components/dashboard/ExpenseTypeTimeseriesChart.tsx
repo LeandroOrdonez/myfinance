@@ -3,6 +3,8 @@ import { Loading } from '../common/Loading';
 import { useExpenseTypeTimeseries } from '../../hooks/useExpenseTypeTimeseries';
 import { format as formatDate } from 'date-fns';
 import { TimePeriod } from '../../types/transaction';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 import {
   AreaChart,
   Area,
@@ -32,6 +34,7 @@ const EXPENSE_TYPE_COLORS = {
 };
 
 export const ExpenseTypeTimeseriesChart: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
   const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [chartType, setChartType] = useState<'area' | 'bar'>('bar');
 
@@ -85,16 +88,16 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
 
   const formatValue = (value: number, isPercentage: boolean = false) => {
     if (!value && value !== 0) return isPercentage ? '0.0%' : '€0.0';
-    
-    if (isPercentage) {
-      return `${value.toFixed(1)}%`;
-    }
-    
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      notation: 'compact'
-    }).format(value);
+    if (isPercentage) return `${value.toFixed(1)}%`;
+    return formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        notation: 'compact',
+      }).format(n)
+    );
   };
 
   const renderChart = () => {

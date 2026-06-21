@@ -4,6 +4,8 @@ import { statisticService } from '../../services/statisticService';
 import { TransactionType, TimePeriod } from '../../types/transaction';
 import { Loading } from '../common/Loading';
 import { format as formatDate } from 'date-fns';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 // Define the periods similar to FinancialTrends
 const PERIODS = [
@@ -35,6 +37,7 @@ interface CategoryAveragesResponse {
 }
 
 export const CategoryAverages: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
   const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [transactionType, setTransactionType] = useState<TransactionType | undefined>(TransactionType.EXPENSE);
   const [categoryData, setCategoryData] = useState<CategoryAveragesResponse | null>(null);
@@ -84,14 +87,17 @@ export const CategoryAverages: React.FC = () => {
   }, [period, transactionType]);
 
   // Helper function to format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    formatPrivateAmount(
+      amount,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(n)
+    );
 
   // Custom tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {

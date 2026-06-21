@@ -1,5 +1,19 @@
 # MyFinance Changelog
 
+## 2026-06-21 – Privacy Mode Bug Fixes
+
+Fixed two YAxis `tickFormatter` leaks where chart axis labels were rendering real EUR amounts even when privacy mode was active.
+
+- `OverviewTab.tsx` — Cash Flow and Cumulative Savings Growth YAxis ticks now use a privacy-aware compact formatter passed down from `Home.tsx` instead of inline `€${v/1000}k` strings
+- `TimeseriesChart.tsx` — Monthly Income/Expenses and Cumulative Totals YAxis ticks now route through `formatPrivateAmount`; the savings-rate branch (`%`) is correctly left unmasked
+
+## 2026-06-14 – Privacy Mode
+
+Added a header toggle (`Eye`/`EyeOff`) that masks all absolute EUR amounts app-wide with `•••••`, while leaving percentages, scores, and chart shapes untouched. Preference persists via `localStorage`.
+
+- `PrivacyContext` + `formatPrivateAmount` utility — single masking implementation consumed by all 22 updated components and hooks
+- 26 new tests covering the utility, context, toggle UI, and `BaseMetricCard`
+
 ## 2026-06-14 – Frontend Design System Modernization
 
 Implemented a comprehensive fintech design system with custom color palette (Slate/Indigo/Emerald/Rose), IBM Plex Sans typography, and CSS variable-based theming.

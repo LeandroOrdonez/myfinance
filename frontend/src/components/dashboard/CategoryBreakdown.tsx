@@ -8,6 +8,8 @@ import * as Tabs from '@radix-ui/react-tabs';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useCategoryStatistics } from '../../hooks/useCategoryStatistics';
 import { useStatistics } from '../../hooks/useStatistics';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 import { Loading } from '../common/Loading';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { ChartBarDecreasing, Grid3x3 } from 'lucide-react';
@@ -27,6 +29,7 @@ const INCOME_COLORS = [
 ];
 
 export const CategoryBreakdown: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
   const [activeTab, setActiveTab] = useState('expenses');
   const [chartType, setChartType] = useState('treemap');
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly' | 'all_time'>('monthly');
@@ -123,13 +126,16 @@ export const CategoryBreakdown: React.FC = () => {
   };
 
   // Format currency
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(n)
+    );
 
   const formatPercent = (value: number) => {
     return `${value.toFixed(1)}%`;

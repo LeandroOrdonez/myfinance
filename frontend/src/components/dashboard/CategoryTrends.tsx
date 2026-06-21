@@ -8,8 +8,11 @@ import { useStatistics } from '../../hooks/useStatistics';
 import { useExpenseTypeStatistics } from '../../hooks/useExpenseTypeStatistics';
 import { Loading } from '../common/Loading';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 export const CategoryTrends: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
   const [activeTab, setActiveTab] = useState('expense-types');
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -68,13 +71,16 @@ export const CategoryTrends: React.FC = () => {
   // and now use the expense type data instead
 
   // Format currency
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      notation: 'compact'
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        notation: 'compact',
+      }).format(n)
+    );
 
   // Render active shape for pie chart
   const renderActiveShape = (props: any) => {

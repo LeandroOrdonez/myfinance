@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { statisticService } from '../../services/statisticService';
 import { Loading } from '../common/Loading';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 interface MonthlyStatistics {
   period: 'monthly' | 'all_time';
@@ -35,6 +37,7 @@ interface YearData {
 }
 
 export const MonthlyHeatmap: React.FC = () => {
+  const { privacyMode } = usePrivacyMode();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [yearData, setYearData] = useState<Record<string, YearData>>({});
@@ -119,14 +122,17 @@ export const MonthlyHeatmap: React.FC = () => {
     return `${monthName} ${year}\nIncome: ${formatCurrency(monthData.income)}\nExpenses: ${formatCurrency(monthData.expenses)}\nNet: ${formatCurrency(monthData.netSavings)}\nRate: ${monthData.savingsRate.toFixed(1)}%`;
   };
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(n)
+    );
   
   if (loading) return (<Loading variant="progress" size="medium" />);
   if (error) return (

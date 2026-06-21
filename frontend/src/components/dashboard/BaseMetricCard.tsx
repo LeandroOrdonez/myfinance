@@ -1,5 +1,7 @@
 import { LucideIcon, TrendingDown, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 
 interface BaseMetricCardProps {
   title: string;
@@ -22,6 +24,8 @@ export const BaseMetricCard: React.FC<BaseMetricCardProps> = ({
   colorType = 'neutral',
   period
 }) => {
+  const { privacyMode } = usePrivacyMode();
+
   const getColorClass = (type: typeof colorType, value: number) => {
     switch (type) {
       case 'income':
@@ -45,14 +49,16 @@ export const BaseMetricCard: React.FC<BaseMetricCardProps> = ({
   };
 
   const formatValue = (value: number) => {
-    if (isPercentage) {
-      return `${value.toFixed(1)}%`;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 2,
-    }).format(value);
+    if (isPercentage) return `${value.toFixed(1)}%`;
+    return formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 2,
+      }).format(n)
+    );
   };
 
   const changeValue = parseFloat(change);

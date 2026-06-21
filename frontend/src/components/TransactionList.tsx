@@ -5,6 +5,8 @@ import { format } from 'date-fns';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Pagination } from './common/Pagination';
+import { usePrivacyMode } from '../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../utils/formatPrivateAmount';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -36,6 +38,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   onTransactionUpdate,
   onTransactionDelete,
 }) => {
+  const { privacyMode } = usePrivacyMode();
+
   const handleSort = (field: SortField) => {
     if (field === sortParams.field) {
       onSortChange({
@@ -101,10 +105,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     ? 'text-green-600' 
                     : 'text-red-600'
                 }`}>
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: transaction.currency,
-                  }).format(Math.abs(transaction.amount))}
+                  {formatPrivateAmount(
+                    Math.abs(transaction.amount),
+                    privacyMode,
+                    (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(n)
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-200">
                   {transaction.transaction_type}

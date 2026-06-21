@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { usePrivacyMode } from '../../../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../../../utils/formatPrivateAmount';
 
 interface NetWorthChartProps {
   data: {
@@ -11,6 +13,7 @@ interface NetWorthChartProps {
 }
 
 const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
+  const { privacyMode } = usePrivacyMode();
   const [showReal, setShowReal] = useState(false);
   const hasRealData = data?.real_projected_net_worth && data.real_projected_net_worth.length > 0;
 
@@ -30,12 +33,12 @@ const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
   }));
 
   // Format currency for tooltip
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    formatPrivateAmount(
+      value,
+      privacyMode,
+      (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n)
+    );
 
   // Format date for display
   const formatDate = (dateStr: string) => {

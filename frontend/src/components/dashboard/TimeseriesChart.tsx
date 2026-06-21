@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import * as Tabs from '@radix-ui/react-tabs';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
+import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
 import { TimePeriod } from '../../types/transaction';
 
 interface TimeseriesData {
@@ -34,6 +36,7 @@ interface TimeseriesChartProps {
 }
 
 export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, setPeriod, PERIODS }) => {
+    const { privacyMode } = usePrivacyMode();
     const [activeMetric, setActiveMetric] = useState('income_expenses');
     const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({});
 
@@ -109,12 +112,16 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
         if (metric === 'savings_rate') {
             return `${Number(value).toFixed(1)}%`;
         }
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(value);
+        return formatPrivateAmount(
+            value,
+            privacyMode,
+            (n) => new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(n)
+        );
     };
 
     if (!data || data.length === 0) {
@@ -179,11 +186,15 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
                                     if (activeMetric === 'savings_rate') {
                                         return `${value}%`;
                                     }
-                                    return new Intl.NumberFormat('en-US', {
-                                        notation: 'compact',
-                                        style: 'currency',
-                                        currency: 'EUR'
-                                    }).format(value);
+                                    return formatPrivateAmount(
+                                        value,
+                                        privacyMode,
+                                        (n) => new Intl.NumberFormat('en-US', {
+                                            notation: 'compact',
+                                            style: 'currency',
+                                            currency: 'EUR',
+                                        }).format(n)
+                                    );
                                 }}
                             />
                             <Tooltip
