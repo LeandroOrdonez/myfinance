@@ -14,6 +14,7 @@ import FinancialHealth from './components/dashboard/FinancialHealth';
 import ProjectionDashboard from './components/dashboard/projections/ProjectionDashboard';
 import { AnomalyDashboard } from './components/dashboard/anomalies/AnomalyDashboard';
 import { AnomalyList } from './components/dashboard/anomalies/AnomalyList';
+import { Budgets } from './components/dashboard/Budgets';
 import { Loading } from './components/common/Loading';
 import { CategoryTimeseriesChart } from './components/dashboard/CategoryTimeseriesChart';
 import { ExpenseTypeTimeseriesChart } from './components/dashboard/ExpenseTypeTimeseriesChart';
@@ -216,6 +217,14 @@ function App() {
                     <AnomalyDashboard />
                     <AnomalyList />
                   </div>
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/budgets" 
+              element={
+                <MainLayout onUploadSuccess={handleUploadSuccess}>
+                  <Budgets />
                 </MainLayout>
               } 
             />

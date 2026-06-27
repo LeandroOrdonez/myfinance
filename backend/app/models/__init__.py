@@ -4,6 +4,7 @@ from .statistics import FinancialStatistics, CategoryStatistics, StatisticsPerio
 from .financial_health import FinancialHealth, FinancialRecommendation
 from .financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult
 from .anomaly import TransactionAnomaly, AnomalyPattern, AnomalyRule, AnomalyType, AnomalySeverity, AnomalyStatus
+from .budget import Budget
 
 # Export all models
 __all__ = [
@@ -25,5 +26,6 @@ __all__ = [
     'AnomalyRule',
     'AnomalyType',
     'AnomalySeverity',
-    'AnomalyStatus'
+    'AnomalyStatus',
+    'Budget'
 ]

@@ -15,7 +15,7 @@ from .database_manager import init_database, reset_database
 init_database()
 
 # Import routers
-from .routers import transactions, statistics, suggestions, financial_health, projections, anomalies, financial_summary
+from .routers import transactions, statistics, suggestions, financial_health, projections, anomalies, financial_summary, budgets
 
 app = FastAPI(title="MyFinance API")
 
@@ -37,6 +37,7 @@ app.include_router(financial_health.router)
 app.include_router(projections.router)
 app.include_router(anomalies.router)
 app.include_router(financial_summary.router)
+app.include_router(budgets.router)
 
 # Add a debug endpoint to reset the database
 # pass statistics or transactions to reset only statistics or transactions  

@@ -9,7 +9,8 @@ import {
   Heart,
   TrendingUp,
   ShieldAlert,
-  Wallet
+  Wallet,
+  PiggyBank
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/AuthContext';
@@ -66,6 +67,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Anomalies',
       icon: ShieldAlert,
       color: 'text-danger'
+    },
+    {
+      id: 'budgets',
+      label: 'Budgets',
+      icon: PiggyBank,
+      color: 'text-info'
     },
     {
       id: 'transactions',
@@ -159,7 +166,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           isActive && item.id === 'analytics' ? 'text-info' :
                           isActive && item.id === 'financial-health' ? 'text-success' :
                           isActive && item.id === 'projections' ? 'text-warning' :
-                          isActive && item.id === 'anomalies' ? 'text-danger' : 'text-accent'
+                          isActive && item.id === 'anomalies' ? 'text-danger' :
+                          isActive && item.id === 'budgets' ? 'text-info' : 'text-accent'
                         : 'text-[var(--color-text-muted)]'
                     )} />
                   </div>
