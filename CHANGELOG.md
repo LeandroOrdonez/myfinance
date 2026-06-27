@@ -1,5 +1,19 @@
 # MyFinance Changelog
 
+## 2026-06-27 – Budgets
+
+Added per-category monthly spending budgets with percentile-based limit suggestions and progress tracking against a target month. Surfaced on a dedicated `/budgets` sidebar page.
+
+### Features
+- **Monthly category limits**: one active budget per expense category, enforced by a unique constraint
+- **Percentile suggestion**: suggested limit defaults to the 75th percentile of the category's monthly spend over a trailing 6-month window (configurable)
+- **Progress tracking**: per-category progress bars with `on_track` (<80%), `warning` (80–100%), and `over` (>100%) status thresholds, plus a budget-vs-actual overview chart
+- All EUR amounts are privacy-aware (`formatPrivateAmount`); percentages and status labels stay unmasked
+
+### Key files
+- Backend: `models/budget.py`, `schemas/budget.py`, `services/budget_service.py`, `routers/budgets.py`, `migrations/migrate_budgets.py`, `tests/test_budgets.py`
+- Frontend: `types/budget.ts`, `services/budgetService.ts`, `components/dashboard/Budgets.tsx`, `BudgetCard.tsx`, `BudgetFormDialog.tsx`, `BudgetCard.test.tsx`
+
 ## 2026-06-21 – Privacy Mode Bug Fixes
 
 Fixed two YAxis `tickFormatter` leaks where chart axis labels were rendering real EUR amounts even when privacy mode was active.

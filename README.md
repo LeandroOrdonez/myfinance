@@ -84,6 +84,12 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Review and management system with status tracking
 - False positive handling and learning capabilities
 
+### Budgets
+- Set a monthly spending limit per expense category (one active budget per category)
+- Percentile-based suggested limit (default: 75th percentile of the category's monthly spend over a trailing 6-month window, configurable)
+- Track each month's actual spend against the limit with progress bars and status thresholds (on-track < 80%, warning 80–100%, over > 100%)
+- Budget-vs-actual overview chart; all amounts respect privacy mode
+
 ### User Experience
 - PIN-based authentication system (not yet fully implemented, PIN hard-coded to 1234)
 - Dark/light theme support
