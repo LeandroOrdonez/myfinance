@@ -21,6 +21,59 @@ import { BudgetFormDialog } from './BudgetFormDialog';
 
 const CHART_TOP_N = 8;
 
+interface BudgetBarEntry {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  Limit?: number;
+  Spent?: number;
+  chartHeight?: number;
+}
+
+/** Renders a single bar showing the budget limit as a dashed-border container
+ *  and the spent amount as a solid filled bar inside it. */
+const BudgetBarShape = ({ x = 0, y = 0, width = 0, height = 0, Limit = 0, Spent = 0 }: BudgetBarEntry) => {
+  if (!Limit || width <= 0 || height <= 0) return null;
+  const spentHeight = Math.round((Spent / Limit) * height);
+  const spentY = y + height - spentHeight;
+  const inset = 3;
+
+  return (
+    <g>
+      {/* Limit: dashed border, light background */}
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill="#EF4444"
+        fillOpacity={0.12}
+        stroke="#EF4444"
+        strokeWidth={1.}
+        strokeDasharray="5 3"
+        rx={4}
+        ry={4}
+      />
+      {/* Spent: solid bar inset within the limit bar */}
+      {spentHeight > 0 && (
+        <rect
+          x={x + inset}
+          y={spentY}
+          width={Math.max(0, width - inset * 2)}
+          height={spentHeight}
+          fill="#6366F1"
+          fillOpacity={0.85}
+          stroke="#6366F1"
+          strokeWidth={1.5}
+          rx={3}
+          ry={3}
+        />
+      )}
+    </g>
+  );
+};
+
 export const Budgets: React.FC = () => {
   const { privacyMode } = usePrivacyMode();
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -160,7 +213,11 @@ export const Budgets: React.FC = () => {
         <DashboardCard title="Budget vs. Actual">
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
+              <BarChart
+                data={chartData}
+                margin={{ top: 5, right: 20, left: 0, bottom: 40 }}
+                barCategoryGap="30%"
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
                 <XAxis
                   dataKey="name"
@@ -188,9 +245,16 @@ export const Budgets: React.FC = () => {
                   itemStyle={{ color: 'var(--color-tooltip-text)' }}
                   labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
                 />
-                <Legend />
-                <Bar dataKey="Limit" fill="#6366F1" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Spent" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                <Legend
+                  payload={[
+                    { value: 'Limit', type: 'rect', color: '#EF4444', id: 'limit' },
+                    { value: 'Spent', type: 'rect', color: '#6366F1', id: 'spent' },
+                  ]}
+                  formatter={(value) => (
+                    <span style={{ fontSize: 12 }}>{value}</span>
+                  )}
+                />
+                <Bar dataKey="Limit" barSize={48} shape={<BudgetBarShape />} />
               </BarChart>
             </ResponsiveContainer>
           </div>
