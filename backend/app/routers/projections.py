@@ -116,6 +116,49 @@ def get_scenario_detail(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.put("/scenarios/holdings-market-value", response_model=Dict[str, Any])
+def update_holdings_market_value(
+    payload: schemas.HoldingsMarketValueUpdate,
+    db: Session = Depends(get_db)
+):
+    """Update the holdings_market_value parameter across all scenarios"""
+    try:
+        scenarios = db.query(ProjectionScenario).all()
+        if not scenarios:
+            raise HTTPException(status_code=404, detail="No projection scenarios found")
+
+        bounds = schemas.PARAMETER_BOUNDS["holdings_market_value"]
+        if payload.value < bounds["min"] or payload.value > bounds["max"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"holdings_market_value must be between {bounds['min']} and {bounds['max']}"
+            )
+
+        for scenario in scenarios:
+            param = db.query(ProjectionParameter).filter(
+                ProjectionParameter.scenario_id == scenario.id,
+                ProjectionParameter.param_name == "holdings_market_value"
+            ).first()
+            if param:
+                param.param_value = payload.value
+            else:
+                db.add(ProjectionParameter(
+                    scenario_id=scenario.id,
+                    param_name="holdings_market_value",
+                    param_value=payload.value,
+                    param_type="amount"
+                ))
+
+        db.commit()
+        return {"success": True, "updated_scenarios": len(scenarios)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating holdings market value: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.put("/scenarios/{scenario_id}", response_model=schemas.ProjectionScenarioDetail)
 def update_scenario(
     scenario_id: int,

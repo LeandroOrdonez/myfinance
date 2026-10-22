@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, Edit, Plus, Trash2, RefreshCw, X } from 'lucide-react';
 import { ProjectionScenario, ProjectionParameter, ProjectionParameterCreate } from '../../../types/projections';
-import { createScenario, updateScenario, deleteScenario, calculateProjection, recomputeBaseScenario } from '../../../services/projectionService';
+import { createScenario, updateScenario, deleteScenario, calculateProjection, recomputeBaseScenario, updateHoldingsMarketValue } from '../../../services/projectionService';
 import { ScenarioFormDialog, DeleteConfirmDialog } from './dialogs';
 
 interface ScenarioManagerProps {
@@ -22,6 +22,8 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCalculating, setIsCalculating] = useState<number | null>(null);
   const [isRecomputing, setIsRecomputing] = useState(false);
+  const [holdingsValue, setHoldingsValue] = useState('0');
+  const [isSavingHoldings, setIsSavingHoldings] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<ProjectionScenario | null>(null);
   const [notification, setNotification] = useState<NotificationProps | null>(null);
   const [formData, setFormData] = useState({
@@ -31,6 +33,16 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
     parameters: [] as ProjectionParameterCreate[]
   });
   
+  // Derive the shared holdings market value from the scenarios (kept identical across all)
+  const sharedHoldingsValue = scenarios
+    .map(s => s.parameters?.find(p => p.param_name === 'holdings_market_value')?.param_value)
+    .find(v => v !== undefined) ?? 0;
+
+  // Sync the holdings input when scenarios change
+  useEffect(() => {
+    setHoldingsValue(sharedHoldingsValue.toString());
+  }, [sharedHoldingsValue]);
+
   // Auto-dismiss notification after 3 seconds
   useEffect(() => {
     if (notification) {
@@ -76,7 +88,7 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
         { param_name: 'inflation_rate', param_value: 0.02, param_type: 'percentage' },
         { param_name: 'investment_return_rate', param_value: 0.07, param_type: 'percentage' },
         { param_name: 'emergency_fund_target', param_value: 6.0, param_type: 'months' },
-        { param_name: 'holdings_market_value', param_value: 0.0, param_type: 'amount' }
+        { param_name: 'holdings_market_value', param_value: sharedHoldingsValue, param_type: 'amount' }
       ]
     });
     setIsCreateDialogOpen(true);
@@ -160,6 +172,26 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
     }
   };
 
+  // Handle updating the shared holdings market value for all scenarios
+  const handleUpdateHoldingsValue = async () => {
+    const value = parseFloat(holdingsValue);
+    if (isNaN(value) || value < 0) {
+      showNotification('error', 'Invalid Value', 'Holdings market value must be a non-negative number');
+      return;
+    }
+
+    try {
+      setIsSavingHoldings(true);
+      await updateHoldingsMarketValue(value);
+      onScenariosChange();
+      showNotification('success', 'Holdings Updated', 'Holdings market value applied to all scenarios');
+    } catch (error) {
+      showNotification('error', 'Update Failed', `Failed to update holdings market value: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsSavingHoldings(false);
+    }
+  };
+
   // Handle recompute base scenario parameters
   const handleRecomputeBaseScenario = async () => {
     try {
@@ -209,6 +241,38 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
           <Plus className="mr-2 h-4 w-4" />
           Create Scenario
         </button>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <label htmlFor="holdings-market-value" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Holdings Market Value
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Current market value of your investments, applied to all scenarios
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              id="holdings-market-value"
+              type="number"
+              min="0"
+              step="1"
+              value={holdingsValue}
+              onChange={(e) => setHoldingsValue(e.target.value)}
+              className="w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700 dark:text-white"
+            />
+            <span className="text-gray-500 text-sm">€</span>
+            <button
+              onClick={handleUpdateHoldingsValue}
+              disabled={isSavingHoldings || isLoading || scenarios.length === 0}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isSavingHoldings ? 'Saving...' : 'Apply to All'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {isLoading ? (

@@ -57,6 +57,10 @@ class ProjectionParameter(ProjectionParameterBase):
         orm_mode = True
 
 
+class HoldingsMarketValueUpdate(BaseModel):
+    value: float = Field(ge=0)
+
+
 class ProjectionScenarioBase(BaseModel):
     name: str
     description: str

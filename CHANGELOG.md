@@ -1,5 +1,18 @@
 # MyFinance Changelog
 
+## 2026-10-22 – Shared Holdings Market Value for Projections
+
+The Holdings Market Value is now set once for all projection scenarios. Before this change, users had to enter it separately in each scenario's edit form.
+
+- **Global input**: a new "Holdings Market Value" card in `ScenarioManager` with an "Apply to All" action. The input shows the current shared value and refreshes after scenarios are refetched
+- **Bulk endpoint**: `PUT /projections/scenarios/holdings-market-value` updates the `holdings_market_value` parameter on every scenario in a single transaction and creates the parameter if it's missing. Values are validated against `PARAMETER_BOUNDS`. The route is declared before `PUT /scenarios/{scenario_id}` so it isn't caught by the ID route
+- **Scenario forms**: `ParameterEditor` no longer shows the holdings row, but the value is still included when a scenario is saved. New scenarios start with the current shared value instead of `0`
+- Recalculating a scenario's projection is still a manual step after the holdings value changes
+
+### Key files
+- Backend: `routers/projections.py`, `schemas/financial_projection.py` (`HoldingsMarketValueUpdate`)
+- Frontend: `services/projectionService.ts` (`updateHoldingsMarketValue`), `components/dashboard/projections/ScenarioManager.tsx`, `ParameterEditor.tsx`
+
 ## 2026-06-27 – Budgets
 
 Added per-category monthly spending budgets with percentile-based limit suggestions and progress tracking against a target month. Surfaced on a dedicated `/budgets` sidebar page.

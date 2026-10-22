@@ -109,6 +109,20 @@ export async function compareScenarios(scenarioIds: number[]): Promise<ScenarioC
   return response.json();
 }
 
+// Update the holdings market value across all scenarios
+export async function updateHoldingsMarketValue(value: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/projections/scenarios/holdings-market-value`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ value }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update holdings market value: ${response.statusText}`);
+  }
+}
+
 // Recompute base scenario parameters using latest historical data
 export async function recomputeBaseScenario(): Promise<RecomputeResult> {
   const response = await fetch(`${API_BASE_URL}/projections/scenarios/base/recompute`, {

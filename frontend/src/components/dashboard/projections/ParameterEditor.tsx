@@ -134,6 +134,8 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange 
           </thead>
           <tbody>
             {parameters.map((param, index) => {
+              // Holdings market value is managed globally for all scenarios
+              if (param.param_name === 'holdings_market_value') return null;
               const bounds = PARAMETER_BOUNDS[param.param_name];
               const minVal = bounds ? (param.param_type === 'percentage' ? bounds.displayMin : bounds.min) : undefined;
               const maxVal = bounds ? (param.param_type === 'percentage' ? bounds.displayMax : bounds.max) : undefined;
