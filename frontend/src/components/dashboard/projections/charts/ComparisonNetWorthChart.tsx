@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ReferenceLine } from 'recharts';
 import { usePrivacyMode } from '../../../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../../../utils/formatPrivateAmount';
+import { buildActualHistory } from './actualNetWorthHistory';
 
 interface ComparisonNetWorthChartProps {
   data: {
@@ -10,8 +11,17 @@ interface ComparisonNetWorthChartProps {
     net_worth_series: Record<string, number[]>;
     real_net_worth_series?: Record<string, number[]>;
     inflation_rates?: Record<string, number>;
+    historical_dates?: string[];
+    actual_net_worth?: (number | null)[];
+    real_actual_net_worth?: (number | null)[];
   };
 }
+
+// Prefixed to avoid clashing with scenario names used as data keys
+const ACTUAL_KEY = '__actual';
+
+// Values keyed by ACTUAL_KEY or scenario name
+type ComparisonPoint = { date: string } & Record<string, number | string | undefined>;
 
 const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data }) => {
   const { privacyMode } = usePrivacyMode();
@@ -28,16 +38,28 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
 
   const activeSeries = showReal && hasRealData ? data.real_net_worth_series! : data.net_worth_series;
 
+  // Shared actual history, with every scenario line starting at the last actual value
+  const historyPoints: ComparisonPoint[] = buildActualHistory(
+    data.historical_dates,
+    showReal ? data.real_actual_net_worth : data.actual_net_worth
+  ).map(({ date, actual }, i, points) => {
+    const isBridge = i === points.length - 1 && actual !== undefined;
+    const bridge = isBridge ? Object.fromEntries(data.scenario_names.map(name => [name, actual])) : {};
+    return { ...bridge, date, [ACTUAL_KEY]: actual };
+  });
+  const lastActual = historyPoints[historyPoints.length - 1];
+  const hasActuals = historyPoints.length > 0;
+
   // Format the data for the chart
-  const chartData = data.dates.map((date, index) => {
-    const dataPoint: any = { date };
+  const chartData: ComparisonPoint[] = [...historyPoints, ...data.dates.map((date, index) => {
+    const dataPoint: ComparisonPoint = { date };
     data.scenario_names.forEach(scenarioName => {
       if (activeSeries[scenarioName]) {
         dataPoint[scenarioName] = activeSeries[scenarioName][index];
       }
     });
     return dataPoint;
-  });
+  })];
 
   // Format currency for tooltip
   const formatCurrency = (value: number) =>
@@ -59,10 +81,14 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      // On the bridge point the scenario values duplicate the actual one
+      const entries = payload.filter(
+        (entry: any) => entry.dataKey === ACTUAL_KEY || entry.payload[ACTUAL_KEY] === undefined
+      );
       return (
         <div className="bg-background border rounded p-2 shadow-md">
           <p className="font-medium">{formatDate(label)}</p>
-          {payload.map((entry: any, index: number) => (
+          {entries.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>
@@ -131,6 +157,20 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
+          {hasActuals && (
+            <ReferenceLine x={lastActual.date} stroke="#9ca3af" strokeDasharray="4 4" label={{ value: 'Today', position: 'insideTopRight', fontSize: 12, fill: '#9ca3af' }} />
+          )}
+          {hasActuals && (
+            <Line
+              type="monotone"
+              dataKey={ACTUAL_KEY}
+              name="Actual"
+              stroke="#9ca3af"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6 }}
+            />
+          )}
           
           {data.scenario_names.map((scenarioName, index) => (
             <Line
@@ -140,6 +180,7 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
               name={scenarioName}
               stroke={colors[index % colors.length]}
               strokeWidth={2}
+              strokeDasharray={hasActuals ? '6 4' : undefined}
               dot={false}
               activeDot={{ r: 6 }}
             />

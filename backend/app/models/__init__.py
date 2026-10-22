@@ -2,7 +2,7 @@ from ..database import Base
 from .transaction import Transaction, TransactionType, ExpenseCategory, IncomeCategory
 from .statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from .financial_health import FinancialHealth, FinancialRecommendation
-from .financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult
+from .financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult, HoldingsValueHistory
 from .anomaly import TransactionAnomaly, AnomalyPattern, AnomalyRule, AnomalyType, AnomalySeverity, AnomalyStatus
 from .budget import Budget
 
@@ -21,6 +21,7 @@ __all__ = [
     'ProjectionScenario',
     'ProjectionParameter',
     'ProjectionResult',
+    'HoldingsValueHistory',
     'TransactionAnomaly',
     'AnomalyPattern',
     'AnomalyRule',

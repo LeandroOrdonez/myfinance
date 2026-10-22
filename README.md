@@ -64,7 +64,7 @@ A personal finance manager for tracking, categorizing, and analyzing your financ
 - Adjustable parameters including income growth, expense growth, investment rate, current market value of investments, and more
 - Support for entering current market value of investments to provide more accurate projections
 - Visualization of projected outcomes:
-  - Net Worth Projection
+  - Net Worth Projection, with the last 12 months of actual net worth (cumulative net savings + recorded holdings value) plotted before the projected line
   - Income vs. Expenses
   - Savings Growth
   - Investment Growth

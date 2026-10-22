@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, JSON, Boolean, Enum
+from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, JSON, Boolean, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from ..database import Base
 import enum
@@ -59,3 +59,17 @@ class ProjectionResult(Base):
     
     # Relationships
     scenario = relationship("ProjectionScenario", back_populates="results")
+
+
+class HoldingsValueHistory(Base):
+    """Month-end snapshot of the holdings market value, used to plot actual net worth."""
+    __tablename__ = "holdings_value_history"
+    __table_args__ = (
+        UniqueConstraint('year', 'month', name='uq_holdings_value_history_year_month'),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    value = Column(Float, nullable=False)
+    updated_at = Column(Date, nullable=False, default=date.today, onupdate=date.today)

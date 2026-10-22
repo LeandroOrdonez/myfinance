@@ -14,6 +14,7 @@ from ..models.statistics import FinancialStatistics, CategoryStatistics, Statist
 from ..models.financial_health import FinancialHealth
 from ..models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult, ParamType
 from ..schemas.financial_projection import PARAMETER_BOUNDS
+from .holdings_history_service import HoldingsHistoryService
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +28,9 @@ class ProjectionService:
     _historical_data_cache: Dict[str, Any] = {}
     _cache_timestamp: float = 0
     _cache_ttl_seconds: int = 300  # 5 minutes TTL
+    
+    # Number of months of actual net worth returned alongside projection results
+    ACTUAL_HISTORY_MONTHS = 12
     
     # Default parameters for projection scenarios
     DEFAULT_PARAMETERS = {
@@ -600,7 +604,16 @@ class ProjectionService:
                 real_savings_series.append(round(result.projected_savings / cumulative_inflation, 2))
                 real_net_worth_series.append(round(result.projected_net_worth / cumulative_inflation, 2))
             
+            # Actual net worth for the months leading up to the projection start
+            history = HoldingsHistoryService.get_actual_net_worth(
+                db,
+                end_month=date(results[0].year, results[0].month, 1) - relativedelta(months=1),
+                months=ProjectionService.ACTUAL_HISTORY_MONTHS,
+                monthly_inflation_rate=monthly_inflation_rate
+            )
+            
             return {
+                **history,
                 "dates": dates,
                 "projected_income": income_series,
                 "projected_expenses": expense_series,
@@ -818,6 +831,17 @@ class ProjectionService:
                 comparison["real_net_worth_series"][scenario.name] = real_net_worth_series
                 comparison["real_savings_series"][scenario.name] = real_savings_series
                 comparison["real_investment_series"][scenario.name] = real_investment_series
+            
+            # Actual net worth leading up to the projection start (shared by all scenarios).
+            # Real values use the average inflation rate of the compared scenarios.
+            inflation_rates = list(comparison["inflation_rates"].values()) or [0.02]
+            avg_monthly_inflation = (1 + sum(inflation_rates) / len(inflation_rates)) ** (1/12) - 1
+            comparison.update(HoldingsHistoryService.get_actual_net_worth(
+                db,
+                end_month=date(first_results[0].year, first_results[0].month, 1) - relativedelta(months=1),
+                months=ProjectionService.ACTUAL_HISTORY_MONTHS,
+                monthly_inflation_rate=avg_monthly_inflation
+            ))
             
             return comparison
             

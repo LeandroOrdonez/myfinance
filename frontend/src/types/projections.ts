@@ -61,6 +61,10 @@ export interface ProjectionTimeseries {
   real_projected_savings: number[];
   real_projected_net_worth: number[];
   inflation_rate: number;
+  // Actual net worth for the months before the projection (null where no holdings value was recorded)
+  historical_dates: string[];
+  actual_net_worth: (number | null)[];
+  real_actual_net_worth: (number | null)[];
 }
 
 export interface ScenarioComparison {
@@ -74,4 +78,8 @@ export interface ScenarioComparison {
   real_savings_series: Record<string, number[]>;
   real_investment_series: Record<string, number[]>;
   inflation_rates: Record<string, number>;
+  // Actual net worth before the projection, shared by all scenarios (null where no holdings value was recorded)
+  historical_dates: string[];
+  actual_net_worth: (number | null)[];
+  real_actual_net_worth: (number | null)[];
 }

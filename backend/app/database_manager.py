@@ -24,7 +24,7 @@ def init_database():
     existing_tables = inspector.get_table_names()
     logger.info(f"Existing tables: {existing_tables}")
 
-    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations", "projection_scenarios", "projection_parameters", "projection_results", "transaction_anomalies", "anomaly_patterns", "anomaly_rules", "budgets"]
+    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations", "projection_scenarios", "projection_parameters", "projection_results", "holdings_value_history", "transaction_anomalies", "anomaly_patterns", "anomaly_rules", "budgets"]
     missing_tables = [table for table in tables_to_check if table not in existing_tables]
 
     if missing_tables:

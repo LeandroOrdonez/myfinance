@@ -122,6 +122,11 @@ class ProjectionTimeseries(BaseModel):
     real_projected_savings: List[float] = []
     real_projected_net_worth: List[float] = []
     inflation_rate: float = 0.02
+    # Actual net worth (cumulative net savings + holdings) for the months before the projection.
+    # Entries are None for months without a recorded holdings value.
+    historical_dates: List[str] = []
+    actual_net_worth: List[Optional[float]] = []
+    real_actual_net_worth: List[Optional[float]] = []
 
 
 class ScenarioComparison(BaseModel):
@@ -135,3 +140,7 @@ class ScenarioComparison(BaseModel):
     real_savings_series: Dict[str, List[float]] = {}
     real_investment_series: Dict[str, List[float]] = {}
     inflation_rates: Dict[str, float] = {}
+    # Actual net worth before the projection, shared by all scenarios (None where no holdings value was recorded)
+    historical_dates: List[str] = []
+    actual_net_worth: List[Optional[float]] = []
+    real_actual_net_worth: List[Optional[float]] = []

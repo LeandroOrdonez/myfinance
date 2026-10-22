@@ -8,6 +8,7 @@ from ..database import get_db
 from ..models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult
 from ..schemas import financial_projection as schemas
 from ..services.projection_service import ProjectionService
+from ..services.holdings_history_service import HoldingsHistoryService
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -149,6 +150,7 @@ def update_holdings_market_value(
                     param_type="amount"
                 ))
 
+        HoldingsHistoryService.record_value(db, payload.value)
         db.commit()
         return {"success": True, "updated_scenarios": len(scenarios)}
     except HTTPException:

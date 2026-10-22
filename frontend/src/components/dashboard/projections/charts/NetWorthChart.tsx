@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ReferenceLine } from 'recharts';
 import { usePrivacyMode } from '../../../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../../../utils/formatPrivateAmount';
+import { ActualNetWorthPoint, buildActualHistory } from './actualNetWorthHistory';
 
 interface NetWorthChartProps {
   data: {
@@ -9,7 +10,14 @@ interface NetWorthChartProps {
     projected_net_worth: number[];
     real_projected_net_worth?: number[];
     inflation_rate?: number;
+    historical_dates?: string[];
+    actual_net_worth?: (number | null)[];
+    real_actual_net_worth?: (number | null)[];
   };
+}
+
+interface NetWorthPoint extends ActualNetWorthPoint {
+  projected?: number;
 }
 
 const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
@@ -25,12 +33,23 @@ const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
     );
   }
 
-  // Format the data for the chart
-  const chartData = data.dates.map((date, index) => ({
-    date,
-    netWorth: data.projected_net_worth[index],
-    realNetWorth: hasRealData ? data.real_projected_net_worth![index] : undefined,
-  }));
+  const projectedSeries = showReal && hasRealData ? data.real_projected_net_worth! : data.projected_net_worth;
+  // Actual history followed by the projection; the projected line starts at the last actual value so both connect
+  const historyPoints: NetWorthPoint[] = buildActualHistory(
+    data.historical_dates,
+    showReal ? data.real_actual_net_worth : data.actual_net_worth
+  ).map((point, i, points) =>
+    i === points.length - 1 && point.actual !== undefined ? { ...point, projected: point.actual } : point
+  );
+  const lastActual = historyPoints[historyPoints.length - 1];
+  const hasActuals = historyPoints.length > 0;
+
+  const chartData: NetWorthPoint[] = [
+    ...historyPoints,
+    ...data.dates.map((date, index) => ({ date, projected: projectedSeries[index] })),
+  ];
+  const valueLabel = showReal ? 'Real' : 'Nominal';
+  const lineColor = showReal ? '#6366f1' : '#10b981';
 
   // Format currency for tooltip
   const formatCurrency = (value: number) =>
@@ -49,10 +68,14 @@ const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      // On the bridge point the projected value duplicates the actual one
+      const entries = payload.filter(
+        (entry: any) => !(entry.dataKey === 'projected' && entry.payload.actual !== undefined)
+      );
       return (
         <div className="bg-white dark:bg-gray-800 border rounded p-2 shadow-md">
           <p className="font-medium">{formatDate(label)}</p>
-          {payload.map((entry: any, index: number) => (
+          {entries.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>
@@ -116,27 +139,31 @@ const NetWorthChart: React.FC<NetWorthChartProps> = ({ data }) => {
               width={80}
             />
             <Tooltip content={<CustomTooltip />} />
-            {!showReal ? (
+            {hasActuals && <Legend />}
+            {hasActuals && (
+              <ReferenceLine x={lastActual.date} stroke="#9ca3af" strokeDasharray="4 4" label={{ value: 'Today', position: 'insideTopRight', fontSize: 12, fill: '#9ca3af' }} />
+            )}
+            {hasActuals && (
               <Line
                 type="monotone"
-                dataKey="netWorth"
-                name="Net Worth (Nominal)"
-                stroke="#10b981"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-            ) : (
-              <Line
-                type="monotone"
-                dataKey="realNetWorth"
-                name="Net Worth (Real)"
-                stroke="#6366f1"
+                dataKey="actual"
+                name={`Actual Net Worth (${valueLabel})`}
+                stroke={lineColor}
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 6 }}
               />
             )}
+            <Line
+              type="monotone"
+              dataKey="projected"
+              name={`${hasActuals ? 'Projected ' : ''}Net Worth (${valueLabel})`}
+              stroke={lineColor}
+              strokeWidth={2}
+              strokeDasharray={hasActuals ? '6 4' : undefined}
+              dot={false}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

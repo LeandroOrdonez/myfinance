@@ -1,5 +1,19 @@
 # MyFinance Changelog
 
+## 2026-10-22 – Actual Net Worth in Projection Results
+
+The Net Worth projection chart now shows the last 12 months of actual net worth as a solid line before the projection. The projection is drawn as a dashed line that starts from the last actual value, and a "Today" marker separates the two.
+
+- **Holdings history**: a new `holdings_value_history` table stores one holdings market value per month. Saving through the global holdings editor (`PUT /projections/scenarios/holdings-market-value`) also records the value for the latest month that has statistics (the month-end the value refers to)
+- **Actual net worth**: computed as the monthly cumulative `total_net_savings` + that month's holdings value. Months without a holdings record are omitted. This matches how the projection's starting net worth is computed
+- **API**: `GET /projections/scenarios/{id}/results` now also returns `historical_dates`, `actual_net_worth` and `real_actual_net_worth`. Real values use the scenario's inflation rate and are expressed in the latest month's purchasing power. Existing `dates`/`projected_*` arrays are unchanged
+- **Scenario comparison**: `POST /projections/scenarios/compare` returns the same three fields. Real values use the average inflation rate of the compared scenarios. The comparison Net Worth chart shows the history as a single grey "Actual" line, and each scenario's dashed line starts from the last actual value. Both charts build the history with the shared `charts/actualNetWorthHistory.ts` helper
+- **Backfill**: holdings history from 2025-04 to 2026-09 was backfilled from the `backup/` databases. Each backup's Base Case `holdings_market_value` is assigned to the month of its latest transaction, and the earliest backup per month is used
+
+### Key files
+- Backend: `models/financial_projection.py` (`HoldingsValueHistory`), `services/holdings_history_service.py`, `services/projection_service.py`, `routers/projections.py`, `schemas/financial_projection.py`, `tests/test_projection_actuals.py`
+- Frontend: `types/projections.ts`, `components/dashboard/projections/charts/NetWorthChart.tsx`, `ComparisonNetWorthChart.tsx`, `actualNetWorthHistory.ts`
+
 ## 2026-10-22 – Shared Holdings Market Value for Projections
 
 The Holdings Market Value is now set once for all projection scenarios. Before this change, users had to enter it separately in each scenario's edit form.
