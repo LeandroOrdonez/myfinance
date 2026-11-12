@@ -1,10 +1,12 @@
 import React from 'react';
-import { 
+import { Link } from 'react-router-dom';
+import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, XAxis, YAxis, Bar, CartesianGrid 
 } from 'recharts';
-import { PieChart as PieIcon, BarChart3, Activity, AlertTriangle } from 'lucide-react';
+import { PieChart as PieIcon, BarChart3, Activity, AlertTriangle, ArrowRight } from 'lucide-react';
 import { FinancialSummaryResponse } from '../../types/summary';
 import { DashboardCard } from './DashboardCard';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
 
 interface SpendingTabProps {
   data: FinancialSummaryResponse;
@@ -13,9 +15,10 @@ interface SpendingTabProps {
 }
 
 export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, colors }) => {
+  const { maskString } = usePrivacyMode();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-500">
-      <DashboardCard title="Category Breakdown" headerExtra={<PieIcon size={20} className="text-indigo-500" />}>
+      <DashboardCard title="Category Breakdown" headerExtra={<PieIcon size={20} className="text-accent" />}>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -49,13 +52,13 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
         </div>
       </DashboardCard>
 
-      <DashboardCard title="Income Sources" headerExtra={<BarChart3 size={20} className="text-indigo-500" />}>
+      <DashboardCard title="Income Sources" headerExtra={<BarChart3 size={20} className="text-accent" />}>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart layout="vertical" data={data.income_analysis.primary_sources}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
               <XAxis type="number" hide />
-              <YAxis dataKey="source" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 500, fill: '#94a3b8'}} width={120} />
+              <YAxis dataKey="source" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 500, fill: 'var(--color-text-muted)'}} width={120} />
               <Tooltip 
                 cursor={{fill: 'transparent'}} 
                 formatter={(val: number) => formatCurrency(val)}
@@ -74,7 +77,7 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
         </div>
       </DashboardCard>
 
-      <DashboardCard title="Spending Composition" headerExtra={<Activity size={20} className="text-indigo-500" />}>
+      <DashboardCard title="Spending Composition" headerExtra={<Activity size={20} className="text-accent" />}>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -111,22 +114,30 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
 
       {data.expense_analysis.outliers.length > 0 && (
         <div className="lg:col-span-2 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 p-6 rounded-3xl shadow-sm">
-          <h4 className="font-bold text-lg mb-4 text-rose-900 dark:text-rose-300 flex items-center gap-2">
-            <AlertTriangle size={20} /> Spending Anomalies Detected
-          </h4>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg text-rose-900 dark:text-rose-300 flex items-center gap-2">
+              <AlertTriangle size={20} /> Spending Anomalies Detected
+            </h2>
+            <Link
+              to="/anomalies"
+              className="inline-flex items-center gap-1 text-sm font-medium text-rose-700 dark:text-rose-300 hover:underline whitespace-nowrap"
+            >
+              View all <ArrowRight size={14} />
+            </Link>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.expense_analysis.outliers.slice(0, 4).map((outlier, i) => (
               <div key={i} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-rose-100 dark:border-rose-900/20">
                 <div className="flex justify-between items-start mb-1">
                   <span className="text-sm font-bold text-slate-900 dark:text-white truncate pr-2">
-                    {outlier.description}
+                    {maskString(outlier.description)}
                   </span>
                   <span className="text-sm font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                     {formatCurrency(outlier.amount)}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-gray-400 italic">
-                  {outlier.reason || 'Unusual transaction amount or pattern detected.'}
+                  {maskString(outlier.reason || 'Unusual transaction amount or pattern detected.')}
                 </p>
               </div>
             ))}
@@ -151,7 +162,7 @@ export const SpendingTab: React.FC<SpendingTabProps> = ({ data, formatCurrency, 
                  .map((tx, i) => (
                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors">
                    <td className="py-4 text-slate-500 dark:text-gray-400 whitespace-nowrap">{tx.date}</td>
-                   <td className="py-4 font-medium max-w-md truncate pr-4 text-slate-900 dark:text-white">{tx.description}</td>
+                   <td className="py-4 font-medium max-w-md truncate pr-4 text-slate-900 dark:text-white">{maskString(tx.description)}</td>
                    <td className={`py-4 text-right font-bold ${tx.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-white'}`}>
                      {formatCurrency(tx.amount)}
                    </td>

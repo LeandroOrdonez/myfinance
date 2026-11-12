@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { 
+import { useSearchParams } from 'react-router-dom';
+import {
   Transaction, 
   ExpenseCategory, 
   IncomeCategory, 
@@ -23,6 +24,17 @@ export const useTransactions = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | IncomeCategory | 'all'>('all');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
+
+  // Apply ?category=<value> deep links (e.g. from the dashboard), then clear
+  // the param so the URL doesn't fight later manual filter changes.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (!cat) return;
+    setCategoryFilter(cat as ExpenseCategory | IncomeCategory);
+    setCurrentPage(1);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Debounce for filters
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);

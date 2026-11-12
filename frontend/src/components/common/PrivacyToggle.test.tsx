@@ -21,26 +21,28 @@ const renderWithProvider = (privacyModeInitial = false) => {
 describe('PrivacyToggle', () => {
   it('renders a button with the correct aria-label', () => {
     renderWithProvider();
-    expect(screen.getByRole('button', { name: /toggle privacy mode/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /hide amounts/i })).toBeInTheDocument();
   });
 
   it('shows Eye icon (privacy off) when privacyMode is false', () => {
     renderWithProvider(false);
-    const button = screen.getByRole('button', { name: /toggle privacy mode/i });
+    const button = screen.getByRole('button', { name: /hide amounts/i });
+    expect(button).toHaveAttribute('aria-pressed', 'false');
     // When off, button should NOT have accent styling
     expect(button.className).not.toMatch(/bg-accent/);
   });
 
   it('shows EyeOff styling (privacy on) when privacyMode is true', () => {
     renderWithProvider(true);
-    const button = screen.getByRole('button', { name: /toggle privacy mode/i });
+    const button = screen.getByRole('button', { name: /show amounts/i });
+    expect(button).toHaveAttribute('aria-pressed', 'true');
     // When on, button should have accent styling
     expect(button.className).toMatch(/bg-accent/);
   });
 
   it('calls togglePrivacyMode when clicked', () => {
     renderWithProvider(false);
-    const button = screen.getByRole('button', { name: /toggle privacy mode/i });
+    const button = screen.getByRole('button', { name: /hide amounts/i });
     fireEvent.click(button);
     // After clicking, localStorage should be updated to 'true'
     expect(localStorage.getItem('privacyMode')).toBe('true');
@@ -48,7 +50,7 @@ describe('PrivacyToggle', () => {
 
   it('toggles back to off on second click', () => {
     renderWithProvider(false);
-    const button = screen.getByRole('button', { name: /toggle privacy mode/i });
+    const button = screen.getByRole('button', { name: /hide amounts/i });
     fireEvent.click(button);
     fireEvent.click(button);
     expect(localStorage.getItem('privacyMode')).toBe('false');

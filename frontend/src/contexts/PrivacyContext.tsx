@@ -1,8 +1,14 @@
 import React, { createContext, useState, useContext } from 'react';
+import { PRIVACY_MASK } from '../utils/formatPrivateAmount';
 
 type PrivacyContextType = {
   privacyMode: boolean;
   togglePrivacyMode: () => void;
+  /**
+   * Mask a non-currency string (e.g. narrative snippets) when privacy mode
+   * is on. Currency amounts should keep using formatPrivateAmount.
+   */
+  maskString: (value: string) => string;
 };
 
 const PrivacyContext = createContext<PrivacyContextType | undefined>(undefined);
@@ -20,8 +26,11 @@ export const PrivacyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
+  const maskString = (value: string): string =>
+    privacyMode ? PRIVACY_MASK : value;
+
   return (
-    <PrivacyContext.Provider value={{ privacyMode, togglePrivacyMode }}>
+    <PrivacyContext.Provider value={{ privacyMode, togglePrivacyMode, maskString }}>
       {children}
     </PrivacyContext.Provider>
   );

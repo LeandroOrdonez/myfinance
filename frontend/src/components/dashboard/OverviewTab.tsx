@@ -1,10 +1,12 @@
 import React from 'react';
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
+import { Link } from 'react-router-dom';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line
 } from 'recharts';
-import { Info } from 'lucide-react';
+import { ArrowRight, AlertTriangle } from 'lucide-react';
 import { FinancialSummaryResponse } from '../../types/summary';
 import { DashboardCard } from './DashboardCard';
+import { usePrivacyMode } from '../../contexts/PrivacyContext';
 
 interface OverviewTabProps {
   data: FinancialSummaryResponse;
@@ -14,13 +16,17 @@ interface OverviewTabProps {
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendData, formatCurrency, formatCurrencyCompact }) => {
+  const { maskString } = usePrivacyMode();
+  const topCategories = data.expense_analysis.top_categories.slice(0, 5);
+  const topRecommendation = data.financial_health.top_recommendations[0];
+
   const trendHeaderExtra = (
     <div className="flex gap-4 text-xs font-medium">
-      <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Income
+      <span className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+        <div className="w-2.5 h-2.5 rounded-full bg-success" /> Income
       </span>
-      <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-        <div className="w-2.5 h-2.5 rounded-full bg-rose-500" /> Expenses
+      <span className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+        <div className="w-2.5 h-2.5 rounded-full bg-danger" /> Expenses
       </span>
     </div>
   );
@@ -42,14 +48,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => formatCurrencyCompact(v)} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--color-tooltip-bg)', 
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-subtle)" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: 'var(--color-text-muted)'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: 'var(--color-text-muted)'}} tickFormatter={(v) => formatCurrencyCompact(v)} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-tooltip-bg)',
                     borderColor: 'var(--color-tooltip-border)',
-                    borderRadius: '16px', 
+                    borderRadius: '16px',
                     border: '1px solid var(--color-tooltip-border)',
                     boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
                   }}
@@ -63,20 +69,20 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
             </ResponsiveContainer>
           </div>
         </DashboardCard>
-        
+
         <DashboardCard title="Cumulative Savings Growth">
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data.savings_investment.savings_growth_trend}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-700" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} tickFormatter={(v) => formatCurrencyCompact(v)} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--color-tooltip-bg)', 
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-subtle)" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: 'var(--color-text-muted)'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: 'var(--color-text-muted)'}} tickFormatter={(v) => formatCurrencyCompact(v)} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-tooltip-bg)',
                     borderColor: 'var(--color-tooltip-border)',
-                    borderRadius: '16px', 
-                    border: '1px solid var(--color-tooltip-border)' 
+                    borderRadius: '16px',
+                    border: '1px solid var(--color-tooltip-border)'
                   }}
                   itemStyle={{ color: 'var(--color-tooltip-text)' }}
                   labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
@@ -90,42 +96,71 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
       </div>
 
       <div className="space-y-6">
-        <div className="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl">
-          <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <Info size={20} className="text-indigo-300" /> Smart Insights
-          </h4>
-          <div className="space-y-4">
-            {data.financial_health.top_recommendations.map((rec, i) => (
-              <div key={i} className="bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700/50">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[12px] font-bold">{rec.title}</span>
-                  <span className="text-[9px] uppercase font-black bg-indigo-500 px-2 py-0.5 rounded">Priority {rec.priority}</span>
-                </div>
-                <p className="text-[12px] text-indigo-200 leading-relaxed">{rec.description}</p>
-              </div>
+        <DashboardCard title="Top Spending Categories">
+          <ol className="divide-y divide-[var(--color-border-subtle)]">
+            {topCategories.map((cat, i) => (
+              <li key={cat.category}>
+                <Link
+                  to={`/transactions?category=${encodeURIComponent(cat.category)}`}
+                  className="flex items-center justify-between py-3 group"
+                >
+                  <span className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs font-bold text-[var(--color-text-muted)] w-4">{i + 1}</span>
+                    <span className="text-sm font-medium text-[var(--color-text-primary)] truncate capitalize group-hover:text-accent transition-colors">
+                      {cat.category.replace(/_/g, ' ').toLowerCase()}
+                    </span>
+                  </span>
+                  <span className="text-sm font-bold text-[var(--color-text-primary)] whitespace-nowrap">
+                    {formatCurrency(Math.abs(cat.amount))}
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
-          <div className="mt-6 pt-6 border-t border-indigo-800">
-            <p className="text-[12px] text-indigo-300 italic">"{data.narrative_summary}"</p>
-          </div>
-        </div>
+          </ol>
+          <Link
+            to="/transactions"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent-dark transition-colors"
+          >
+            View all transactions <ArrowRight size={14} />
+          </Link>
+        </DashboardCard>
 
-        <DashboardCard title="6-Month Outlook">
+        {topRecommendation && (
+          <Link
+            to="/financial-health"
+            className="block bg-accent/5 border border-accent/20 p-5 rounded-2xl hover:bg-accent/10 transition-colors group"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={18} className="text-accent mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[var(--color-text-primary)]">
+                  Review: {maskString(topRecommendation.title)}
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)] mt-1 leading-relaxed">
+                  {maskString(topRecommendation.description)}
+                </p>
+              </div>
+              <ArrowRight size={16} className="text-accent mt-1 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+        )}
+
+        <DashboardCard title="6-Month Outlook (Estimated)">
           <div className="space-y-4">
              <div className="flex justify-between items-center">
-               <span className="text-slate-500 dark:text-gray-400 text-sm">Projected Net Worth</span>
-               <span className="font-bold text-emerald-600 dark:text-emerald-400">
+               <span className="text-[var(--color-text-secondary)] text-sm">Projected Net Worth</span>
+               <span className="font-bold text-success">
                  {formatCurrency(data.projections_summary.six_month_outlook.projected_net_worth)}
                </span>
              </div>
-             <div className="w-full bg-slate-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-               <div 
-                 className="bg-emerald-500 h-full transition-all duration-1000" 
-                 style={{ width: `${data.income_analysis.income_stability * 100}%` }} 
+             <div className="w-full bg-[var(--color-bg-tertiary)] h-2 rounded-full overflow-hidden">
+               <div
+                 className="bg-success h-full transition-all duration-1000"
+                 style={{ width: `${Math.min(Math.max(data.income_analysis.income_stability, 0), 1) * 100}%` }}
                />
              </div>
-             <p className="text-xs text-slate-400 dark:text-gray-500">
-               Estimated growth based on current income stability ({(data.income_analysis.income_stability * 100).toFixed(0)}%) and YoY growth trends.
+             <p className="text-xs text-[var(--color-text-muted)]">
+               Estimate based on income stability ({(data.income_analysis.income_stability * 100).toFixed(0)}%) and recent trends. Not a guarantee.
              </p>
           </div>
         </DashboardCard>

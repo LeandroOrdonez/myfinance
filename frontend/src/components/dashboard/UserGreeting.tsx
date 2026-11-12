@@ -91,9 +91,9 @@ export const UserGreeting: React.FC = () => {
   if (!userName) {
     return (
       <div>
-        <h1 className="text-xl font-bold text-[var(--color-text-primary)]">
+        <p className="text-xl font-bold text-[var(--color-text-primary)]">
           {pageInfo.title}
-        </h1>
+        </p>
         <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{pageInfo.subtitle}</p>
       </div>
     );
@@ -101,13 +101,13 @@ export const UserGreeting: React.FC = () => {
 
   return (
     <div>
-      <h1 className={clsx(
+      <p className={clsx(
         "text-xl font-bold text-[var(--color-text-primary)]",
         "flex items-baseline gap-2"
       )}>
         {greeting},
         <span className="text-accent">{userName}</span>
-      </h1>
+      </p>
       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{pageInfo.subtitle}</p>
     </div>
   );

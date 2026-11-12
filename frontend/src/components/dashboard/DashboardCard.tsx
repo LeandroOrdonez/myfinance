@@ -24,17 +24,16 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 
   return (
     <div className={clsx(
-      'p-6 rounded-2xl border transition-all duration-300',
-      'hover:shadow-card-hover hover:-translate-y-0.5',
+      'p-6 rounded-2xl border',
       variantStyles[variant],
       className
     )}>
       {(title || headerExtra) && (
         <div className="flex items-center justify-between mb-5">
           {title && (
-            <h4 className="font-semibold text-lg text-[var(--color-text-primary)]">
+            <h2 className="font-semibold text-lg text-[var(--color-text-primary)]">
               {title}
-            </h4>
+            </h2>
           )}
           {headerExtra}
         </div>

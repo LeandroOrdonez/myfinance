@@ -10,7 +10,8 @@ import {
   TrendingUp,
   ShieldAlert,
   Wallet,
-  PiggyBank
+  PiggyBank,
+  X
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,6 +21,7 @@ interface SidebarProps {
   onNavigate: (view: string) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  mobile?: boolean;
 }
 
 // Helper function to generate initials from user name
@@ -34,7 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeView,
   onNavigate,
   collapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  mobile = false
 }) => {
   const { userName } = useAuth();
   const menuItems = [
@@ -85,9 +88,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div
       className={clsx(
-        'h-screen fixed left-0 top-0 z-30 transition-all duration-300 ease-out',
+        'flex flex-col transition-all duration-300 ease-out motion-reduce:transition-none',
         'bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)]',
-        collapsed ? 'w-16' : 'w-64'
+        mobile ? 'relative h-full w-full' : 'h-screen fixed left-0 top-0 z-30',
+        !mobile && (collapsed ? 'w-16' : 'w-64')
       )}
     >
       {/* Logo Section */}
@@ -112,10 +116,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {!collapsed && (
           <button
             onClick={onToggleCollapse}
-            className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-all duration-200"
-            aria-label="Collapse sidebar"
+            className="p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label={mobile ? 'Close navigation' : 'Collapse sidebar'}
           >
-            <Menu className="w-4 h-4" />
+            {mobile ? <X className="w-5 h-5" /> : <Menu className="w-4 h-4" />}
           </button>
         )}
       </div>
@@ -124,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {collapsed && (
         <button
           onClick={onToggleCollapse}
-          className="absolute -right-3 top-16 z-40 w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center shadow-lg hover:bg-accent-dark transition-colors duration-200"
+          className="absolute -right-3 top-16 z-40 w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center shadow-lg hover:bg-accent-dark transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           aria-label="Expand sidebar"
         >
           <ChevronRight className="w-4 h-4" />
@@ -132,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Navigation Menu */}
-      <NavigationMenu.Root orientation="vertical" className="mt-4 px-2">
+      <NavigationMenu.Root aria-label="Main navigation" orientation="vertical" className="mt-4 px-2 flex-1 min-h-0 overflow-y-auto">
         <NavigationMenu.List className="flex flex-col space-y-1">
           {menuItems.map((item) => {
             const isActive = activeView === item.id;
@@ -152,6 +156,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 hover:text-[var(--color-text-primary)]'
                   )}
                   title={item.label}
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <div className={clsx(
                     'flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200',
@@ -191,7 +197,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom Section */}
       {!collapsed && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--color-border)]">
+        <div className="shrink-0 p-4 border-t border-[var(--color-border)]">
           <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-[var(--color-bg-tertiary)]">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-success to-success-dark flex items-center justify-center">
               <span className="text-white text-xs font-bold">{getInitials(userName)}</span>
@@ -200,7 +206,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
                 {userName || 'User'}
               </p>
-              <p className="text-xs text-[var(--color-text-muted)] truncate">Pro Plan</p>
             </div>
           </div>
         </div>

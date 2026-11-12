@@ -49,10 +49,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
 
   return (
     <div className={clsx(
-      'group p-5 rounded-2xl border transition-all duration-300 ease-out',
-      'bg-[var(--color-surface)] border-[var(--color-border)]',
-      'hover:shadow-card-hover hover:border-[var(--color-accent)]/30',
-      'hover:-translate-y-0.5'
+      'p-5 rounded-2xl border',
+      'bg-[var(--color-surface)] border-[var(--color-border)]'
     )}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -67,12 +65,11 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
             subtitleColor || styles.accent
           )}>
             {trendIcon && <span className="opacity-80">{trendIcon}</span>}
-            <span className="truncate">{subtitle}</span>
+            <span className="truncate capitalize">{subtitle}</span>
           </div>
         </div>
         <div className={clsx(
-          'flex-shrink-0 p-2.5 rounded-xl transition-all duration-300',
-          'group-hover:scale-105',
+          'flex-shrink-0 p-2.5 rounded-xl',
           iconBg || styles.iconBg
         )}>
           {icon}
