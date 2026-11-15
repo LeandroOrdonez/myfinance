@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
 import { Home } from './components/dashboard/Home';
@@ -7,7 +7,6 @@ import { TransactionFilters } from './components/TransactionFilters';
 import { FinancialOverview } from './components/dashboard/FinancialOverview';
 import { FinancialTrends } from './components/dashboard/FinancialTrends';
 import { CategoryBreakdown } from './components/dashboard/CategoryBreakdown';
-import { CategoryTrends } from './components/dashboard/CategoryTrends';
 import { MonthlyHeatmap } from './components/dashboard/MonthlyHeatmap';
 // import WeekdayDistribution from './components/dashboard/WeekdayDistribution';
 import FinancialHealth from './components/dashboard/FinancialHealth';
@@ -24,28 +23,74 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthWrapper } from './components/auth/AuthWrapper';
 import { PrivacyProvider } from './contexts/PrivacyContext';
-import { CategoryAverages } from './components/dashboard/CategoryAverages';
 import { CashFlows } from './components/dashboard/CashFlows';
+import { CategoryAverages } from './components/dashboard/CategoryAverages';
+import PeriodSelector from './components/common/PeriodSelector';
+import { TimePeriod, TransactionType } from './types/transaction';
+
+const PERIOD_TO_SELECTOR: Record<TimePeriod, string> = {
+  [TimePeriod.THREE_MONTHS]: '3m',
+  [TimePeriod.SIX_MONTHS]: '6m',
+  [TimePeriod.YEAR_TO_DATE]: 'ytd',
+  [TimePeriod.ONE_YEAR]: '1y',
+  [TimePeriod.TWO_YEARS]: '2y',
+  [TimePeriod.ALL_TIME]: 'all',
+};
+
+const SELECTOR_TO_PERIOD: Record<string, TimePeriod> = {
+  '3m': TimePeriod.THREE_MONTHS,
+  '6m': TimePeriod.SIX_MONTHS,
+  'ytd': TimePeriod.YEAR_TO_DATE,
+  '1y': TimePeriod.ONE_YEAR,
+  '2y': TimePeriod.TWO_YEARS,
+  'all': TimePeriod.ALL_TIME,
+};
 
 // Analytics Dashboard Component
 const AnalyticsDashboard = () => {
+  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
+  const [focusedCategory, setFocusedCategory] = useState<string | null>(null);
+  const [focusedType, setFocusedType] = useState<TransactionType>(TransactionType.EXPENSE);
+
+  const handleSelectCategory = (category: string, type: TransactionType) => {
+    setFocusedCategory(category);
+    setFocusedType(type);
+  };
+
   return (
     <div className="space-y-6 mt-4">
-      <FinancialOverview />
-      <CashFlows />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CategoryBreakdown />
-        <div className="space-y-6">
-          <CategoryTrends />
-          <MonthlyHeatmap />
+      <div className="sticky top-[76px] z-10 -mx-1 px-1 py-3 -mt-4 bg-[var(--color-bg-primary)] flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Analytics</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Trends and breakdowns across your finances
+          </p>
         </div>
+        <PeriodSelector
+          selectedPeriod={PERIOD_TO_SELECTOR[period]}
+          onChange={(p) => setPeriod(SELECTOR_TO_PERIOD[p] ?? TimePeriod.ONE_YEAR)}
+          ariaLabel="Analysis period"
+        />
       </div>
-      <FinancialTrends />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CategoryTimeseriesChart title="Category Trends Over Time" />
-        <ExpenseTypeTimeseriesChart />
+      <FinancialOverview />
+      <CashFlows period={period} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <CategoryBreakdown onSelectCategory={handleSelectCategory} />
+        <CategoryTimeseriesChart
+          key={`${focusedType}-${focusedCategory ?? 'all'}`}
+          title="Category Trends Over Time"
+          period={period}
+          defaultTransactionType={focusedType}
+          focusedCategory={focusedCategory}
+          onClearFocus={() => setFocusedCategory(null)}
+        />
       </div>
-      <CategoryAverages />
+      <FinancialTrends period={period} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <ExpenseTypeTimeseriesChart period={period} />
+        <MonthlyHeatmap />
+      </div>
+      <CategoryAverages period={period} />
     </div>
   );
 };

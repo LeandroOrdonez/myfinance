@@ -99,13 +99,14 @@ export const BaseMetricCard: React.FC<BaseMetricCardProps> = ({
         </p>
 
         <div className="flex items-center gap-1.5">
-          {isPositiveChange ?
-            <TrendingUp className={clsx('w-4 h-4', getColorClass(colorType, changeValue))} /> :
-            <TrendingDown className={clsx('w-4 h-4', getColorClass(colorType, changeValue))} />
-          }
+          {!Number.isNaN(changeValue) && (
+            isPositiveChange ?
+              <TrendingUp className={clsx('w-4 h-4', getColorClass(colorType, changeValue))} /> :
+              <TrendingDown className={clsx('w-4 h-4', getColorClass(colorType, changeValue))} />
+          )}
           <p className={clsx(
             'text-sm font-medium',
-            getColorClass(colorType, changeValue)
+            Number.isNaN(changeValue) ? 'text-[var(--color-text-muted)]' : getColorClass(colorType, changeValue)
           )}>
             {change}
           </p>

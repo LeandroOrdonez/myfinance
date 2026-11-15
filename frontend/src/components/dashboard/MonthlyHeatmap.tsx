@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { statisticService } from '../../services/statisticService';
-import { Loading } from '../common/Loading';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
+import { DashboardCard } from './DashboardCard';
+import { ChartState } from './ChartState';
 
 interface MonthlyStatistics {
   period: 'monthly' | 'all_time';
@@ -41,60 +42,61 @@ export const MonthlyHeatmap: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [yearData, setYearData] = useState<Record<string, YearData>>({});
-  
+  const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
+
   // Get only the last 3 years of data, sorted descending
   const years = Object.keys(yearData)
     .sort((a, b) => parseInt(b) - parseInt(a))
     .slice(0, 3); // Limit to the last 3 years
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Get all available monthly data
-        const data = await statisticService.getStatisticsTimeseries();
-        
-        // Process the data into year-month format
-        const processedData: Record<string, YearData> = {};
-        
-        data.forEach((stat: MonthlyStatistics) => {
-          if (stat.date) {
-            const date = new Date(stat.date);
-            const year = date.getFullYear().toString();
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            
-            // Initialize the year if it doesn't exist
-            if (!processedData[year]) {
-              processedData[year] = {
-                year,
-                months: {}
-              };
-            }
-            
-            // Add month data
-            processedData[year].months[month] = {
-              month: `${year}-${month}`,
-              income: stat.period_income,
-              expenses: stat.period_expenses,
-              netSavings: stat.period_net_savings,
-              savingsRate: stat.savings_rate,
-              date: stat.date
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Get all available monthly data
+      const data = await statisticService.getStatisticsTimeseries();
+
+      // Process the data into year-month format
+      const processedData: Record<string, YearData> = {};
+
+      data.forEach((stat: MonthlyStatistics) => {
+        if (stat.date) {
+          const date = new Date(stat.date);
+          const year = date.getFullYear().toString();
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+          // Initialize the year if it doesn't exist
+          if (!processedData[year]) {
+            processedData[year] = {
+              year,
+              months: {}
             };
           }
-        });
-        
-        setYearData(processedData);
-        setError(null);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to fetch statistics data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
+
+          // Add month data
+          processedData[year].months[month] = {
+            month: `${year}-${month}`,
+            income: stat.period_income,
+            expenses: stat.period_expenses,
+            netSavings: stat.period_net_savings,
+            savingsRate: stat.savings_rate,
+            date: stat.date
+          };
+        }
+      });
+
+      setYearData(processedData);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch statistics data');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   
   const getIntensityClass = (monthData: MonthData | undefined) => {
     if (!monthData) return 'bg-gray-100 dark:bg-gray-800';
@@ -111,17 +113,13 @@ export const MonthlyHeatmap: React.FC = () => {
     return 'bg-green-600 dark:bg-green-500';
   };
   
-  // Format tooltip content
-  const formatTooltip = (monthData: MonthData | undefined) => {
-    if (!monthData) return 'No data available';
-    
-    const date = new Date(monthData.date);
-    const monthName = date.toLocaleString('default', { month: 'long' });
-    const year = date.getFullYear();
-    
-    return `${monthName} ${year}\nIncome: ${formatCurrency(monthData.income)}\nExpenses: ${formatCurrency(monthData.expenses)}\nNet: ${formatCurrency(monthData.netSavings)}\nRate: ${monthData.savingsRate.toFixed(1)}%`;
+  // Format a short accessible label for a month cell
+  const formatMonthLabel = (monthData: MonthData | undefined, monthIndex: number, year: string) => {
+    const monthName = new Date(0, monthIndex).toLocaleString('default', { month: 'long' });
+    if (!monthData) return `${monthName} ${year}: no data`;
+    return `${monthName} ${year}: savings rate ${monthData.savingsRate.toFixed(1)}%`;
   };
-  
+
   const formatCurrency = (value: number) =>
     formatPrivateAmount(
       value,
@@ -134,20 +132,19 @@ export const MonthlyHeatmap: React.FC = () => {
       }).format(n)
     );
   
-  if (loading) return (<Loading variant="progress" size="medium" />);
-  if (error) return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-        {error}
-      </div>
-    </div>
-  );
-  
+  const selectedDate = selectedMonth ? new Date(selectedMonth.date) : null;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md hover:shadow-lg transition-all duration-300">
-      <h3 className="text-lg font-medium mb-4 dark:text-gray-100">Monthly Financial Activity</h3>
-      
-      <div className="space-y-3">
+    <DashboardCard title="Monthly Savings Rate">
+      <ChartState
+        loading={loading}
+        error={error}
+        isEmpty={years.length === 0}
+        emptyMessage="No monthly data available yet"
+        onRetry={fetchData}
+        heightClass="h-[200px]"
+      >
+      <div className="space-y-3" role="group" aria-label="Savings rate by month">
         {years.map(year => (
           <div key={year} className="flex items-center">
             <div className="w-10 text-xs text-gray-500 dark:text-gray-400">{year}</div>
@@ -155,12 +152,18 @@ export const MonthlyHeatmap: React.FC = () => {
               {Array.from({ length: 12 }, (_, i) => {
                 const month = (i + 1).toString().padStart(2, '0');
                 const monthData = yearData[year]?.months[month];
+                const isSelected = selectedMonth?.month === monthData?.month;
                 return (
-                  <div
+                  <button
                     key={month}
-                    className={`w-full aspect-square rounded-sm cursor-pointer ${getIntensityClass(monthData)}`}
-
-                    title={monthData ? formatTooltip(monthData) : `No data for ${new Date(0, i).toLocaleString('default', { month: 'long' })} ${year}`}
+                    type="button"
+                    disabled={!monthData}
+                    aria-label={formatMonthLabel(monthData, i, year)}
+                    aria-pressed={isSelected}
+                    onClick={() => monthData && setSelectedMonth(monthData)}
+                    className={`w-full aspect-square rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${getIntensityClass(monthData)} ${
+                      monthData ? 'cursor-pointer' : 'cursor-default'
+                    } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                   />
                 );
               })}
@@ -168,27 +171,41 @@ export const MonthlyHeatmap: React.FC = () => {
           </div>
         ))}
       </div>
-      
-      <div className="flex justify-between items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
+
+      <div className="flex justify-between items-center mt-2 text-xs text-gray-500 dark:text-gray-400" aria-hidden="true">
         <div>Jan</div>
         <div>Dec</div>
       </div>
-      
-      <div className="flex items-center mt-4 text-xs text-gray-700 dark:text-gray-300">
-        <span className="mr-2">Less</span>
-        <div className="flex space-x-1">
-        <div className="w-3 h-3 bg-red-500 dark:bg-red-600 rounded-sm"></div>
-          <div className="w-3 h-3 bg-gray-100 dark:bg-gray-800 rounded-sm"></div>
-          <div className="w-3 h-3 bg-green-200 dark:bg-green-900 rounded-sm"></div>
-          <div className="w-3 h-3 bg-green-300 dark:bg-green-800 rounded-sm"></div>
-          <div className="w-3 h-3 bg-green-400 dark:bg-green-700 rounded-sm"></div>
-          <div className="w-3 h-3 bg-green-500 dark:bg-green-600 rounded-sm"></div>
-          <div className="w-3 h-3 bg-green-600 dark:bg-green-500 rounded-sm"></div>
-        </div>
-        <span className="ml-2">More</span>
-      </div>
-      
 
-    </div>
+      {selectedMonth && selectedDate ? (
+        <div className="mt-4 rounded-md bg-gray-50 dark:bg-gray-700/50 px-4 py-3 text-sm" aria-live="polite">
+          <span className="font-medium dark:text-gray-200">
+            {selectedDate.toLocaleString('default', { month: 'long' })} {selectedDate.getFullYear()}
+          </span>
+          <span className="mx-2 text-gray-300 dark:text-gray-600">·</span>
+          <span className="text-gray-600 dark:text-gray-300">
+            Income {formatCurrency(selectedMonth.income)} · Expenses {formatCurrency(selectedMonth.expenses)} · Net {formatCurrency(selectedMonth.netSavings)} · {selectedMonth.savingsRate.toFixed(1)}% saved
+          </span>
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">Select a month to see income, expenses, and savings.</p>
+      )}
+
+      <div className="flex items-center mt-4 text-xs text-gray-700 dark:text-gray-300">
+        <span className="mr-2">Negative</span>
+        <div className="w-3 h-3 bg-red-500 dark:bg-red-600 rounded-sm" />
+        <span className="mx-2">No data</span>
+        <div className="w-3 h-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm" />
+        <span className="mx-2">Savings rate</span>
+        <div className="flex space-x-1">
+          <div className="w-3 h-3 bg-green-200 dark:bg-green-900 rounded-sm" />
+          <div className="w-3 h-3 bg-green-300 dark:bg-green-800 rounded-sm" />
+          <div className="w-3 h-3 bg-green-400 dark:bg-green-700 rounded-sm" />
+          <div className="w-3 h-3 bg-green-500 dark:bg-green-600 rounded-sm" />
+          <div className="w-3 h-3 bg-green-600 dark:bg-green-500 rounded-sm" />
+        </div>
+      </div>
+      </ChartState>
+    </DashboardCard>
   );
 };

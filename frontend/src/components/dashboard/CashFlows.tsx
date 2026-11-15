@@ -2,21 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Sankey, Tooltip, ResponsiveContainer } from 'recharts';
 import { statisticService } from '../../services/statisticService';
 import { TransactionType, TimePeriod } from '../../types/transaction';
-import { Loading } from '../common/Loading';
 import { buildSankeyData, CategoryAverageItem, SankeyData } from './sankey/buildSankeyData';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
-
-const PERIODS = [
-  { label: '3M', value: TimePeriod.THREE_MONTHS },
-  { label: '6M', value: TimePeriod.SIX_MONTHS },
-  { label: 'YTD', value: TimePeriod.YEAR_TO_DATE },
-  { label: '1Y', value: TimePeriod.ONE_YEAR },
-  { label: '2Y', value: TimePeriod.TWO_YEARS },
-  { label: 'All', value: TimePeriod.ALL_TIME },
-];
-
-
+import { DashboardCard } from './DashboardCard';
+import { ChartState } from './ChartState';
 
 // Color schemes
 const INCOME_COLORS = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#059669', '#047857', '#065f46', '#064e3b'];
@@ -25,7 +15,11 @@ const CENTRAL_INCOME_COLOR = '#059669';
 const EXPENSE_PRIMARY_COLOR = '#ec4899';
 const SAVINGS_COLOR = '#3b82f6';
 
-export const CashFlows: React.FC = () => {
+interface CashFlowsProps {
+  period: TimePeriod;
+}
+
+export const CashFlows: React.FC<CashFlowsProps> = ({ period }) => {
   const { privacyMode } = usePrivacyMode();
   const formatCurrency = (amount: number) =>
     formatPrivateAmount(
@@ -38,47 +32,46 @@ export const CashFlows: React.FC = () => {
         maximumFractionDigits: 0,
       }).format(n)
     );
-  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sankeyData, setSankeyData] = useState<SankeyData | null>(null);
   const [metadata, setMetadata] = useState<{ start_date: string; end_date: string; months_count: number } | null>(null);
   const [nodeInfo, setNodeInfo] = useState<{ incomeCatCount: number; hasSavings: boolean }>({ incomeCatCount: 0, hasSavings: false });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [incomeData, expenseData] = await Promise.all([
-          statisticService.getCategoryAverages(TransactionType.INCOME, undefined, undefined, period),
-          statisticService.getCategoryAverages(TransactionType.EXPENSE, undefined, undefined, period),
-        ]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [incomeData, expenseData] = await Promise.all([
+        statisticService.getCategoryAverages(TransactionType.INCOME, undefined, undefined, period),
+        statisticService.getCategoryAverages(TransactionType.EXPENSE, undefined, undefined, period),
+      ]);
 
-        const data = buildSankeyData(incomeData.categories, expenseData.categories, 6);
-        setSankeyData(data);
-        setMetadata({
-          start_date: incomeData.start_date,
-          end_date: incomeData.end_date,
-          months_count: incomeData.months_count,
-        });
-        
-        const totalIncome = incomeData.categories.reduce((sum: number, cat: CategoryAverageItem) => sum + cat.average_amount, 0);
-        const totalExpenses = expenseData.categories.reduce((sum: number, cat: CategoryAverageItem) => sum + cat.average_amount, 0);
-        const hasSavings = totalIncome > totalExpenses;
-        const incomeCatCount = Math.min(6, incomeData.categories.length);
-        setNodeInfo({ incomeCatCount, hasSavings });
-        
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching cash flow data:', err);
-        setError('Failed to load cash flow data');
-      } finally {
-        setLoading(false);
-      }
-    };
+      const data = buildSankeyData(incomeData.categories, expenseData.categories, 6);
+      setSankeyData(data);
+      setMetadata({
+        start_date: incomeData.start_date,
+        end_date: incomeData.end_date,
+        months_count: incomeData.months_count,
+      });
 
-    fetchData();
+      const totalIncome = incomeData.categories.reduce((sum: number, cat: CategoryAverageItem) => sum + cat.average_amount, 0);
+      const totalExpenses = expenseData.categories.reduce((sum: number, cat: CategoryAverageItem) => sum + cat.average_amount, 0);
+      const hasSavings = totalIncome > totalExpenses;
+      const incomeCatCount = Math.min(6, incomeData.categories.length);
+      setNodeInfo({ incomeCatCount, hasSavings });
+
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching cash flow data:', err);
+      setError('Failed to load cash flow data');
+    } finally {
+      setLoading(false);
+    }
   }, [period]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const getNodeColor = useCallback((index: number): string => {
     if (!sankeyData) return '#6b7280';
@@ -123,7 +116,7 @@ export const CashFlows: React.FC = () => {
           y={y + height / 2}
           textAnchor="start"
           dominantBaseline="middle"
-          style={{ fontSize: '11px', fill: '#374151' }}
+          style={{ fontSize: '11px', fill: 'var(--color-text-secondary)' }}
         >
           {payload.name}
         </text>
@@ -177,44 +170,21 @@ export const CashFlows: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Cash Flow Trends</h3>
-        
-        <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              className={`px-3 py-1 text-xs ${period === p.value 
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-                : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              onClick={() => setPeriod(p.value)}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {loading && (
-        <div className="flex justify-center items-center h-64">
-          <Loading variant="skeleton" size="small" />
-        </div>
-      )}
-
-      {error && !loading && (
-        <div className="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && sankeyData && metadata && (
+    <DashboardCard title="Monthly Cash Flow">
+      <ChartState
+        loading={loading}
+        error={error}
+        isEmpty={!sankeyData || !metadata}
+        emptyMessage="No cash flow data for this period"
+        onRetry={fetchData}
+      >
+      {sankeyData && metadata && (
         <div>
           <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
             Monthly average flows from {metadata.start_date} to {metadata.end_date} ({metadata.months_count} months)
           </div>
           
-          <div className="h-[400px]">
+          <div className="h-[400px]" role="img" aria-label="Sankey diagram of monthly average income flowing into expenses and savings">
             <ResponsiveContainer width="100%" height="100%">
               <Sankey
                 data={sankeyData}
@@ -283,6 +253,7 @@ export const CashFlows: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </ChartState>
+    </DashboardCard>
   );
 };

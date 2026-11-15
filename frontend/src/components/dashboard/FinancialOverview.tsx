@@ -5,7 +5,7 @@ import { useStatistics } from '../../hooks/useStatistics';
 import { Loading } from '../common/Loading';
 
 export const FinancialOverview: React.FC = () => {
-  const { statistics, loading, error } = useStatistics();
+  const { statistics, loading, error, refreshStatistics } = useStatistics();
 
   if (loading) return (
     <div className="space-y-6">
@@ -18,35 +18,23 @@ export const FinancialOverview: React.FC = () => {
     </div>
   );
   if (error) return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-            {error}
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-            {error}
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-            {error}
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-            {error}
-          </div>
-        </div>
+    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+      <div className="flex items-center justify-between text-gray-500 dark:text-gray-400" role="alert">
+        <span>{error}</span>
+        <button
+          type="button"
+          onClick={refreshStatistics}
+          className="px-3 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          Try again
+        </button>
       </div>
     </div>
   );
   if (!statistics) return null;
 
   const calculateChange = (current: number, previous: number): string => {
-    if (previous === 0) return '+0.0%';
+    if (previous === 0) return '—';
     const change = ((current - previous) / Math.abs(previous)) * 100;
     return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
   };

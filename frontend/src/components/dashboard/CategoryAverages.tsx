@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { statisticService } from '../../services/statisticService';
 import { TransactionType, TimePeriod } from '../../types/transaction';
-import { Loading } from '../common/Loading';
-import { format as formatDate } from 'date-fns';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
-
-// Define the periods similar to FinancialTrends
-const PERIODS = [
-  { label: '3M', value: TimePeriod.THREE_MONTHS },
-  { label: '6M', value: TimePeriod.SIX_MONTHS },
-  { label: 'YTD', value: TimePeriod.YEAR_TO_DATE },
-  { label: '1Y', value: TimePeriod.ONE_YEAR },
-  { label: '2Y', value: TimePeriod.TWO_YEARS },
-  { label: 'All', value: TimePeriod.ALL_TIME },
-];
+import { DashboardCard } from './DashboardCard';
+import { ChartState } from './ChartState';
 
 // Define the category average item interface
 interface CategoryAverageItem {
@@ -36,9 +26,12 @@ interface CategoryAveragesResponse {
   categories: CategoryAverageItem[];
 }
 
-export const CategoryAverages: React.FC = () => {
+interface CategoryAveragesProps {
+  period: TimePeriod;
+}
+
+export const CategoryAverages: React.FC<CategoryAveragesProps> = ({ period }) => {
   const { privacyMode } = usePrivacyMode();
-  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [transactionType, setTransactionType] = useState<TransactionType | undefined>(TransactionType.EXPENSE);
   const [categoryData, setCategoryData] = useState<CategoryAveragesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,45 +39,45 @@ export const CategoryAverages: React.FC = () => {
   const [chartData, setChartData] = useState<any[]>([]);
 
   // Fetch category averages data
-  useEffect(() => {
-    const fetchCategoryAverages = async () => {
-      setLoading(true);
-      try {
-        const data = await statisticService.getCategoryAverages(
-          transactionType,
-          undefined, // No explicit start date
-          undefined, // No explicit end date
-          period     // Use the time_period parameter
-        );
-        setCategoryData(data);
-        
-        // Transform data for the chart
-        // Take top 10 categories by average amount
-        const topCategories = [...data.categories]
-          .sort((a, b) => b.average_amount - a.average_amount)
-          .slice(0, 10);
-          
-        // Format data for the chart
-        const formattedData = topCategories.map(cat => ({
-          name: cat.category_name,
-          average: cat.average_amount,
-          total: cat.total_amount,
-          type: cat.expense_type || 'Income',
-          percentage: cat.percentage
-        }));
-        
-        setChartData(formattedData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching category averages:', err);
-        setError('Failed to load category averages data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchCategoryAverages = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await statisticService.getCategoryAverages(
+        transactionType,
+        undefined, // No explicit start date
+        undefined, // No explicit end date
+        period
+      );
+      setCategoryData(data);
 
-    fetchCategoryAverages();
+      // Transform data for the chart
+      // Take top 10 categories by average amount
+      const topCategories = [...data.categories]
+        .sort((a, b) => b.average_amount - a.average_amount)
+        .slice(0, 10);
+
+      // Format data for the chart
+      const formattedData = topCategories.map(cat => ({
+        name: cat.category_name,
+        average: cat.average_amount,
+        total: cat.total_amount,
+        type: cat.expense_type || 'Income',
+        percentage: cat.percentage
+      }));
+
+      setChartData(formattedData);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching category averages:', err);
+      setError('Failed to load category averages data');
+    } finally {
+      setLoading(false);
+    }
   }, [period, transactionType]);
+
+  useEffect(() => {
+    fetchCategoryAverages();
+  }, [fetchCategoryAverages]);
 
   // Helper function to format currency
   const formatCurrency = (amount: number) =>
@@ -133,72 +126,50 @@ export const CategoryAverages: React.FC = () => {
     return '#ec4899'; // pink-500 for Discretionary
   };
 
+  const typeToggle = (
+    <div className="flex space-x-1" role="group" aria-label="Transaction type">
+      <button
+        type="button"
+        aria-pressed={transactionType === TransactionType.EXPENSE}
+        className={`px-3 py-2 text-xs rounded ${
+          transactionType === TransactionType.EXPENSE
+            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+        }`}
+        onClick={() => setTransactionType(TransactionType.EXPENSE)}
+      >
+        Expenses
+      </button>
+      <button
+        type="button"
+        aria-pressed={transactionType === TransactionType.INCOME}
+        className={`px-3 py-2 text-xs rounded ${
+          transactionType === TransactionType.INCOME
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+        }`}
+        onClick={() => setTransactionType(TransactionType.INCOME)}
+      >
+        Income
+      </button>
+    </div>
+  );
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Category Averages</h3>
-        
-        <div className="flex space-x-2">
-          {/* Transaction Type Selector */}
-          <div className="flex space-x-1">
-            <button
-              className={`px-2 py-1 text-xs rounded ${
-                transactionType === TransactionType.EXPENSE
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-              }`}
-              onClick={() => setTransactionType(TransactionType.EXPENSE)}
-            >
-              Expenses
-            </button>
-            <button
-              className={`px-2 py-1 text-xs rounded ${
-                transactionType === TransactionType.INCOME
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-              }`}
-              onClick={() => setTransactionType(TransactionType.INCOME)}
-            >
-              Income
-            </button>
-          </div>
-          
-          {/* Period Selector */}
-          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                className={`px-3 py-1 text-xs ${period === p.value 
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-                  : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                onClick={() => setPeriod(p.value)}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {loading && (
-        <div className="flex justify-center items-center h-64">
-          <Loading variant="skeleton" size="small" />
-        </div>
-      )}
-
-      {error && !loading && (
-        <div className="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && categoryData && (
+    <DashboardCard title="Category Averages" headerExtra={typeToggle}>
+      <ChartState
+        loading={loading}
+        error={error}
+        isEmpty={!categoryData || chartData.length === 0}
+        onRetry={fetchCategoryAverages}
+      >
+      {categoryData && (
         <div>
           <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
             Showing monthly averages from {categoryData.start_date} to {categoryData.end_date} ({categoryData.months_count} months)
           </div>
           
-          <div className="h-[400px]">
+          <div className="h-[400px]" role="img" aria-label="Bar chart of top categories by monthly average">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
@@ -291,6 +262,7 @@ export const CategoryAverages: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </ChartState>
+    </DashboardCard>
   );
 };

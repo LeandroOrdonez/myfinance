@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Loading } from '../common/Loading';
 import { useExpenseTypeTimeseries } from '../../hooks/useExpenseTypeTimeseries';
 import { format as formatDate } from 'date-fns';
 import { TimePeriod } from '../../types/transaction';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
+import { DashboardCard } from './DashboardCard';
+import { ChartState } from './ChartState';
 import {
   AreaChart,
   Area,
@@ -19,31 +20,24 @@ import {
 } from 'recharts';
 import { ChartArea, ChartColumnStacked } from 'lucide-react';
 
-const PERIODS = [
-  { label: '3M', value: TimePeriod.THREE_MONTHS },
-  { label: '6M', value: TimePeriod.SIX_MONTHS },
-  { label: 'YTD', value: TimePeriod.YEAR_TO_DATE },
-  { label: '1Y', value: TimePeriod.ONE_YEAR },
-  { label: '2Y', value: TimePeriod.TWO_YEARS },
-  { label: 'All', value: TimePeriod.ALL_TIME },
-];
-
 const EXPENSE_TYPE_COLORS = {
   essential: '#10B981', // Green
   discretionary: '#EF4444', // Red
 };
 
-export const ExpenseTypeTimeseriesChart: React.FC = () => {
+interface ExpenseTypeTimeseriesChartProps {
+  period: TimePeriod;
+}
+
+export const ExpenseTypeTimeseriesChart: React.FC<ExpenseTypeTimeseriesChartProps> = ({ period }) => {
   const { privacyMode } = usePrivacyMode();
-  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [chartType, setChartType] = useState<'area' | 'bar'>('bar');
 
-  // Use the time_period parameter instead of manually calculating date ranges
-  const { timeseriesData, loading } = useExpenseTypeTimeseries(
+  const { timeseriesData, loading, error, refreshData } = useExpenseTypeTimeseries(
     undefined, // No specific expense type filter
     undefined, // No explicit start date
     undefined, // No explicit end date
-    period     // Use the time_period parameter
+    period
   );
 
   // Transform data for chart display
@@ -221,56 +215,45 @@ export const ExpenseTypeTimeseriesChart: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Essential vs Discretionary Spending</h3>
-        <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-         <button
-            className={`px-3 py-1 text-sm ${chartType === 'bar' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+    <DashboardCard
+      title="Essential vs Discretionary Spending"
+      headerExtra={
+        <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden" role="group" aria-label="Chart type">
+          <button
+            type="button"
+            aria-label="Bar chart view"
+            aria-pressed={chartType === 'bar'}
+            className={`p-2 ${chartType === 'bar'
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
               : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
             onClick={() => setChartType('bar')}
           >
             <ChartColumnStacked size={18} />
           </button>
           <button
-            className={`px-3 py-1 text-sm ${chartType === 'area' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+            type="button"
+            aria-label="Area chart view"
+            aria-pressed={chartType === 'area'}
+            className={`p-2 ${chartType === 'area'
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
               : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
             onClick={() => setChartType('area')}
           >
             <ChartArea size={18} />
           </button>
         </div>
-      </div>
-      
-      <div className="flex flex-wrap gap-2 mb-4">
-        <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden ml-auto">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              className={`px-3 py-1 text-sm ${period === p.value 
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-                : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              onClick={() => setPeriod(p.value)}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      
-      {loading ? (
-        <Loading />
-      ) : chartData.length > 0 ? (
-        <div style={{ height: '400px' }}>
+      }
+    >
+      <ChartState
+        loading={loading}
+        error={error}
+        isEmpty={chartData.length === 0}
+        onRetry={refreshData}
+      >
+        <div style={{ height: '400px' }} role="img" aria-label="Chart of essential versus discretionary spending over the selected period">
           {renderChart()}
         </div>
-      ) : (
-        <div className="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
-          No data available
-        </div>
-      )}
-    </div>
+      </ChartState>
+    </DashboardCard>
   );
 };

@@ -10,9 +10,11 @@ import { useCategoryStatistics } from '../../hooks/useCategoryStatistics';
 import { useStatistics } from '../../hooks/useStatistics';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
-import { Loading } from '../common/Loading';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { ChartBarDecreasing, Grid3x3 } from 'lucide-react';
+import { TransactionType } from '../../types/transaction';
+import { DashboardCard } from './DashboardCard';
+import { ChartState } from './ChartState';
 
 const EXPENSE_COLORS = [
   '#EF4444', '#DC2626', '#B91C1C', '#991B1B', '#7F1D1D',
@@ -28,35 +30,51 @@ const INCOME_COLORS = [
   '#22C55E', '#16A34A', '#15803D', '#166534'
 ];
 
-export const CategoryBreakdown: React.FC = () => {
+interface CategoryBreakdownProps {
+  onSelectCategory?: (category: string, type: TransactionType) => void;
+}
+
+export const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ onSelectCategory }) => {
   const { privacyMode } = usePrivacyMode();
   const [activeTab, setActiveTab] = useState('expenses');
   const [chartType, setChartType] = useState('treemap');
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly' | 'all_time'>('monthly');
-  
-  const { 
-    expenseCategoriesWithPercentage, 
-    incomeCategoriesWithPercentage, 
-    loading: categoryLoading, 
+
+  const {
+    expenseCategoriesWithPercentage,
+    incomeCategoriesWithPercentage,
+    loading: categoryLoading,
     error: categoryError,
-    setPeriod
+    setPeriod,
+    refreshCategoryStatistics
   } = useCategoryStatistics();
-  
-  const { statistics, loading: statsLoading, error: statsError } = useStatistics();
-  
+
+  const { statistics, loading: statsLoading, error: statsError, refreshStatistics } = useStatistics();
+
   const loading = categoryLoading || statsLoading;
   const error = categoryError || statsError;
 
-  if (loading) return <Loading variant="progress" size="medium" />;
-  if (error) return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-        {error}
-      </div>
-    </div>
+  const retry = () => {
+    refreshCategoryStatistics();
+    refreshStatistics();
+  };
+
+  if (loading) return (
+    <DashboardCard title="Category Breakdown">
+      <ChartState loading />
+    </DashboardCard>
   );
-    
-  if (!statistics) return null;
+  if (error) return (
+    <DashboardCard title="Category Breakdown">
+      <ChartState error={error} onRetry={retry} />
+    </DashboardCard>
+  );
+
+  if (!statistics) return (
+    <DashboardCard title="Category Breakdown">
+      <ChartState isEmpty emptyMessage="No statistics available yet" />
+    </DashboardCard>
+  );
 
   // Get current month name from statistics
   const currentDate = new Date(statistics.current_month.date!);
@@ -146,11 +164,12 @@ export const CategoryBreakdown: React.FC = () => {
     return `${currentMonth} ${type} Breakdown`;
   };
 
-  return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-5">
-        <h3 className="text-lg font-medium dark:text-gray-200">{getChartTitle()}</h3>
-        <div className="flex items-center space-x-4">
+  const activeData = activeTab === 'expenses' ? expenseData : incomeData;
+  const activeType = activeTab === 'expenses' ? TransactionType.EXPENSE : TransactionType.INCOME;
+  const accentTextClass = activeTab === 'expenses' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+
+  const controls = (
+    <div className="flex items-center space-x-4">
           {/* Period selector */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -192,24 +211,31 @@ export const CategoryBreakdown: React.FC = () => {
           </DropdownMenu.Root>
 
           {/* Chart type selector */}
-          <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+          <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden" role="group" aria-label="Chart type">
             <button
+              type="button"
+              aria-label="Treemap view"
+              aria-pressed={chartType === 'treemap'}
               onClick={() => setChartType('treemap')}
               className={`p-2 ${chartType === 'treemap' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              title="Treemap View"
             >
               <Grid3x3 size={18} />
             </button>
             <button
+              type="button"
+              aria-label="Bar chart view"
+              aria-pressed={chartType === 'bar'}
               onClick={() => setChartType('bar')}
               className={`p-2 ${chartType === 'bar' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              title="Bar Chart View"
             >
               <ChartBarDecreasing size={18} />
             </button>
           </div>
-        </div>
-      </div>
+    </div>
+  );
+
+  return (
+    <DashboardCard title={getChartTitle()} headerExtra={controls}>
       
       <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="mt-4">
         <Tabs.List className="flex space-x-2 mb-4">
@@ -228,16 +254,18 @@ export const CategoryBreakdown: React.FC = () => {
         </Tabs.List>
 
         <div className="h-[400px]">
-          {chartType === 'treemap' ? (
+          {activeData.length === 0 ? (
+            <ChartState isEmpty emptyMessage={`No ${activeTab} recorded for this period`} />
+          ) : chartType === 'treemap' ? (
             <ResponsiveContainer width="100%" height="100%">
               <Treemap
-                data={activeTab === 'expenses' ? (expenseData.length > 0 ? expenseData : [{name: 'No Data', size: 1, value: 0, percentage: '0'}]) 
-                                             : (incomeData.length > 0 ? incomeData : [{name: 'No Data', size: 1, value: 0, percentage: '0'}])}
+                data={activeData}
                 dataKey="size"
                 aspectRatio={4/3}
                 stroke="#fff"
                 fill={activeTab === 'expenses' ? '#EF4444' : '#10B981'}
                 isAnimationActive={false}
+                onClick={(node: any) => node?.name && onSelectCategory?.(node.name, activeType)}
               >
                 <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
@@ -259,7 +287,7 @@ export const CategoryBreakdown: React.FC = () => {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={activeTab === 'expenses' ? expenseData : incomeData}
+                data={activeData}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 90, bottom: 5 }}
               >
@@ -291,9 +319,11 @@ export const CategoryBreakdown: React.FC = () => {
                   labelStyle={{ color: 'var(--color-tooltip-text)', fontWeight: 'bold' }}
                   wrapperClassName="tooltip-wrapper"
                 />
-                <Bar 
-                  dataKey="value" 
-                  fill={activeTab === 'expenses' ? '#EF4444' : '#10B981'} 
+                <Bar
+                  dataKey="value"
+                  fill={activeTab === 'expenses' ? '#EF4444' : '#10B981'}
+                  onClick={(data: any) => data?.name && onSelectCategory?.(data.name, activeType)}
+                  cursor={onSelectCategory ? 'pointer' : undefined}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -355,10 +385,16 @@ export const CategoryBreakdown: React.FC = () => {
         </div>
       )}
 
+      {onSelectCategory && activeData.length > 0 && (
+        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+          Select a category to see its trend below.
+        </p>
+      )}
+
       {/* Total Summary */}
       <div className="mt-6 grid grid-cols-2 gap-4">
         <div className="bg-gray-50 rounded-md dark:bg-gray-800 p-4 shadow-sm">
-          <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">
+          <h5 className={`text-sm font-medium mb-3 ${accentTextClass}`}>
             {selectedPeriod === 'monthly' && (activeTab === 'expenses' ? 'Monthly Expenses' : 'Monthly Income')}
             {selectedPeriod === 'yearly' && (activeTab === 'expenses' ? 'Yearly Expenses' : 'Yearly Income')}
             {selectedPeriod === 'all_time' && (activeTab === 'expenses' ? 'All-time Expenses' : 'All-time Income')}
@@ -376,12 +412,19 @@ export const CategoryBreakdown: React.FC = () => {
           </p>
         </div>
         <div className="bg-gray-50 rounded-md dark:bg-gray-800 p-4 shadow-sm">
-          <h5 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-3">Top Category</h5>
+          <h5 className={`text-sm font-medium mb-3 ${accentTextClass}`}>Top Category</h5>
           <p className={`text-xl font-bold tracking-tight ${activeTab === 'expenses' ? 'text-rose-600' : 'text-emerald-600'}`}>
-            {activeTab === 'expenses' 
-              ? (expenseData.length > 0 ? expenseData[0].name : 'None')
-              : (incomeData.length > 0 ? incomeData[0].name : 'None')
-            }
+            {activeData.length > 0 ? (
+              onSelectCategory ? (
+                <button
+                  type="button"
+                  className="underline decoration-dotted underline-offset-4 hover:opacity-80"
+                  onClick={() => onSelectCategory(activeData[0].name, activeType)}
+                >
+                  {activeData[0].name}
+                </button>
+              ) : activeData[0].name
+            ) : 'None'}
           </p>
           {(activeTab === 'expenses' && expenseData.length > 0) || (activeTab === 'income' && incomeData.length > 0) ? (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -391,6 +434,6 @@ export const CategoryBreakdown: React.FC = () => {
           ) : null}
         </div>
       </div>
-    </div>
+    </DashboardCard>
   );
 };

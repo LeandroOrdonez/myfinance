@@ -15,7 +15,6 @@ import { format, parseISO } from 'date-fns';
 import * as Tabs from '@radix-ui/react-tabs';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
-import { TimePeriod } from '../../types/transaction';
 
 interface TimeseriesData {
     date: string;
@@ -30,12 +29,9 @@ interface TimeseriesData {
 
 interface TimeseriesChartProps {
     data: TimeseriesData[];
-    period: TimePeriod;
-    setPeriod: (period: TimePeriod) => void;
-    PERIODS: { label: string; value: TimePeriod }[];
 }
 
-export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, setPeriod, PERIODS }) => {
+export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data }) => {
     const { privacyMode } = usePrivacyMode();
     const [activeMetric, setActiveMetric] = useState('income_expenses');
     const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({});
@@ -135,7 +131,7 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
     return (
         <div className="w-full" style={{ height: '400px' }}>
             <Tabs.Root value={activeMetric} onValueChange={setActiveMetric}>
-                <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="mb-4">
                   <Tabs.List className="flex gap-2">
                     {Object.entries(metrics).map(([key, { title }]) => (
                         <Tabs.Trigger
@@ -151,22 +147,9 @@ export const TimeseriesChart: React.FC<TimeseriesChartProps> = ({ data, period, 
                         </Tabs.Trigger>
                     ))}
                   </Tabs.List>
-                    <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-                    {PERIODS.map((p) => (
-                      <button
-                        key={p.value}
-                        className={`px-3 py-1 text-sm ${period === p.value 
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-                          : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                        onClick={() => setPeriod(p.value)}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
-                <div className="h-[320px]">
+                <div className="h-[320px]" role="img" aria-label="Chart of income, expenses, and savings over the selected period">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={sortedData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />

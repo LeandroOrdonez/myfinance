@@ -3,9 +3,10 @@ import React from 'react';
 interface PeriodSelectorProps {
   selectedPeriod: string;
   onChange: (period: string) => void;
+  ariaLabel?: string;
 }
 
-const PeriodSelector: React.FC<PeriodSelectorProps> = ({ selectedPeriod, onChange }) => {
+const PeriodSelector: React.FC<PeriodSelectorProps> = ({ selectedPeriod, onChange, ariaLabel = 'Time period' }) => {
   const periods = [
     { id: '3m', label: '3M' },
     { id: '6m', label: '6M' },
@@ -16,12 +17,13 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({ selectedPeriod, onChang
   ];
 
   return (
-    <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden" role="group">
+    <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden" role="group" aria-label={ariaLabel}>
       {periods.map(period => (
         <button
           key={period.id}
           type="button"
-          className={`px-3 py-1 text-xs font-medium ${
+          aria-pressed={selectedPeriod === period.id}
+          className={`px-3 py-2 text-xs font-medium ${
             selectedPeriod === period.id
               ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
               : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}

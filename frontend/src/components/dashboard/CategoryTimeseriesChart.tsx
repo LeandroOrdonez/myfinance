@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Loading } from '../common/Loading';
 import { useCategoryTimeseries } from '../../hooks/useCategoryTimeseries';
 import { TransactionType, TimePeriod } from '../../types/transaction';
 import { format as formatDate } from 'date-fns';
 import { usePrivacyMode } from '../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../utils/formatPrivateAmount';
+import { DashboardCard } from './DashboardCard';
+import { ChartState } from './ChartState';
 import {
   AreaChart,
   Area,
@@ -17,39 +18,34 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { ChartArea, ChartColumnStacked } from 'lucide-react';
-
-const PERIODS = [
-  { label: '3M', value: TimePeriod.THREE_MONTHS },
-  { label: '6M', value: TimePeriod.SIX_MONTHS },
-  { label: 'YTD', value: TimePeriod.YEAR_TO_DATE },
-  { label: '1Y', value: TimePeriod.ONE_YEAR },
-  { label: '2Y', value: TimePeriod.TWO_YEARS },
-  { label: 'All', value: TimePeriod.ALL_TIME },
-];
+import { ChartArea, ChartColumnStacked, X } from 'lucide-react';
 
 interface CategoryTimeseriesChartProps {
   title?: string;
   defaultTransactionType?: TransactionType;
+  period: TimePeriod;
+  focusedCategory?: string | null;
+  onClearFocus?: () => void;
 }
 
-export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = ({ 
+export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = ({
   title = "Category Trends Over Time",
-  defaultTransactionType = TransactionType.EXPENSE
+  defaultTransactionType = TransactionType.EXPENSE,
+  period,
+  focusedCategory,
+  onClearFocus
 }) => {
   const { privacyMode } = usePrivacyMode();
-  const [period, setPeriod] = useState<TimePeriod>(TimePeriod.ONE_YEAR);
   const [transactionType, setTransactionType] = useState<TransactionType>(defaultTransactionType);
   const [chartType, setChartType] = useState<'area' | 'bar'>('area');
   const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({});
 
-  // Use the time_period parameter instead of manually calculating date ranges
-  const { timeseriesData, loading } = useCategoryTimeseries(
+  const { timeseriesData, loading, error, refreshData } = useCategoryTimeseries(
     transactionType,
-    undefined, // No specific category filter
+    focusedCategory ?? undefined,
     undefined, // No explicit start date
     undefined, // No explicit end date
-    period     // Use the time_period parameter
+    period
   );
 
   // Get unique categories from the data
@@ -321,34 +317,42 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">{title}</h3>
-        <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+    <DashboardCard
+      title={title}
+      headerExtra={
+        <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden" role="group" aria-label="Chart type">
           <button
-            className={`px-3 py-1 text-sm ${chartType === 'bar' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+            type="button"
+            aria-label="Bar chart view"
+            aria-pressed={chartType === 'bar'}
+            className={`p-2 ${chartType === 'bar'
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
               : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
             onClick={() => setChartType('bar')}
           >
             <ChartColumnStacked size={18} />
           </button>
           <button
-            className={`px-3 py-1 text-sm ${chartType === 'area' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+            type="button"
+            aria-label="Area chart view"
+            aria-pressed={chartType === 'area'}
+            className={`p-2 ${chartType === 'area'
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
               : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
             onClick={() => setChartType('area')}
           >
             <ChartArea size={18} />
           </button>
         </div>
-      </div>
-      
-      <div className="flex flex-wrap gap-2 mb-4">
-      <div className="flex space-x-2">
+      }
+    >
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="flex space-x-2" role="group" aria-label="Transaction type">
           <button
+            type="button"
+            aria-pressed={transactionType === TransactionType.EXPENSE}
             onClick={() => setTransactionType(TransactionType.EXPENSE)}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-3 py-2 text-sm rounded-md ${
               transactionType === TransactionType.EXPENSE
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                 : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
@@ -357,8 +361,10 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
             Expenses
           </button>
           <button
+            type="button"
+            aria-pressed={transactionType === TransactionType.INCOME}
             onClick={() => setTransactionType(TransactionType.INCOME)}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-3 py-2 text-sm rounded-md ${
               transactionType === TransactionType.INCOME
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                 : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
@@ -367,34 +373,33 @@ export const CategoryTimeseriesChart: React.FC<CategoryTimeseriesChartProps> = (
             Income
           </button>
         </div>
-        <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden ml-auto">
-          {PERIODS.map((p) => (
+        {focusedCategory && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+            {focusedCategory}
             <button
-              key={p.value}
-              className={`px-3 py-1 text-sm ${period === p.value 
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
-                : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              onClick={() => setPeriod(p.value)}
+              type="button"
+              aria-label={`Clear ${focusedCategory} filter`}
+              onClick={onClearFocus}
+              className="hover:text-blue-900 dark:hover:text-blue-100"
             >
-              {p.label}
+              <X size={14} />
             </button>
-          ))}
-        </div>
+          </span>
+        )}
       </div>
-      
-      {loading ? (
-        <Loading />
-      ) : chartData.length > 0 ? (
-        <div style={{ height: '400px' }}>
+
+      <ChartState
+        loading={loading}
+        error={error}
+        isEmpty={chartData.length === 0}
+        onRetry={refreshData}
+      >
+        <div style={{ height: '400px' }} role="img" aria-label={`${title} chart`}>
           <ResponsiveContainer width="100%" height="100%">
             {renderChart()}
           </ResponsiveContainer>
         </div>
-      ) : (
-        <div className="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
-          No data available
-        </div>
-      )}
-    </div>
+      </ChartState>
+    </DashboardCard>
   );
 };
