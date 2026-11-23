@@ -5,213 +5,100 @@ import NetWorthChart from './charts/NetWorthChart';
 import IncomeExpensesChart from './charts/IncomeExpensesChart';
 import SavingsGrowthChart from './charts/SavingsGrowthChart';
 import InvestmentGrowthChart from './charts/InvestmentGrowthChart';
+import { ProjectionTabs } from './ProjectionTabs';
+import { ValueModeControl } from './ValueModeControl';
+import { ForecastStatus } from './ForecastStatus';
+import { ForecastAssumptions } from './ForecastAssumptions';
+import { ForecastSummary } from './ForecastSummary';
 
 interface ResultsVisualizationProps {
   scenarios: ProjectionScenario[];
   selectedScenarioId: number | null;
   onScenarioSelect: (scenarioId: number) => void;
   isLoading: boolean;
+  onEdit?: (scenario: ProjectionScenario) => void;
+  onManage?: () => void;
+  refreshVersion?: number;
+  onCalculated?: (scenarioId: number) => void;
 }
 
 const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
-  scenarios,
-  selectedScenarioId,
-  onScenarioSelect,
-  isLoading: isLoadingScenarios,
+  scenarios, selectedScenarioId, onScenarioSelect, isLoading: isLoadingScenarios,
+  onEdit, onManage, refreshVersion = 0, onCalculated,
 }) => {
   const [activeTab, setActiveTab] = useState('net-worth');
-  
+  const [showReal, setShowReal] = useState(false);
+
   // Use the custom hook for managing projection results
   const {
-    projectionData,
-    isCalculating,
-    isLoading: isLoadingResults,
-    error,
-    calculateResults: handleCalculateProjection,
-    formatCurrency,
-    getSummaryData
-  } = useProjectionResults(selectedScenarioId);
+    projectionData, isCalculating, isLoading: isLoadingResults, error,
+    calculateResults: handleCalculateProjection, formatCurrency, getSummaryData, refreshData,
+  } = useProjectionResults(selectedScenarioId, showReal, refreshVersion);
 
   // Simple toast notification function for displaying errors
-  const showToast = (message: string) => {
-    if (error) {
-      alert(message);
-    }
-  };
+  const showToast = () => error && (
+    <div role="alert" className="rounded-md bg-red-50 dark:bg-red-900/30 p-4 text-red-800 dark:text-red-200 space-y-2">
+      <p>{error}</p>
+      {projectionData && <p className="text-sm">Showing previous results, not a refreshed forecast.</p>}
+      <button type="button" onClick={refreshData} disabled={isLoadingResults || isCalculating} className="min-h-11 underline underline-offset-4 font-medium disabled:opacity-50">Retry loading forecast</button>
+    </div>
+  );
 
   // Handle scenario selection
-  const handleScenarioChange = (value: string) => {
-    onScenarioSelect(parseInt(value));
-  };
+  const handleScenarioChange = (value: string) => { onScenarioSelect(Number(value)); };
 
   // Get selected scenario name
-  const getSelectedScenarioName = () => {
-    if (!selectedScenarioId) return 'No scenario selected';
-    const scenario = scenarios.find(s => s.id === selectedScenarioId);
-    return scenario ? scenario.name : 'Unknown scenario';
+  const getSelectedScenarioName = () => scenarios.find(s => s.id === selectedScenarioId)?.name ?? 'No scenario selected';
+  const selectedScenario = scenarios.find(s => s.id === selectedScenarioId);
+  const hasRealData = Boolean(projectionData?.dates.length && [
+    projectionData.real_projected_net_worth, projectionData.real_projected_income,
+    projectionData.real_projected_expenses, projectionData.real_projected_savings,
+    projectionData.real_projected_investments,
+  ].every(series => series?.length === projectionData.dates.length));
+  const useReal = showReal && hasRealData;
+  const calculate = async () => {
+    if (selectedScenarioId && await handleCalculateProjection()) onCalculated?.(selectedScenarioId);
   };
 
-  const summaryData = getSummaryData();
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <div className="w-full md:w-1/2">
-          <div className="relative">
-            <select
-              value={selectedScenarioId?.toString() || ''}
-              onChange={(e) => handleScenarioChange(e.target.value)}
-              disabled={isLoadingScenarios || scenarios.length === 0}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none dark:bg-gray-700 dark:border-gray-600"
-            >
-              <option value="" disabled>Select a scenario</option>
-              {scenarios.map((scenario) => (
-                <option key={scenario.id} value={scenario.id.toString()}>
-                  {scenario.name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
-          </div>
+    <div className="space-y-3 min-w-0" aria-busy={isLoadingResults || isCalculating}>
+      <div className="grid grid-cols-2 md:flex md:items-end gap-3">
+        <div className="col-span-2 flex-1 min-w-0">
+          <label htmlFor="forecast-scenario" className="block text-sm font-medium mb-2">Scenario</label>
+          <select id="forecast-scenario" value={selectedScenarioId ?? ''} onChange={e => handleScenarioChange(e.target.value)} disabled={isLoadingScenarios || isCalculating || !scenarios.length} className="w-full min-h-11 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled>Select a scenario</option>
+            {scenarios.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.name}</option>)}
+          </select>
         </div>
-        
-        <button 
-          onClick={handleCalculateProjection} 
-          disabled={!selectedScenarioId || isCalculating}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isCalculating ? 'Calculating...' : 'Calculate Projection'}
+        {selectedScenario && onEdit && <button type="button" onClick={() => onEdit(selectedScenario)} disabled={isCalculating} className="min-h-11 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">Edit assumptions</button>}
+        <button type="button" onClick={calculate} disabled={!selectedScenarioId || isCalculating || isLoadingScenarios || isLoadingResults} className="min-h-11 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          {isCalculating ? 'Calculating…' : 'Calculate forecast'}
         </button>
       </div>
-
-      {isLoadingScenarios || isLoadingResults ? (
-        <div className="space-y-4 dark:bg-gray-700">
-          <div className="h-[400px] w-full bg-gray-200 animate-pulse rounded-lg" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="h-[100px] w-full bg-gray-200 animate-pulse rounded-lg" />
-            <div className="h-[100px] w-full bg-gray-200 animate-pulse rounded-lg" />
-            <div className="h-[100px] w-full bg-gray-200 animate-pulse rounded-lg" />
-          </div>
-        </div>
-      ) : !projectionData ? (
-        <div className="border rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold">No Projection Data</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Select a scenario and calculate the projection to view results.
-            </p>
-          </div>
+      {showToast()}
+      {(isLoadingScenarios || isLoadingResults) ? (
+        <div role="status" className="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-300">Loading forecast…</div>
+      ) : !projectionData?.dates.length ? (
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-2">
+          <h2 className="text-lg font-semibold">{error ? 'Forecast unavailable' : 'Your forecast starts here'}</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{scenarios.length ? 'Calculate a forecast using this scenario’s assumptions to see your possible financial trajectory.' : 'Create a scenario to start exploring your financial future.'}</p>
+          {!scenarios.length && onManage && <button type="button" onClick={onManage} className="min-h-11 text-blue-700 dark:text-blue-300 underline underline-offset-4">Manage scenarios</button>}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 pb-2">
-                <p className="text-sm text-gray-500">1 Year Projection</p>
-                <h3 className="text-lg font-semibold">{formatCurrency(summaryData.oneYear.netWorth)}</h3>
-              </div>
-              <div className="p-4 pt-0">
-                <div className="text-xs text-gray-500">
-                  <div className="flex justify-between">
-                    <span>Monthly Savings:</span>
-                    <span>{formatCurrency(summaryData.oneYear.savings)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly Investments:</span>
-                    <span>{formatCurrency(summaryData.oneYear.investments)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 pb-2">
-                <p className="text-sm text-gray-500">3 Year Projection</p>
-                <h3 className="text-lg font-semibold">{formatCurrency(summaryData.threeYears.netWorth)}</h3>
-              </div>
-              <div className="p-4 pt-0">
-                <div className="text-xs text-gray-500">
-                  <div className="flex justify-between">
-                    <span>Monthly Savings:</span>
-                    <span>{formatCurrency(summaryData.threeYears.savings)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly Investments:</span>
-                    <span>{formatCurrency(summaryData.threeYears.investments)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 pb-2">
-                <p className="text-sm text-gray-500">5 Year Projection</p>
-                <h3 className="text-lg font-semibold">{formatCurrency(summaryData.fiveYears.netWorth)}</h3>
-              </div>
-              <div className="p-4 pt-0">
-                <div className="text-xs text-gray-500">
-                  <div className="flex justify-between">
-                    <span>Monthly Savings:</span>
-                    <span>{formatCurrency(summaryData.fiveYears.savings)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly Investments:</span>
-                    <span>{formatCurrency(summaryData.fiveYears.investments)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold">{getSelectedScenarioName()} - Projection Results</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                View different aspects of your financial projection
-              </p>
-            </div>
-            <div className="p-6 pt-0">
-              <div className="border-b">
-                <div className="flex w-full">
-                  <button 
-                    onClick={() => setActiveTab('net-worth')}
-                    className={`px-4 py-2 text-sm font-medium ${activeTab === 'net-worth' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Net Worth
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('income-expenses')}
-                    className={`px-4 py-2 text-sm font-medium ${activeTab === 'income-expenses' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Income vs. Expenses
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('savings')}
-                    className={`px-4 py-2 text-sm font-medium ${activeTab === 'savings' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Savings Growth
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('investments')}
-                    className={`px-4 py-2 text-sm font-medium ${activeTab === 'investments' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Investment Growth
-                  </button>
-                </div>
-              </div>
-              
-              <div className="pt-4">
-                {activeTab === 'net-worth' && <NetWorthChart data={projectionData} />}
-                {activeTab === 'income-expenses' && <IncomeExpensesChart data={projectionData} />}
-                {activeTab === 'savings' && <SavingsGrowthChart data={projectionData} />}
-                {activeTab === 'investments' && <InvestmentGrowthChart data={projectionData} />}
-              </div>
-            </div>
-          </div>
+          <ForecastStatus provenance={projectionData.provenance} />
+          <ValueModeControl showReal={useReal} onChange={setShowReal} available={hasRealData} inflationRate={projectionData.inflation_rate} firstForecastMonth={projectionData.dates[0]} />
+          <ForecastSummary summary={getSummaryData(useReal)} formatCurrency={formatCurrency} />
+          <section aria-label={`${getSelectedScenarioName()} forecast`} className="min-w-0">
+            <ProjectionTabs label="Forecast metric" value={activeTab} onValueChange={setActiveTab} tabs={[
+              { value: 'net-worth', label: 'Net worth', content: <NetWorthChart data={projectionData} showReal={useReal} /> },
+              { value: 'income-expenses', label: 'Income & expenses', content: <IncomeExpensesChart data={projectionData} showReal={useReal} /> },
+              { value: 'savings', label: 'Monthly savings', content: <SavingsGrowthChart data={projectionData} showReal={useReal} /> },
+              { value: 'investments', label: 'Monthly investments', content: <InvestmentGrowthChart data={projectionData} showReal={useReal} /> },
+            ]} />
+          </section>
+          {selectedScenario && <ForecastAssumptions scenario={selectedScenario} provenance={projectionData.provenance} formatCurrency={formatCurrency} />}
+          <p className="text-sm text-gray-600 dark:text-gray-400">Projections are estimates based on your records and assumptions, not guaranteed outcomes. Investment returns and future spending can differ.</p>
         </>
       )}
     </div>

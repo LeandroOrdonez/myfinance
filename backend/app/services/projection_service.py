@@ -1,18 +1,20 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract, and_, or_, desc, text
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from dateutil.relativedelta import relativedelta
 import copy
 import calendar
 import numpy as np
 import logging
 import time
+import math
 from typing import List, Dict, Optional, Tuple, Any
 
 from ..models.transaction import Transaction, TransactionType, ExpenseCategory, ExpenseType
 from ..models.statistics import FinancialStatistics, CategoryStatistics, StatisticsPeriod
 from ..models.financial_health import FinancialHealth
-from ..models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult, ParamType
+from ..models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult, ProjectionCalculation, ParamType
+from .projection_provenance import MODEL_VERSION, get_provenance, source_version
 from ..schemas.financial_projection import PARAMETER_BOUNDS
 from .holdings_history_service import HoldingsHistoryService
 
@@ -102,6 +104,44 @@ class ProjectionService:
         return value
 
     @staticmethod
+    def _derive_growth_parameters(historical_data: Dict[str, Any]) -> Dict[str, float]:
+        """Derive sustainable growth assumptions from historical data.
+
+        Values are clamped to PARAMETER_BOUNDS. Expense growth rates are
+        additionally capped at the income growth trend: a short-term spending
+        trend cannot sustainably outpace income, so deriving a permanent
+        compound rate above it would produce unrealistic forecasts.
+        """
+        income_growth = ProjectionService._clamp_to_bounds(
+            "income_growth_rate",
+            historical_data.get("avg_annual_income_growth", 0.03)
+        )
+        essential_growth = min(
+            ProjectionService._clamp_to_bounds(
+                "essential_expenses_growth_rate",
+                historical_data.get("avg_annual_essential_expense_growth", 0.03)
+            ),
+            income_growth
+        )
+        discretionary_growth = min(
+            ProjectionService._clamp_to_bounds(
+                "discretionary_expenses_growth_rate",
+                historical_data.get("avg_annual_discretionary_expense_growth", 0.03)
+            ),
+            income_growth
+        )
+        investment_rate = ProjectionService._clamp_to_bounds(
+            "investment_rate",
+            historical_data.get("avg_investment_rate", 0.10)
+        )
+        return {
+            "income_growth_rate": income_growth,
+            "essential_expenses_growth_rate": essential_growth,
+            "discretionary_expenses_growth_rate": discretionary_growth,
+            "investment_rate": investment_rate,
+        }
+
+    @staticmethod
     def create_default_scenarios(db: Session) -> List[ProjectionScenario]:
         """Create the default projection scenarios if they don't exist"""
         scenarios = []
@@ -117,24 +157,10 @@ class ProjectionService:
         # Start with a deep copy of the default base_case parameters
         base_case_params = copy.deepcopy(ProjectionService.DEFAULT_PARAMETERS["base_case"])
 
-        # Update specific parameter values using historical data
-        # Values are clamped to PARAMETER_BOUNDS to handle extreme historical patterns
-        base_case_params["income_growth_rate"]["value"] = ProjectionService._clamp_to_bounds(
-            "income_growth_rate",
-            historical_data.get("avg_annual_income_growth", base_case_params["income_growth_rate"]["value"])
-        )
-        base_case_params["essential_expenses_growth_rate"]["value"] = ProjectionService._clamp_to_bounds(
-            "essential_expenses_growth_rate",
-            historical_data.get("avg_annual_essential_expense_growth", base_case_params["essential_expenses_growth_rate"]["value"])
-        )
-        base_case_params["discretionary_expenses_growth_rate"]["value"] = ProjectionService._clamp_to_bounds(
-            "discretionary_expenses_growth_rate",
-            historical_data.get("avg_annual_discretionary_expense_growth", base_case_params["discretionary_expenses_growth_rate"]["value"])
-        )
-        base_case_params["investment_rate"]["value"] = ProjectionService._clamp_to_bounds(
-            "investment_rate",
-            historical_data.get("avg_investment_rate", base_case_params["investment_rate"]["value"])
-        )
+        # Update growth parameters using historical data
+        derived = ProjectionService._derive_growth_parameters(historical_data)
+        for param_name, value in derived.items():
+            base_case_params[param_name]["value"] = value
 
         scenario_definitions = {
             "base_case": {
@@ -202,36 +228,37 @@ class ProjectionService:
     @staticmethod
     def calculate_annual_growth(monthly_amounts: List[float]) -> Optional[float]:
         """
-        Calculate annualized growth by comparing total amounts between two consecutive years.
-        
+        Calculate annualized growth by comparing median monthly amounts between two consecutive years.
+
         Args:
             monthly_amounts: A list of monthly values in chronological order (at least 24 entries for 2 years)
-            
+
         Returns:
             The annual growth rate as a decimal, or None if calculation is not possible
-            
+
         Methodology:
-            1. Sum first 12 months (year 1 total)
-            2. Sum next 12 months (year 2 total)
-            3. Calculate (year2_total / year1_total) - 1
+            1. Median of first 12 months (year 1 typical month)
+            2. Median of next 12 months (year 2 typical month)
+            3. Calculate (year2_median / year1_median) - 1
+
+        The median is used instead of year totals so that lumpy one-off months
+        (e.g., a single large purchase) do not turn into a permanent compound
+        growth rate for the projection.
         """
         # Validate input length
         if len(monthly_amounts) < 24:
             return None
-            
-        # Calculate total for year 1 (first 12 months)
-        year1_total = sum(monthly_amounts[:12])
-        
-        # Calculate total for year 2 (next 12 months)
-        year2_total = sum(monthly_amounts[12:24])
-        
+
+        year1_median = float(np.median(monthly_amounts[:12]))
+        year2_median = float(np.median(monthly_amounts[12:24]))
+
         # Handle zero beginning value
-        if year1_total == 0:
+        if year1_median == 0:
             return None
-            
+
         # Calculate annual growth rate
-        annual_growth = (year2_total / year1_total) - 1
-        
+        annual_growth = (year2_median / year1_median) - 1
+
         return annual_growth
     
     
@@ -356,14 +383,19 @@ class ProjectionService:
                 CategoryStatistics.transaction_type == TransactionType.EXPENSE
             ).order_by(CategoryStatistics.date).all()
             
-            # Group stats by month and expense type, excluding investments
+            # Group stats by month and expense type, excluding investments.
+            # Restrict to the months covered by monthly_stats so the expense-type
+            # series is aligned with the income/expense series used for growth.
+            stat_months = {d.strftime('%Y-%m') for d in dates}
             monthly_expense_stats = {}
             for stat in category_stats:
                 # Skip investment expenses
                 if stat.category_name == ExpenseCategory.INVESTMENTS.value:
                     continue
-                    
+
                 month_key = stat.date.strftime('%Y-%m')
+                if month_key not in stat_months:
+                    continue
                 if month_key not in monthly_expense_stats:
                     monthly_expense_stats[month_key] = {'essential': [], 'discretionary': []}
                 
@@ -372,9 +404,10 @@ class ProjectionService:
                 else:
                     monthly_expense_stats[month_key]['discretionary'].append(stat.period_amount)
             
-            # Extract monthly totals for each expense type
-            monthly_essential = [sum(ProjectionService._winsorize(month_data['essential'])) for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
-            monthly_discretionary = [sum(ProjectionService._winsorize(month_data['discretionary'])) for month_data in monthly_expense_stats.values()] if monthly_expense_stats else [0]
+            # Extract monthly totals for each expense type in chronological order
+            sorted_months = sorted(monthly_expense_stats)
+            monthly_essential = [sum(monthly_expense_stats[m]['essential']) for m in sorted_months] if sorted_months else [0]
+            monthly_discretionary = [sum(monthly_expense_stats[m]['discretionary']) for m in sorted_months] if sorted_months else [0]
             
             # Calculate annual growth for essential and discretionary expenses using year-over-year comparison
             annual_essential_expense_growth = ProjectionService.calculate_annual_growth(monthly_essential)
@@ -437,9 +470,7 @@ class ProjectionService:
             if not scenario:
                 raise ValueError(f"Scenario with ID {scenario_id} not found")
             
-            # Recompute base case parameters if it's the base scenario
-            if scenario.is_base_scenario:
-                ProjectionService.recompute_base_case_parameters(db)
+            # Base assumptions are refreshed only by the explicit refresh action
                 
             parameters = db.query(ProjectionParameter).filter(
                 ProjectionParameter.scenario_id == scenario_id
@@ -451,7 +482,24 @@ class ProjectionService:
                 param_dict[param.param_name] = param.param_value
             
             # Get historical data analysis
-            historical_data = ProjectionService.analyze_historical_data(db)
+            historical_data = ProjectionService.analyze_historical_data(db, force_refresh=True)
+            raw_parameters = dict(param_dict)
+            defaults = {
+                "income_growth_rate": historical_data.get("avg_annual_income_growth", 0.03),
+                "essential_expenses_growth_rate": historical_data.get("avg_annual_essential_expense_growth", 0.03),
+                "discretionary_expenses_growth_rate": historical_data.get("avg_annual_discretionary_expense_growth", 0.03),
+                "investment_rate": historical_data.get("avg_investment_rate", 0.10),
+                "investment_return_rate": 0.07, "inflation_rate": 0.02,
+                "emergency_fund_target": 6, "holdings_market_value": 0,
+            }
+            param_dict = {**defaults, **param_dict}
+            for name, value in param_dict.items():
+                bounds = PARAMETER_BOUNDS.get(name)
+                if not math.isfinite(value) or (bounds and not bounds["min"] <= value <= bounds["max"]):
+                    raise ValueError(f"Invalid projection assumption: {name}")
+            if not 1 <= time_horizon <= 180:
+                raise ValueError("Projection horizon must be between 1 and 180 months")
+            input_version = source_version(db)
             
             # Clear existing projection results for this scenario
             db.query(ProjectionResult).filter(ProjectionResult.scenario_id == scenario_id).delete()
@@ -461,10 +509,10 @@ class ProjectionService:
             current_income = historical_data["avg_monthly_income"]
             current_essential_expenses = historical_data["avg_monthly_expenses"] * historical_data["essential_expense_ratio"]
             current_discretionary_expenses = historical_data["avg_monthly_expenses"] * historical_data["discretionary_expense_ratio"]
-            current_investment_rate = historical_data["avg_investment_rate"] or param_dict.get("investment_rate", 0.10)
+            current_investment_rate = param_dict["investment_rate"]
             
-            # Guardrail: cap expenses as a share of income using historical ratio (with an absolute ceiling)
-            expense_ratio_cap = min(0.95, historical_data.get("avg_expense_to_income_ratio", 0.85))
+            # Guardrail: reserve essential spending before investing monthly surplus
+            emergency_fund_target = param_dict["emergency_fund_target"]
             
             # Initialize investment portfolio with current market value if provided
             investment_portfolio = param_dict.get("holdings_market_value", 0)
@@ -474,10 +522,11 @@ class ProjectionService:
                 FinancialStatistics.period == StatisticsPeriod.ALL_TIME
             ).first()
             
-            # Use the latest total_net_savings as initial net worth, or fall back to 6 months of income if not available
+            # Use recorded net savings as opening cash, or disclose a zero starting balance if unavailable
             # Add the current market value of investments to the initial net worth
-            savings_base = latest_stats.total_net_savings if latest_stats else current_income * 6
-            initial_net_worth = savings_base + investment_portfolio
+            savings_base = latest_stats.total_net_savings if latest_stats else 0
+            cash_balance = savings_base
+            initial_net_worth = cash_balance + investment_portfolio
             
             # Calculate monthly growth rates from annual rates
             monthly_income_growth = (1 + param_dict.get("income_growth_rate", historical_data.get("avg_annual_income_growth", 0.03))) ** (1/12) - 1
@@ -494,31 +543,24 @@ class ProjectionService:
                 projection_date = current_date + relativedelta(months=i+1)
                 
                 # Apply growth rates
-                if i > 0:  # Keep first month at current values
-                    current_income *= (1 + monthly_income_growth)
-                    current_essential_expenses *= (1 + monthly_essential_growth)
-                    current_discretionary_expenses *= (1 + monthly_discretionary_growth)
+                current_income *= (1 + monthly_income_growth)  # Each projected month advances from the historical baseline
+                current_essential_expenses *= (1 + monthly_essential_growth)
+                current_discretionary_expenses *= (1 + monthly_discretionary_growth)
                 
                 # Calculate derived values
-                total_expenses_pre = current_essential_expenses + current_discretionary_expenses
-                # Apply cap to keep expenses within a realistic share of income
-                cap_amount = current_income * expense_ratio_cap
-                if total_expenses_pre > cap_amount and total_expenses_pre > 0:
-                    scale = cap_amount / total_expenses_pre
-                    current_essential_expenses *= scale
-                    current_discretionary_expenses *= scale
-                    total_expenses = cap_amount
-                else:
-                    total_expenses = total_expenses_pre
-                
-                investment_amount = current_income * current_investment_rate
+                total_expenses = current_essential_expenses + current_discretionary_expenses
+                # Preserve spending deficits and restrict contributions to affordable surplus
+                surplus = current_income - total_expenses
+                reserve_gap = max(0, current_essential_expenses * emergency_fund_target - cash_balance)
+                investment_amount = min(max(0, current_income * current_investment_rate), max(0, surplus - reserve_gap))
                 savings = current_income - total_expenses - investment_amount
                 
                 # Update investment portfolio with returns and new investments
                 investment_portfolio = (investment_portfolio * (1 + monthly_investment_return)) + investment_amount
                 
                 # Update net worth
-                net_worth += savings + investment_amount  # Investment is already counted in portfolio
+                cash_balance += savings
+                net_worth = cash_balance + investment_portfolio  # Cash and investments are disjoint balances
                 
                 # Create projection result
                 result = ProjectionResult(
@@ -536,6 +578,18 @@ class ProjectionService:
                 db.add(result)
                 results.append(result)
             
+            run = db.get(ProjectionCalculation, scenario_id)
+            if run is None:
+                run = ProjectionCalculation(scenario_id=scenario_id)
+                db.add(run)
+            run.calculated_at = datetime.now(timezone.utc)
+            run.model_version = MODEL_VERSION
+            run.source_version = input_version
+            run.time_horizon = time_horizon
+            run.parameters = raw_parameters
+            run.assumptions = param_dict
+            run.starting_cash = savings_base
+            run.cash_balance_known = latest_stats is not None
             db.commit()
             return results
             
@@ -545,7 +599,7 @@ class ProjectionService:
             raise e
     
     @staticmethod
-    def get_projection_results(db: Session, scenario_id: int) -> Dict[str, Any]:
+    def get_projection_results(db: Session, scenario_id: int, current_source: Optional[str] = None) -> Dict[str, Any]:
         """Get projection results in a format suitable for visualization
         
         Returns both nominal and real (inflation-adjusted) values.
@@ -559,13 +613,10 @@ class ProjectionService:
             if not results:
                 raise ValueError(f"No projection results found for scenario {scenario_id}")
             
-            # Get the inflation rate from scenario parameters
-            params = db.query(ProjectionParameter).filter(
-                ProjectionParameter.scenario_id == scenario_id
-            ).all()
-            param_dict = {p.param_name: p.param_value for p in params}
-            annual_inflation_rate = param_dict.get("inflation_rate", 0.02)
-            monthly_inflation_rate = (1 + annual_inflation_rate) ** (1/12) - 1
+            # Get the inflation rate from the assumptions used for this calculation
+            provenance = get_provenance(db, scenario_id, current_source)
+            annual_inflation_rate = provenance["assumptions"].get("inflation_rate")
+            monthly_inflation_rate = (1 + annual_inflation_rate) ** (1/12) - 1 if annual_inflation_rate is not None else 0
             
             # Format results for visualization
             dates = []
@@ -612,6 +663,8 @@ class ProjectionService:
                 monthly_inflation_rate=monthly_inflation_rate
             )
             
+            if annual_inflation_rate is None:
+                history["real_actual_net_worth"] = []
             return {
                 **history,
                 "dates": dates,
@@ -620,12 +673,13 @@ class ProjectionService:
                 "projected_investments": investment_series,
                 "projected_savings": savings_series,
                 "projected_net_worth": net_worth_series,
-                "real_projected_income": real_income_series,
-                "real_projected_expenses": real_expense_series,
-                "real_projected_investments": real_investment_series,
-                "real_projected_savings": real_savings_series,
-                "real_projected_net_worth": real_net_worth_series,
-                "inflation_rate": annual_inflation_rate
+                "real_projected_income": real_income_series if annual_inflation_rate is not None else [],
+                "real_projected_expenses": real_expense_series if annual_inflation_rate is not None else [],
+                "real_projected_investments": real_investment_series if annual_inflation_rate is not None else [],
+                "real_projected_savings": real_savings_series if annual_inflation_rate is not None else [],
+                "real_projected_net_worth": real_net_worth_series if annual_inflation_rate is not None else [],
+                "inflation_rate": annual_inflation_rate,
+                "provenance": provenance
             }
             
         except Exception as e:
@@ -663,33 +717,26 @@ class ProjectionService:
             
             # Get latest historical data (force refresh to ensure we have the most recent data)
             historical_data = ProjectionService.analyze_historical_data(db, force_refresh=True)
-            
-            # Define parameters to update with their corresponding historical data keys
-            param_mapping = {
-                "income_growth_rate": "avg_annual_income_growth",
-                "essential_expenses_growth_rate": "avg_annual_essential_expense_growth",
-                "discretionary_expenses_growth_rate": "avg_annual_discretionary_expense_growth",
-                "investment_rate": "avg_investment_rate"
-            }
-            
+
+            # Derive growth parameters, anchoring expense growth to the income trend
+            derived = ProjectionService._derive_growth_parameters(historical_data)
+
             # Track changes for return value
             changes = {}
-            
+
             # Update parameters
-            for param_name, historical_key in param_mapping.items():
+            for param_name, new_value in derived.items():
                 param = db.query(ProjectionParameter).filter(
                     ProjectionParameter.scenario_id == base_case.id,
                     ProjectionParameter.param_name == param_name
                 ).first()
-                
-                if param and historical_key in historical_data:
+
+                if param:
                     # Record old value
                     old_value = param.param_value
-                    
-                    # Update with new value (clamped to bounds to handle extreme historical patterns)
-                    param.param_value = ProjectionService._clamp_to_bounds(
-                        param_name, historical_data[historical_key]
-                    )
+
+                    # Update with derived value
+                    param.param_value = new_value
                     
                     # Track the change
                     changes[param_name] = {
@@ -701,10 +748,9 @@ class ProjectionService:
             # Commit changes
             db.commit()
             
-            # Delete any existing projection results for this scenario
-            # so they will be recalculated with the new parameters
-            db.query(ProjectionResult).filter(ProjectionResult.scenario_id == base_case.id).delete()
-            db.commit()
+            # Preserve existing projection results for this scenario
+            # so changes can be reviewed before explicitly recalculating
+            db.flush()
             
             return {
                 "scenario_id": base_case.id,
@@ -755,93 +801,57 @@ class ProjectionService:
         """
         try:
             comparison = {
-                "scenario_names": [],
-                "dates": [],
-                "net_worth_series": {},
-                "savings_series": {},
-                "investment_series": {},
-                "real_net_worth_series": {},
-                "real_savings_series": {},
-                "real_investment_series": {},
-                "inflation_rates": {}
+                "scenario_names": [], "dates": [], "net_worth_series": {},
+                "savings_series": {}, "investment_series": {}, "real_net_worth_series": {},
+                "real_savings_series": {}, "real_investment_series": {}, "inflation_rates": {}, "provenance": {}
             }
             
-            # Get the first scenario's dates to use as reference
+            # Get each scenario's recorded dates rather than assuming identical horizons
             if not scenario_ids:
                 raise ValueError("No scenarios provided for comparison")
-                
-            first_results = db.query(ProjectionResult).filter(
-                ProjectionResult.scenario_id == scenario_ids[0]
-            ).order_by(ProjectionResult.year, ProjectionResult.month).all()
-            
-            if not first_results:
-                raise ValueError(f"No projection results found for scenario {scenario_ids[0]}")
-                
+            current_source = source_version(db)
+            scenarios = [db.get(ProjectionScenario, sid) for sid in dict.fromkeys(scenario_ids)]
+            if any(scenario is None for scenario in scenarios):
+                raise ValueError("A selected scenario no longer exists")
+            datasets = [ProjectionService.get_projection_results(db, scenario.id, current_source) for scenario in scenarios]
+
             # Set up dates
-            for result in first_results:
-                date_str = f"{result.year}-{result.month:02d}"
-                comparison["dates"].append(date_str)
+            comparison["dates"] = sorted({month for data in datasets for month in data["dates"]})
             
             # Get data for each scenario
-            for scenario_id in scenario_ids:
-                scenario = db.query(ProjectionScenario).filter(ProjectionScenario.id == scenario_id).first()
-                if not scenario:
-                    continue
-                    
-                comparison["scenario_names"].append(scenario.name)
+            for scenario, data in zip(scenarios, datasets):
+                duplicate = sum(item.name == scenario.name for item in scenarios) > 1
+                label = f"{scenario.name} (#{scenario.id})" if duplicate else scenario.name
+                while label in comparison["scenario_names"] or label in {"date", "__actual"}:
+                    label = f"{label} (#{scenario.id})"
+                comparison["scenario_names"].append(label)
+                comparison["provenance"][label] = data["provenance"]
                 
-                # Get inflation rate for this scenario
-                params = db.query(ProjectionParameter).filter(
-                    ProjectionParameter.scenario_id == scenario_id
-                ).all()
-                param_dict = {p.param_name: p.param_value for p in params}
-                annual_inflation_rate = param_dict.get("inflation_rate", 0.02)
-                monthly_inflation_rate = (1 + annual_inflation_rate) ** (1/12) - 1
-                comparison["inflation_rates"][scenario.name] = annual_inflation_rate
+                # Get inflation rate used for this scenario's saved calculation
+                if data["inflation_rate"] is not None:
+                    comparison["inflation_rates"][label] = data["inflation_rate"]
                 
-                results = db.query(ProjectionResult).filter(
-                    ProjectionResult.scenario_id == scenario_id
-                ).order_by(ProjectionResult.year, ProjectionResult.month).all()
-                
-                if not results:
-                    continue
-                    
                 # Extract nominal series
-                net_worth_series = []
-                savings_series = []
-                investment_series = []
-                real_net_worth_series = []
-                real_savings_series = []
-                real_investment_series = []
-                
-                for i, r in enumerate(results):
-                    net_worth_series.append(round(r.projected_net_worth, 2))
-                    savings_series.append(round(r.projected_savings, 2))
-                    investment_series.append(round(r.projected_investments, 2))
+                for key, field in (("net_worth_series", "projected_net_worth"),
+                                   ("savings_series", "projected_savings"),
+                                   ("investment_series", "projected_investments")):
+                    values = dict(zip(data["dates"], data[field]))
+                    comparison[key][label] = [values.get(month) for month in comparison["dates"]]
                     
-                    # Calculate real values
-                    cumulative_inflation = (1 + monthly_inflation_rate) ** (i + 1)
-                    real_net_worth_series.append(round(r.projected_net_worth / cumulative_inflation, 2))
-                    real_savings_series.append(round(r.projected_savings / cumulative_inflation, 2))
-                    real_investment_series.append(round(r.projected_investments / cumulative_inflation, 2))
-                
-                comparison["net_worth_series"][scenario.name] = net_worth_series
-                comparison["savings_series"][scenario.name] = savings_series
-                comparison["investment_series"][scenario.name] = investment_series
-                comparison["real_net_worth_series"][scenario.name] = real_net_worth_series
-                comparison["real_savings_series"][scenario.name] = real_savings_series
-                comparison["real_investment_series"][scenario.name] = real_investment_series
-            
-            # Actual net worth leading up to the projection start (shared by all scenarios).
-            # Real values use the average inflation rate of the compared scenarios.
-            inflation_rates = list(comparison["inflation_rates"].values()) or [0.02]
-            avg_monthly_inflation = (1 + sum(inflation_rates) / len(inflation_rates)) ** (1/12) - 1
+                    # Reuse real values from the same immutable assumption snapshot
+                    if data["real_" + field] and len({item["dates"][0] for item in datasets}) == 1:
+                        real_values = dict(zip(data["dates"], data["real_" + field]))
+                        comparison["real_" + key][label] = [real_values.get(month) for month in comparison["dates"]]
+
+            # Actual net worth leading up to the earliest projection start (shared by all scenarios).
+            # Real history is omitted when inflation assumptions or reference months differ.
+            start = date.fromisoformat(comparison["dates"][0] + "-01")
             comparison.update(HoldingsHistoryService.get_actual_net_worth(
-                db,
-                end_month=date(first_results[0].year, first_results[0].month, 1) - relativedelta(months=1),
-                months=ProjectionService.ACTUAL_HISTORY_MONTHS,
-                monthly_inflation_rate=avg_monthly_inflation
+                db, end_month=start - relativedelta(months=1), months=ProjectionService.ACTUAL_HISTORY_MONTHS,
+                monthly_inflation_rate=0
             ))
+            same_basis = len({(data["dates"][0], data["inflation_rate"]) for data in datasets}) == 1
+            comparison["real_actual_net_worth"] = datasets[0]["real_actual_net_worth"] if same_basis and datasets[0]["inflation_rate"] is not None else []
             
             return comparison
             

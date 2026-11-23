@@ -8,8 +8,8 @@ interface ComparisonNetWorthChartProps {
   data: {
     scenario_names: string[];
     dates: string[];
-    net_worth_series: Record<string, number[]>;
-    real_net_worth_series?: Record<string, number[]>;
+    net_worth_series: Record<string, (number | null)[]>;
+    real_net_worth_series?: Record<string, (number | null)[]>;
     inflation_rates?: Record<string, number>;
     historical_dates?: string[];
     actual_net_worth?: (number | null)[];
@@ -21,12 +21,12 @@ interface ComparisonNetWorthChartProps {
 const ACTUAL_KEY = '__actual';
 
 // Values keyed by ACTUAL_KEY or scenario name
-type ComparisonPoint = { date: string } & Record<string, number | string | undefined>;
+type ComparisonPoint = { date: string } & Record<string, number | string | null | undefined>;
 
 const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data }) => {
   const { privacyMode } = usePrivacyMode();
   const [showReal, setShowReal] = useState(false);
-  const hasRealData = data?.real_net_worth_series && Object.keys(data.real_net_worth_series).length > 0;
+  const hasRealData = data?.scenario_names?.every(name => data.real_net_worth_series?.[name]?.some(value => value !== null)) && data.scenario_names.length > 0;
 
   if (!data || !data.dates || data.dates.length === 0 || !data.scenario_names || data.scenario_names.length === 0) {
     return (
@@ -108,11 +108,12 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
   return (
     <div className="w-full">
       {hasRealData && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-2">
             <button
+              aria-pressed={!showReal}
               onClick={() => setShowReal(false)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              className={`min-h-11 px-3 py-2 text-sm rounded-md transition-colors ${
                 !showReal
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -121,8 +122,9 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
               Nominal
             </button>
             <button
+              aria-pressed={showReal}
               onClick={() => setShowReal(true)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              className={`min-h-11 px-3 py-2 text-sm rounded-md transition-colors ${
                 showReal
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -146,19 +148,19 @@ const ComparisonNetWorthChart: React.FC<ComparisonNetWorthChartProps> = ({ data 
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
             tickMargin={10}
             minTickGap={30}
           />
           <YAxis 
             tickFormatter={(value) => formatCurrency(value)}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
             width={80}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           {hasActuals && (
-            <ReferenceLine x={lastActual.date} stroke="#9ca3af" strokeDasharray="4 4" label={{ value: 'Today', position: 'insideTopRight', fontSize: 12, fill: '#9ca3af' }} />
+            <ReferenceLine x={lastActual.date} stroke="#9ca3af" strokeDasharray="4 4" label={{ value: 'Last history month', position: 'insideTopRight', fontSize: 12, fill: 'var(--color-text-secondary)' }} />
           )}
           {hasActuals && (
             <Line

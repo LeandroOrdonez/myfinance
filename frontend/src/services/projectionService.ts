@@ -86,8 +86,9 @@ export async function calculateProjection(scenarioId: number, timeHorizon: numbe
 }
 
 // Fetch projection results for a scenario
-export async function fetchProjectionResults(scenarioId: number): Promise<ProjectionTimeseries> {
+export async function fetchProjectionResults(scenarioId: number): Promise<ProjectionTimeseries | null> {
   const response = await fetch(`${API_BASE_URL}/projections/scenarios/${scenarioId}/results`);
+  if (response.status === 409) return null;
   if (!response.ok) {
     throw new Error(`Failed to fetch projection results: ${response.statusText}`);
   }

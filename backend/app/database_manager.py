@@ -4,7 +4,7 @@ from .database import engine, Base
 from .models.transaction import Transaction
 from .models.statistics import FinancialStatistics, CategoryStatistics
 from .models.financial_health import FinancialHealth, FinancialRecommendation
-from .models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult
+from .models.financial_projection import ProjectionScenario, ProjectionParameter, ProjectionResult, ProjectionCalculation
 from .models.anomaly import TransactionAnomaly, AnomalyPattern, AnomalyRule
 from .models.budget import Budget
 from .services.statistics_service import StatisticsService
@@ -24,7 +24,7 @@ def init_database():
     existing_tables = inspector.get_table_names()
     logger.info(f"Existing tables: {existing_tables}")
 
-    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations", "projection_scenarios", "projection_parameters", "projection_results", "holdings_value_history", "transaction_anomalies", "anomaly_patterns", "anomaly_rules", "budgets"]
+    tables_to_check = ["transactions", "financial_statistics", "category_statistics", "financial_health", "financial_recommendations", "projection_scenarios", "projection_parameters", "projection_results", "projection_calculations", "holdings_value_history", "transaction_anomalies", "anomaly_patterns", "anomaly_rules", "budgets"]
     missing_tables = [table for table in tables_to_check if table not in existing_tables]
 
     if missing_tables:
@@ -100,8 +100,8 @@ def reset_database(reset_type: str = "all"):
             Base.metadata.drop_all(bind=engine, tables=[FinancialHealth.__table__, FinancialRecommendation.__table__])
             Base.metadata.create_all(bind=engine, tables=[FinancialHealth.__table__, FinancialRecommendation.__table__])
         elif reset_type == "projections":
-            Base.metadata.drop_all(bind=engine, tables=[ProjectionScenario.__table__, ProjectionParameter.__table__, ProjectionResult.__table__])
-            Base.metadata.create_all(bind=engine, tables=[ProjectionScenario.__table__, ProjectionParameter.__table__, ProjectionResult.__table__])
+            Base.metadata.drop_all(bind=engine, tables=[ProjectionScenario.__table__, ProjectionParameter.__table__, ProjectionResult.__table__, ProjectionCalculation.__table__])
+            Base.metadata.create_all(bind=engine, tables=[ProjectionScenario.__table__, ProjectionParameter.__table__, ProjectionResult.__table__, ProjectionCalculation.__table__])
         elif reset_type == "anomalies":
             Base.metadata.drop_all(bind=engine, tables=[TransactionAnomaly.__table__, AnomalyPattern.__table__, AnomalyRule.__table__])
             Base.metadata.create_all(bind=engine, tables=[TransactionAnomaly.__table__, AnomalyPattern.__table__, AnomalyRule.__table__])

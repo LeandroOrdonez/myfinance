@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { usePrivacyMode } from '../../../../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../../../../utils/formatPrivateAmount';
 
 interface SavingsGrowthChartProps {
+  showReal: boolean;
   data: {
     dates: string[];
     projected_savings: number[];
     real_projected_savings?: number[];
-    inflation_rate?: number;
+    inflation_rate?: number | null;
   };
 }
 
-const SavingsGrowthChart: React.FC<SavingsGrowthChartProps> = ({ data }) => {
+const SavingsGrowthChart: React.FC<SavingsGrowthChartProps> = ({ data, showReal }) => {
   const { privacyMode } = usePrivacyMode();
-  const [showReal, setShowReal] = useState(false);
   const hasRealData = data?.real_projected_savings && data.real_projected_savings.length > 0;
 
   if (!data || !data.dates || data.dates.length === 0) {
@@ -60,40 +60,11 @@ const SavingsGrowthChart: React.FC<SavingsGrowthChartProps> = ({ data }) => {
     return null;
   };
 
-  const inflationPct = data.inflation_rate ? (data.inflation_rate * 100).toFixed(1) : '2.0';
   const valueLabel = showReal ? ' (Real)' : '';
 
   return (
     <div className="w-full border rounded-lg shadow-sm p-4">
-      {hasRealData && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowReal(false)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                !showReal
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
-            >
-              Nominal
-            </button>
-            <button
-              onClick={() => setShowReal(true)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                showReal
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
-            >
-              Real (Inflation-Adjusted)
-            </button>
-          </div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Inflation rate: {inflationPct}%/year
-          </span>
-        </div>
-      )}
+
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
@@ -104,13 +75,13 @@ const SavingsGrowthChart: React.FC<SavingsGrowthChartProps> = ({ data }) => {
             <XAxis 
               dataKey="date" 
               tickFormatter={formatDate}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
               tickMargin={10}
               minTickGap={30}
             />
             <YAxis 
               tickFormatter={(value) => formatCurrency(value)}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
               width={80}
             />
             <Tooltip content={<CustomTooltip />} />

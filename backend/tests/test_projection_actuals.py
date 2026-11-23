@@ -139,6 +139,8 @@ def test_comparison_includes_shared_actual_net_worth_history():
     finally:
         db.close()
 
+    for scenario_id in ids:
+        assert client.post(f"/projections/scenarios/{scenario_id}/calculate").status_code == 200
     response = client.post("/projections/scenarios/compare", json=ids)
     assert response.status_code == 200
     data = response.json()

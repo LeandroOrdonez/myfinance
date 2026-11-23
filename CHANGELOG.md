@@ -1,5 +1,59 @@
 # MyFinance Changelog
 
+## 2026-11-23 – Projections: Fix Unrealistic History-Derived Growth Rates
+
+Fixed the base-case forecast exploding to millions in the red: a 59%/yr discretionary expense growth estimate (against −0.5%/yr income) compounded for 10 years, zeroing out monthly investments within ~18 months.
+
+- **Median-based growth estimation**: `calculate_annual_growth` now compares per-year median monthly amounts instead of raw year totals, so lumpy one-off months (e.g., single large purchases) no longer become permanent compound growth rates
+- **Income-anchored expense growth**: new `_derive_growth_parameters` helper (shared by base-case creation and the "refresh from history" action) caps history-derived expense growth at the derived income trend — spending cannot sustainably outpace income. Manually entered custom-scenario rates are unaffected
+- **Aligned comparison windows**: the essential/discretionary growth series is restricted to the same months as the income/expense series (previously off by one month due to `>=` vs `>` boundary)
+- Two regression tests added to `tests/test_projection_correctness.py` covering spike robustness and the income-trend cap
+
+### Notes
+- Applies to parameters *derived from history* (base-case creation and refresh). Existing stored parameters keep their old values until the base case is explicitly refreshed and recalculated
+- 69 backend tests pass
+
+## 2026-11-19 – Projections: Forecast Correctness, Provenance & Forecast-First UX
+
+Reworked the projections page around the forecast itself, fixed the calculation model so scenario assumptions actually control the result, and added persisted provenance so saved forecasts can be trusted as Current, Out of date, or Unverified.
+
+### Calculation correctness
+- Custom scenario parameters now drive the calculation, including valid `0` values (previously truthiness fallbacks could silently substitute defaults or the historical investment rate)
+- The scenario's `investment_rate` is applied instead of always preferring the historical rate
+- Net worth is accounted as cash savings plus invested assets: returns compound on the opening portfolio before new contributions are added, and contributions are no longer double-counted
+- Investment contributions are limited to affordable surplus after reserving cash toward the `emergency_fund_target`; spending deficits are shown rather than capped away
+- Base-case growth assumptions refresh from transaction history only via the explicit recompute path; the UI explains this and recommends custom scenarios for manually retained assumptions
+- New `tests/test_projection_correctness.py` covers the parameter-precedence, investment-accounting, and base-refresh invariants
+
+### Forecast provenance
+- `ProjectionResult` now stores calculation timestamp, the effective assumptions used, a source-data fingerprint, and the model version (`services/projection_provenance.py`)
+- Results are classified **Current** (assumptions and source data unchanged), **Out of date** (scenario or source data changed since calculation), or **Unverified** (legacy rows without metadata — not fabricated or overwritten)
+- Saved inflation-adjusted values stay tied to the assumptions used at calculation time, even after later scenario edits
+- Scenario/source-data changes invalidate provenance; `finance-data-updated` events trigger re-checks
+- A failed recalculation rolls back results and provenance together, so the previous forecast is retained and clearly labeled
+
+### Forecast-first UX
+- The page opens on the Forecast tab with the selected scenario's summary, chart, assumptions, and Calculate action grouped together
+- "Edit assumptions" opens the dialog over the forecast without switching tabs; scenario, horizon, metric, and value basis survive edit/cancel/save, and focus is restored to the trigger
+- One value-mode control ("Future euros" / "Inflation-adjusted euros") drives both the summary and every chart
+- Mobile uses a compact 1/3/5-year horizon selector and one summary block; assumptions and monthly detail disclose on demand, moving the chart into the first viewport
+- Replaced the misleading "Today" history-boundary label with the last recorded month
+- Persistent error alerts with retry for scenario loading, forecast loading, calculation, and comparison; stale responses can no longer overwrite a newly selected scenario's results
+- `ParameterEditor` preserves raw invalid drafts, shows per-field validation errors, and blocks invalid saves instead of silently clamping
+- Dialogs/tabs migrated to accessible Radix-based behavior (labels, Escape, focus restoration); privacy masking preserved across summaries, charts, holdings editor, and comparison
+
+### Comparison
+- `POST /projections/scenarios/compare` aligns scenarios by calendar month and preserves gaps where a scenario lacks data
+- Comparison views share the same value basis and provenance-aware messaging as the main forecast
+
+### Key files
+- Backend: `models/financial_projection.py`, `services/projection_service.py`, `services/projection_provenance.py`, `routers/projections.py`, `schemas/financial_projection.py`, `database_manager.py`, `tests/test_projection_correctness.py`, `tests/test_projection_actuals.py`
+- Frontend: `components/dashboard/projections/` (`ProjectionDashboard`, `ProjectionTabs`, `ResultsVisualization`, `ForecastStatus`, `ForecastSummary`, `ForecastAssumptions`, `ValueModeControl`, `ScenarioCard`, `HoldingsValueEditor`, `ParameterEditor`, `ScenarioManager`, `ScenarioComparison`, `dialogs/*`, `charts/*`), `hooks/useProjectionResults.ts`, `hooks/useProjectionScenarios.ts`, `hooks/useScenarioComparison.ts`, `services/projectionService.ts`, `types/projections.ts`
+
+### Notes
+- Existing saved forecasts are intentionally left untouched and display as **Unverified** until explicitly recalculated under the corrected model
+- 67 backend tests and 56 frontend tests pass; production build and TypeScript checks pass. The pre-existing `App.test.tsx` `react-router-dom` resolution failure is unrelated and unchanged
+
 ## 2026-10-22 – Actual Net Worth in Projection Results
 
 The Net Worth projection chart now shows the last 12 months of actual net worth as a solid line before the projection. The projection is drawn as a dashed line that starts from the last actual value, and a "Today" marker separates the two.

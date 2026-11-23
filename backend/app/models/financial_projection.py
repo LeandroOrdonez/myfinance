@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, JSON, Boolean, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, Float, String, Date, DateTime, ForeignKey, JSON, Boolean, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from ..database import Base
 import enum
@@ -28,6 +28,7 @@ class ProjectionScenario(Base):
     # Relationships
     parameters = relationship("ProjectionParameter", back_populates="scenario", cascade="all, delete-orphan")
     results = relationship("ProjectionResult", back_populates="scenario", cascade="all, delete-orphan")
+    calculation = relationship("ProjectionCalculation", back_populates="scenario", cascade="all, delete-orphan", uselist=False)
 
 
 class ProjectionParameter(Base):
@@ -59,6 +60,21 @@ class ProjectionResult(Base):
     
     # Relationships
     scenario = relationship("ProjectionScenario", back_populates="results")
+
+
+class ProjectionCalculation(Base):
+    __tablename__ = "projection_calculations"
+
+    scenario_id = Column(Integer, ForeignKey("projection_scenarios.id"), primary_key=True)
+    calculated_at = Column(DateTime(timezone=True), nullable=False)
+    model_version = Column(String(50), nullable=False)
+    source_version = Column(String(64), nullable=False)
+    time_horizon = Column(Integer, nullable=False)
+    parameters = Column(JSON, nullable=False)
+    assumptions = Column(JSON, nullable=False)
+    starting_cash = Column(Float, nullable=False)
+    cash_balance_known = Column(Boolean, nullable=False)
+    scenario = relationship("ProjectionScenario", back_populates="calculation")
 
 
 class HoldingsValueHistory(Base):

@@ -7,8 +7,8 @@ interface ComparisonSavingsChartProps {
   data: {
     scenario_names: string[];
     dates: string[];
-    savings_series: Record<string, number[]>;
-    real_savings_series?: Record<string, number[]>;
+    savings_series: Record<string, (number | null)[]>;
+    real_savings_series?: Record<string, (number | null)[]>;
     inflation_rates?: Record<string, number>;
   };
 }
@@ -16,7 +16,7 @@ interface ComparisonSavingsChartProps {
 const ComparisonSavingsChart: React.FC<ComparisonSavingsChartProps> = ({ data }) => {
   const { privacyMode } = usePrivacyMode();
   const [showReal, setShowReal] = useState(false);
-  const hasRealData = data?.real_savings_series && Object.keys(data.real_savings_series).length > 0;
+  const hasRealData = data?.scenario_names?.every(name => data.real_savings_series?.[name]?.some(value => value !== null)) && data.scenario_names.length > 0;
 
   if (!data || !data.dates || data.dates.length === 0 || !data.scenario_names || data.scenario_names.length === 0) {
     return (
@@ -82,11 +82,12 @@ const ComparisonSavingsChart: React.FC<ComparisonSavingsChartProps> = ({ data })
   return (
     <div className="w-full border rounded-lg shadow-sm p-4">
       {hasRealData && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-2">
             <button
+              aria-pressed={!showReal}
               onClick={() => setShowReal(false)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              className={`min-h-11 px-3 py-2 text-sm rounded-md transition-colors ${
                 !showReal
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -95,8 +96,9 @@ const ComparisonSavingsChart: React.FC<ComparisonSavingsChartProps> = ({ data })
               Nominal
             </button>
             <button
+              aria-pressed={showReal}
               onClick={() => setShowReal(true)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              className={`min-h-11 px-3 py-2 text-sm rounded-md transition-colors ${
                 showReal
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -120,13 +122,13 @@ const ComparisonSavingsChart: React.FC<ComparisonSavingsChartProps> = ({ data })
             <XAxis 
               dataKey="date" 
               tickFormatter={formatDate}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
               tickMargin={10}
               minTickGap={30}
             />
             <YAxis 
               tickFormatter={(value) => formatCurrency(value)}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
               width={80}
             />
             <Tooltip content={<CustomTooltip />} />

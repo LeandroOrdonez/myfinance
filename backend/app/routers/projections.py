@@ -104,6 +104,7 @@ def get_scenario_detail(
             name=scenario.name,
             description=scenario.description,
             is_default=scenario.is_default,
+            is_base_scenario=scenario.is_base_scenario,
             created_at=scenario.created_at,
             user_id=scenario.user_id,
             parameters=pydantic_parameters
@@ -286,6 +287,8 @@ def calculate_projection(
         ProjectionService.calculate_projection(db, scenario_id, time_horizon)
         
         return {"success": True}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error calculating projection: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -307,6 +310,10 @@ def get_projection_results(
         results = ProjectionService.get_projection_results(db, scenario_id)
         
         return results
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail="Calculate this scenario before loading its forecast.") from e
     except Exception as e:
         logger.error(f"Error retrieving projection results: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -331,8 +338,8 @@ def compare_scenarios(
             # Check if projection has been calculated
             results = db.query(ProjectionResult).filter(ProjectionResult.scenario_id == scenario_id).first()
             if not results:
-                # Calculate projection if not already done
-                ProjectionService.calculate_projection(db, scenario_id)
+                # Require explicit calculation rather than writing during comparison
+                raise HTTPException(status_code=409, detail="Calculate every selected scenario before comparing.")
         
         # Compare scenarios
         comparison = ProjectionService.compare_scenarios(db, scenario_ids)
@@ -357,8 +364,7 @@ def recompute_base_scenario_parameters(db: Session = Depends(get_db)):
         # Recompute base scenario parameters
         result = ProjectionService.recompute_base_case_parameters(db)
         
-        # Calculate projection with new parameters
-        ProjectionService.calculate_projection(db, result["scenario_id"])
+        # Forecast calculation remains explicit after refreshing assumptions
         
         return result
     except Exception as e:

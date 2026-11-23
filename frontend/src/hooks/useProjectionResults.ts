@@ -1,19 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchProjectionResults, calculateProjection } from '../services/projectionService';
 import { usePrivacyMode } from '../contexts/PrivacyContext';
 import { formatPrivateAmount } from '../utils/formatPrivateAmount';
+import { ProjectionTimeseries } from '../types/projections';
 
-export const useProjectionResults = (selectedScenarioId: number | null) => {
+export const useProjectionResults = (selectedScenarioId: number | null, showReal = false, refreshVersion = 0) => {
   const { privacyMode } = usePrivacyMode();
-  const [projectionData, setProjectionData] = useState<any>(null);
+  const [projectionData, setProjectionData] = useState<ProjectionTimeseries | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [calculatedAt, setCalculatedAt] = useState<Date | null>(null);
+  const requestId = useRef(0);
+  const calculating = useRef(false);
 
   // Load projection results when selected scenario changes
   const loadResults = useCallback(async () => {
+    const request = ++requestId.current;
     if (!selectedScenarioId) {
       setProjectionData(null);
+      setIsLoading(false);
+      setError(null);
       return;
     }
 
@@ -21,87 +28,82 @@ export const useProjectionResults = (selectedScenarioId: number | null) => {
       setIsLoading(true);
       setError(null);
       const data = await fetchProjectionResults(selectedScenarioId);
-      setProjectionData(data);
+      if (request === requestId.current) setProjectionData(data);
     } catch (err) {
-      console.error('Error loading projection results:', err);
-      setProjectionData(null);
-      setError('No projection data. Calculate the projection first to view results.');
+      if (request === requestId.current) {
+        setError('Could not load the saved forecast. Retry loading, or calculate a forecast with the current assumptions.');
+      }
     } finally {
-      setIsLoading(false);
+      if (request === requestId.current) setIsLoading(false);
     }
   }, [selectedScenarioId]);
 
   // Calculate projection for the selected scenario
   const calculateResults = useCallback(async () => {
-    if (!selectedScenarioId) return;
-    
+    if (!selectedScenarioId || calculating.current) return false;
+    const request = ++requestId.current;
+    calculating.current = true;
     try {
+      setIsLoading(false);
       setIsCalculating(true);
       setError(null);
       await calculateProjection(selectedScenarioId);
       
       // Reload results after calculation
       const data = await fetchProjectionResults(selectedScenarioId);
+      if (!data) throw new Error('No saved forecast after calculation');
+      if (request !== requestId.current) return false;
       setProjectionData(data);
+      setCalculatedAt(new Date());
+      return true;
     } catch (err) {
-      console.error('Error calculating projection:', err);
-      setError('Failed to calculate projection');
+      if (request === requestId.current) setError('Could not calculate and load the forecast. Showing the previously loaded results, not a confirmed refresh. Retry loading to check the saved forecast, or calculate again.');
+      return false;
     } finally {
-      setIsCalculating(false);
+      if (request === requestId.current) {
+        calculating.current = false;
+        setIsCalculating(false);
+      }
     }
   }, [selectedScenarioId]);
 
   // Format currency helper
-  const formatCurrency = (value: number) =>
-    formatPrivateAmount(
+  const formatCurrency = (value: number | undefined) =>
+    value === undefined || !Number.isFinite(value) ? 'Unavailable' : formatPrivateAmount(
       value,
       privacyMode,
       (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
     );
 
   // Get projection summary data
-  const getSummaryData = useCallback(() => {
-    if (!projectionData || !projectionData.dates || projectionData.dates.length === 0) {
+  const getSummaryData = useCallback((real = showReal) => {
+    const summary = (index: number) => {
+      const available = projectionData && index < projectionData.dates.length;
       return {
-        oneYear: { netWorth: 0, savings: 0, investments: 0 },
-        threeYears: { netWorth: 0, savings: 0, investments: 0 },
-        fiveYears: { netWorth: 0, savings: 0, investments: 0 },
+        netWorth: available ? (real ? projectionData.real_projected_net_worth : projectionData.projected_net_worth)?.[index] : undefined,
+        savings: available ? (real ? projectionData.real_projected_savings : projectionData.projected_savings)?.[index] : undefined,
+        investments: available ? (real ? projectionData.real_projected_investments : projectionData.projected_investments)?.[index] : undefined,
       };
-    }
-
-    const oneYearIndex = Math.min(11, projectionData.dates.length - 1);
-    const threeYearIndex = Math.min(35, projectionData.dates.length - 1);
-    const fiveYearIndex = Math.min(59, projectionData.dates.length - 1);
-
-    return {
-      oneYear: {
-        netWorth: projectionData.projected_net_worth[oneYearIndex],
-        savings: projectionData.projected_savings[oneYearIndex],
-        investments: projectionData.projected_investments[oneYearIndex],
-      },
-      threeYears: {
-        netWorth: projectionData.projected_net_worth[threeYearIndex],
-        savings: projectionData.projected_savings[threeYearIndex],
-        investments: projectionData.projected_investments[threeYearIndex],
-      },
-      fiveYears: {
-        netWorth: projectionData.projected_net_worth[fiveYearIndex],
-        savings: projectionData.projected_savings[fiveYearIndex],
-        investments: projectionData.projected_investments[fiveYearIndex],
-      },
     };
-  }, [projectionData]);
+    return { oneYear: summary(11), threeYears: summary(35), fiveYears: summary(59) };
+  }, [projectionData, showReal]);
 
   // Load results when the selected scenario changes
   useEffect(() => {
+    setProjectionData(null);
+    setCalculatedAt(null);
+    setIsCalculating(false);
+    calculating.current = false;
     loadResults();
-  }, [loadResults]);
+    return () => { requestId.current += 1; };
+  }, [loadResults, refreshVersion]);
 
   return {
     projectionData,
     isCalculating,
     isLoading,
     error,
+    calculatedAt,
     calculateResults,
     formatCurrency,
     getSummaryData,

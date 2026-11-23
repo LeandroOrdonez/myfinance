@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Dict, Any
-from datetime import date
+from typing import List, Optional, Dict, Any, Literal
+from datetime import date, datetime
 from enum import Enum
 
 
@@ -27,7 +27,7 @@ PARAMETER_BOUNDS = {
 
 class ProjectionParameterBase(BaseModel):
     param_name: str
-    param_value: float
+    param_value: float = Field(allow_inf_nan=False)
     param_type: ParamType
     
     @field_validator('param_value')
@@ -58,7 +58,7 @@ class ProjectionParameter(ProjectionParameterBase):
 
 
 class HoldingsMarketValueUpdate(BaseModel):
-    value: float = Field(ge=0)
+    value: float = Field(ge=0, le=1e12, allow_inf_nan=False)
 
 
 class ProjectionScenarioBase(BaseModel):
@@ -108,7 +108,20 @@ class ProjectionResult(ProjectionResultBase):
         orm_mode = True
 
 
+class ForecastProvenance(BaseModel):
+    status: Literal["current", "out_of_date", "unverified"]
+    calculated_at: Optional[datetime] = None
+    assumptions: Dict[str, float] = Field(default_factory=dict)
+    source_version: Optional[str] = None
+    model_version: Optional[str] = None
+    time_horizon: Optional[int] = None
+    starting_cash: Optional[float] = None
+    cash_balance_known: Optional[bool] = None
+    reasons: List[str] = Field(default_factory=list)
+
+
 class ProjectionTimeseries(BaseModel):
+    provenance: ForecastProvenance
     dates: List[str]
     projected_income: List[float]
     projected_expenses: List[float]
@@ -121,7 +134,7 @@ class ProjectionTimeseries(BaseModel):
     real_projected_investments: List[float] = []
     real_projected_savings: List[float] = []
     real_projected_net_worth: List[float] = []
-    inflation_rate: float = 0.02
+    inflation_rate: Optional[float] = None
     # Actual net worth (cumulative net savings + holdings) for the months before the projection.
     # Entries are None for months without a recorded holdings value.
     historical_dates: List[str] = []
@@ -130,15 +143,16 @@ class ProjectionTimeseries(BaseModel):
 
 
 class ScenarioComparison(BaseModel):
+    provenance: Dict[str, ForecastProvenance] = Field(default_factory=dict)
     scenario_names: List[str]
     dates: List[str]
-    net_worth_series: Dict[str, List[float]]
-    savings_series: Dict[str, List[float]]
-    investment_series: Dict[str, List[float]]
+    net_worth_series: Dict[str, List[Optional[float]]]
+    savings_series: Dict[str, List[Optional[float]]]
+    investment_series: Dict[str, List[Optional[float]]]
     # Real (inflation-adjusted) series
-    real_net_worth_series: Dict[str, List[float]] = {}
-    real_savings_series: Dict[str, List[float]] = {}
-    real_investment_series: Dict[str, List[float]] = {}
+    real_net_worth_series: Dict[str, List[Optional[float]]] = {}
+    real_savings_series: Dict[str, List[Optional[float]]] = {}
+    real_investment_series: Dict[str, List[Optional[float]]] = {}
     inflation_rates: Dict[str, float] = {}
     # Actual net worth before the projection, shared by all scenarios (None where no holdings value was recorded)
     historical_dates: List[str] = []

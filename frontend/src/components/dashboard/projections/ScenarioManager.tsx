@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Edit, Plus, Trash2, RefreshCw, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { AlertCircle, Plus, X } from 'lucide-react';
 import { ProjectionScenario, ProjectionParameter, ProjectionParameterCreate } from '../../../types/projections';
-import { createScenario, updateScenario, deleteScenario, calculateProjection, recomputeBaseScenario, updateHoldingsMarketValue } from '../../../services/projectionService';
+import { createScenario, updateScenario, deleteScenario, calculateProjection, recomputeBaseScenario } from '../../../services/projectionService';
 import { ScenarioFormDialog, DeleteConfirmDialog } from './dialogs';
+import { HoldingsValueEditor } from './HoldingsValueEditor';
+import { ScenarioCard } from './ScenarioCard';
 
 interface ScenarioManagerProps {
   scenarios: ProjectionScenario[];
   onScenariosChange: () => void;
   isLoading: boolean;
+  editScenarioId?: number | null;
+  onEditHandled?: () => void;
+  onViewForecast?: (scenarioId: number, calculated?: boolean) => void;
 }
 
 interface NotificationProps {
@@ -16,39 +21,27 @@ interface NotificationProps {
   message: string;
 }
 
-const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenariosChange, isLoading }) => {
+const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenariosChange, isLoading, editScenarioId, onEditHandled, onViewForecast }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCalculating, setIsCalculating] = useState<number | null>(null);
   const [isRecomputing, setIsRecomputing] = useState(false);
-  const [holdingsValue, setHoldingsValue] = useState('0');
-  const [isSavingHoldings, setIsSavingHoldings] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [selectedScenario, setSelectedScenario] = useState<ProjectionScenario | null>(null);
   const [notification, setNotification] = useState<NotificationProps | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    is_default: false,
-    parameters: [] as ProjectionParameterCreate[]
-  });
+  const [formData, setFormData] = useState({ name: '', description: '', is_default: false, parameters: [] as ProjectionParameterCreate[] });
+  const busy = isLoading || isSaving || isDeleting || isCalculating !== null || isRecomputing;
   
   // Derive the shared holdings market value from the scenarios (kept identical across all)
-  const sharedHoldingsValue = scenarios
-    .map(s => s.parameters?.find(p => p.param_name === 'holdings_market_value')?.param_value)
-    .find(v => v !== undefined) ?? 0;
+  const sharedHoldingsValue = scenarios.map(s => s.parameters?.find(p => p.param_name === 'holdings_market_value')?.param_value).find(v => v !== undefined) ?? 0;
 
-  // Sync the holdings input when scenarios change
+  // Auto-dismiss successful notifications after 3 seconds
   useEffect(() => {
-    setHoldingsValue(sharedHoldingsValue.toString());
-  }, [sharedHoldingsValue]);
-
-  // Auto-dismiss notification after 3 seconds
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => {
-        setNotification(null);
-      }, 3000);
+    if (notification?.type === 'success') {
+      const timer = setTimeout(() => { setNotification(null); }, 3000);
       return () => clearTimeout(timer);
     }
   }, [notification]);
@@ -76,10 +69,9 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
 
   // Open create dialog
   const openCreateDialog = () => {
+    setFormError(null);
     setFormData({
-      name: '',
-      description: '',
-      is_default: false,
+      name: '', description: '', is_default: false,
       parameters: [
         { param_name: 'income_growth_rate', param_value: 0.03, param_type: 'percentage' },
         { param_name: 'essential_expenses_growth_rate', param_value: 0.03, param_type: 'percentage' },
@@ -95,112 +87,107 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
   };
 
   // Open edit dialog
-  const openEditDialog = (scenario: ProjectionScenario) => {
+  const openEditDialog = useCallback((scenario: ProjectionScenario) => {
+    setFormError(null);
     setSelectedScenario(scenario);
     setFormData({
-      name: scenario.name,
-      description: scenario.description,
-      is_default: scenario.is_default,
-      parameters: scenario.parameters?.map((p: ProjectionParameter) => ({
-        param_name: p.param_name,
-        param_value: p.param_value,
-        param_type: p.param_type
-      })) || []
+      name: scenario.name, description: scenario.description, is_default: scenario.is_default,
+      parameters: scenario.parameters?.map((p: ProjectionParameter) => ({ param_name: p.param_name, param_value: p.param_value, param_type: p.param_type })) || []
     });
     setIsEditDialogOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    const scenario = scenarios.find(item => item.id === editScenarioId);
+    if (scenario) { openEditDialog(scenario); onEditHandled?.(); }
+  }, [editScenarioId, scenarios, openEditDialog, onEditHandled]);
 
   // Open delete dialog
   const openDeleteDialog = (scenario: ProjectionScenario) => {
+    setFormError(null);
     setSelectedScenario(scenario);
     setIsDeleteDialogOpen(true);
   };
 
   // Handle create scenario
   const handleCreateScenario = async () => {
+    if (isSaving) return;
     try {
-      await createScenario(formData);
+      setIsSaving(true);
+      setFormError(null);
+      const scenario = await createScenario({ ...formData, name: formData.name.trim() });
       setIsCreateDialogOpen(false);
       onScenariosChange();
       showNotification('success', 'Success', 'Scenario created successfully');
-    } catch (error) {
-      console.error('Error creating scenario:', error);
-      showNotification('error', 'Error', 'Failed to create scenario');
+      onViewForecast?.(scenario.id);
+    } catch {
+      setFormError('Could not create the scenario. Your entries have been kept. Try saving again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   // Handle update scenario
   const handleUpdateScenario = async () => {
+    if (!selectedScenario || isSaving) return;
     try {
-      if (!selectedScenario) return;
-      await updateScenario(selectedScenario.id, formData);
+      setIsSaving(true);
+      setFormError(null);
+      await updateScenario(selectedScenario.id, { ...formData, name: formData.name.trim() });
       setIsEditDialogOpen(false);
       onScenariosChange();
-      showNotification('success', 'Success', 'Scenario updated successfully');
-    } catch (error) {
-      console.error('Error updating scenario:', error);
-      showNotification('error', 'Error', 'Failed to update scenario');
+      showNotification('success', 'Success', 'Scenario updated. Recalculate its forecast to include your changes.');
+      onViewForecast?.(selectedScenario.id);
+    } catch {
+      setFormError('Could not save the scenario. Your entries have been kept. Try saving again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   // Handle delete scenario
   const handleDeleteScenario = async () => {
-    if (!selectedScenario) return;
-    
+    if (!selectedScenario || isDeleting) return;
     try {
+      setIsDeleting(true);
+      setFormError(null);
       await deleteScenario(selectedScenario.id);
       showNotification('success', 'Success', 'Scenario deleted successfully');
       setIsDeleteDialogOpen(false);
       onScenariosChange();
-    } catch (error) {
-      console.error('Error deleting scenario:', error);
-      showNotification('error', 'Error', 'Failed to delete scenario');
+    } catch {
+      setFormError('Could not delete the scenario. Try deleting it again, or cancel to keep it.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   // Handle calculate projection
   const handleCalculateProjection = async (scenarioId: number) => {
+    if (busy) return;
     try {
       setIsCalculating(scenarioId);
       await calculateProjection(scenarioId);
-      onScenariosChange();
-      showNotification('success', 'Projection Calculated', 'The projection has been calculated successfully.');
-    } catch (error) {
-      showNotification('error', 'Calculation Failed', `Failed to calculate projection: ${error instanceof Error ? error.message : String(error)}`);
+      showNotification('success', 'Forecast calculated', 'The forecast has been calculated successfully.');
+      onViewForecast?.(scenarioId, true);
+    } catch {
+      showNotification('error', 'Calculation failed', 'Could not confirm the calculation. View the forecast to check its saved status, then retry if needed.');
     } finally {
       setIsCalculating(null);
     }
   };
 
-  // Handle updating the shared holdings market value for all scenarios
-  const handleUpdateHoldingsValue = async () => {
-    const value = parseFloat(holdingsValue);
-    if (isNaN(value) || value < 0) {
-      showNotification('error', 'Invalid Value', 'Holdings market value must be a non-negative number');
-      return;
-    }
-
-    try {
-      setIsSavingHoldings(true);
-      await updateHoldingsMarketValue(value);
-      onScenariosChange();
-      showNotification('success', 'Holdings Updated', 'Holdings market value applied to all scenarios');
-    } catch (error) {
-      showNotification('error', 'Update Failed', `Failed to update holdings market value: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsSavingHoldings(false);
-    }
-  };
-
   // Handle recompute base scenario parameters
   const handleRecomputeBaseScenario = async () => {
+    if (busy) return;
     try {
       setIsRecomputing(true);
       const result = await recomputeBaseScenario();
       onScenariosChange();
-      showNotification('success', 'Parameters Updated', `Base scenario parameters have been updated with the latest financial data.`);
-    } catch (error) {
-      showNotification('error', 'Recomputation Failed', `Failed to recompute base scenario parameters: ${error instanceof Error ? error.message : String(error)}`);
+      showNotification('success', 'Assumptions refreshed', 'Base assumptions updated using transaction data. Calculate the forecast to include these changes.');
+      onViewForecast?.(result.scenario_id);
+    } catch {
+      showNotification('error', 'Refresh failed', 'Could not refresh the base assumptions and forecast. Try refreshing again before relying on saved results.');
     } finally {
       setIsRecomputing(false);
     }
@@ -209,202 +196,35 @@ const ScenarioManager: React.FC<ScenarioManagerProps> = ({ scenarios, onScenario
   return (
     <div className="space-y-4">
       {notification && (
-        <div className={`p-4 rounded-md mb-4 ${notification.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200'}`}>
-          <div className="flex items-center">
-            {notification.type === 'success' ? (
-              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <AlertCircle className="h-5 w-5 mr-2" />
-            )}
-            <div>
-              <p className="font-medium">{notification.title}</p>
-              <p className="text-sm">{notification.message}</p>
-            </div>
-            <button 
-              onClick={() => setNotification(null)} 
-              className="ml-auto"
-            >
-              <X className="h-4 w-4" />
-            </button>
+        <div role={notification.type === 'error' ? 'alert' : 'status'} className={`p-4 rounded-md ${notification.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200'}`}>
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 shrink-0 mt-1" aria-hidden="true" />
+            <div className="min-w-0"><p className="font-medium">{notification.title}</p><p className="text-sm">{notification.message}</p></div>
+            <button type="button" aria-label="Dismiss notification" onClick={() => setNotification(null)} className="ml-auto min-h-11 min-w-11 flex items-center justify-center"><X className="h-4 w-4" aria-hidden="true" /></button>
           </div>
         </div>
       )}
-      
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Manage Projection Scenarios</h3>
-        <button 
-          onClick={openCreateDialog}
-          className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Scenario
-        </button>
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <h2 className="text-lg font-medium">Projection scenarios</h2>
+        <button type="button" disabled={busy} onClick={openCreateDialog} className="flex items-center min-h-11 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"><Plus className="mr-2 h-4 w-4" aria-hidden="true" />Create scenario</button>
       </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <label htmlFor="holdings-market-value" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Holdings Market Value
-            </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Current market value of your investments, applied to all scenarios
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              id="holdings-market-value"
-              type="number"
-              min="0"
-              step="1"
-              value={holdingsValue}
-              onChange={(e) => setHoldingsValue(e.target.value)}
-              className="w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 dark:bg-gray-700 dark:text-white"
-            />
-            <span className="text-gray-500 text-sm">€</span>
-            <button
-              onClick={handleUpdateHoldingsValue}
-              disabled={isSavingHoldings || isLoading || scenarios.length === 0}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {isSavingHoldings ? 'Saving...' : 'Apply to All'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="w-full bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
-              <div className="mb-4">
-                <div className="h-6 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-                <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              </div>
-              <div className="mb-4">
-                <div className="h-20 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : scenarios.length === 0 ? (
-        <div className="p-4 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-          <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 mr-2 mt-0.5" />
-            <div>
-              <h4 className="font-medium">No scenarios found</h4>
-              <p className="text-sm">
-                Create a new scenario to get started with financial projections.
-              </p>
-            </div>
-          </div>
-        </div>
+      <HoldingsValueEditor value={sharedHoldingsValue} disabled={busy || !scenarios.length} onSaved={onScenariosChange} />
+      {isLoading ? <p role="status" className="py-8 text-gray-600 dark:text-gray-300">Loading scenarios…</p> : !scenarios.length ? (
+        <div className="p-4 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"><h3 className="font-medium">No scenarios yet</h3><p className="text-sm">Create a scenario to start exploring your financial future.</p></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {scenarios.map((scenario) => (
-            <div key={scenario.id} className="w-full bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300">
-              <div className="mb-4">
-                <h4 className="text-lg font-medium">{scenario.name}</h4>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {scenario.is_default && <span className="text-blue-500 text-xs font-medium mr-2">DEFAULT</span>}
-                  Created: {new Date(scenario.created_at).toLocaleDateString()}
-                </div>
-              </div>
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300">{scenario.description}</p>
-              </div>
-              <div className="flex justify-between">
-                <button 
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md border ${isCalculating === scenario.id ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                  onClick={() => handleCalculateProjection(scenario.id)}
-                  disabled={isCalculating === scenario.id}
-                >
-                  {isCalculating === scenario.id ? 'Calculating...' : 'Calculate'}
-                </button>
-                <div className="flex space-x-2">
-                  <button 
-                    className={`p-2 rounded-md border ${isCalculating === scenario.id ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                    onClick={() => openEditDialog(scenario)}
-                    disabled={isCalculating === scenario.id}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button 
-                    className={`p-2 rounded-md border ${scenario.is_default || isCalculating === scenario.id ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                    onClick={() => openDeleteDialog(scenario)}
-                    disabled={scenario.is_default || isCalculating === scenario.id}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                  {scenario.is_base_scenario && (
-                    <button 
-                      onClick={handleRecomputeBaseScenario}
-                      className="px-2 py-1 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 rounded transition-colors flex items-center"
-                      disabled={isRecomputing}
-                      title="Recompute parameters using latest financial data"
-                    >
-                      {isRecomputing ? (
-                        <>
-                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                          <span>Updating...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          <span>Update</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {scenarios.map(scenario => <ScenarioCard key={scenario.id} scenario={scenario} busy={busy} isCalculating={isCalculating === scenario.id} isRecomputing={isRecomputing} onCalculate={() => handleCalculateProjection(scenario.id)} onView={onViewForecast ? () => onViewForecast(scenario.id) : undefined} onEdit={() => openEditDialog(scenario)} onDelete={() => openDeleteDialog(scenario)} onRecompute={handleRecomputeBaseScenario} />)}
         </div>
       )}
 
       {/* Create Scenario Dialog */}
-      <ScenarioFormDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        title="Create New Scenario"
-        description="Create a new projection scenario with custom parameters."
-        formData={formData}
-        onInputChange={handleInputChange}
-        onSwitchChange={handleSwitchChange}
-        onParametersChange={handleParametersChange}
-        onSubmit={handleCreateScenario}
-        submitLabel="Create Scenario"
-      />
+      <ScenarioFormDialog isOpen={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} title="Create scenario" description="Choose assumptions for a possible financial future. Defaults are a starting point, not financial advice." formData={formData} onInputChange={handleInputChange} onSwitchChange={handleSwitchChange} onParametersChange={handleParametersChange} onSubmit={handleCreateScenario} submitLabel="Create scenario" isSaving={isSaving} error={formError} />
 
       {/* Edit Scenario Dialog */}
-      <ScenarioFormDialog
-        isOpen={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
-        title="Edit Scenario"
-        description="Modify this projection scenario's details and parameters."
-        formData={formData}
-        onInputChange={handleInputChange}
-        onSwitchChange={handleSwitchChange}
-        onParametersChange={handleParametersChange}
-        onSubmit={handleUpdateScenario}
-        submitLabel="Update Scenario"
-        idPrefix="edit-"
-      />
+      <ScenarioFormDialog isOpen={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} title="Edit assumptions" description={selectedScenario?.is_base_scenario ? 'Manual assumptions are retained when calculating. Refresh from transactions only when you want to replace the base scenario’s growth and allocation assumptions.' : 'Changes affect this scenario. Recalculate its forecast after saving.'} formData={formData} onInputChange={handleInputChange} onSwitchChange={handleSwitchChange} onParametersChange={handleParametersChange} onSubmit={handleUpdateScenario} submitLabel="Save assumptions" idPrefix="edit-" isSaving={isSaving} error={formError} />
 
       {/* Delete Scenario Dialog */}
-      <DeleteConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        scenario={selectedScenario}
-        onConfirm={handleDeleteScenario}
-      />
+      <DeleteConfirmDialog isOpen={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)} scenario={selectedScenario} onConfirm={handleDeleteScenario} isDeleting={isDeleting} error={formError} />
     </div>
   );
 };

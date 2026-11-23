@@ -17,13 +17,12 @@ export const useProjectionScenarios = () => {
       setScenarios(data);
       
       // Select the first scenario by default if available and no scenario is currently selected
-      if (data.length > 0 && !selectedScenarioId) {
-        setSelectedScenarioId(data[0].id);
-        // Only set comparison IDs if they're empty
-        if (comparisonScenarioIds.length === 0) {
-          setComparisonScenarioIds([data[0].id]);
-        }
-      }
+      const defaultId = data.find(scenario => scenario.is_default)?.id ?? data[0]?.id ?? null;
+      setSelectedScenarioId(current => data.some(scenario => scenario.id === current) ? current : defaultId);
+      // Only set comparison IDs if they're empty
+      setComparisonScenarioIds(current => current.length === 0 && defaultId !== null
+        ? [defaultId]
+        : current.filter(id => data.some(scenario => scenario.id === id)));
       
       setError(null);
     } catch (err) {
@@ -32,7 +31,7 @@ export const useProjectionScenarios = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedScenarioId, comparisonScenarioIds.length]);
+  }, []);
 
   // Handle scenario selection for results view
   const handleScenarioSelect = useCallback((scenarioId: number) => {
