@@ -16,7 +16,7 @@ interface OverviewTabProps {
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendData, formatCurrency, formatCurrencyCompact }) => {
-  const { maskString } = usePrivacyMode();
+  const { maskAmounts } = usePrivacyMode();
   const topCategories = data.expense_analysis.top_categories.slice(0, 5);
   const topRecommendation = data.financial_health.top_recommendations[0];
 
@@ -134,10 +134,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ data, combinedTrendDat
               <AlertTriangle size={18} className="text-accent mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-[var(--color-text-primary)]">
-                  Review: {maskString(topRecommendation.title)}
+                  Review: {maskAmounts(topRecommendation.title)}
                 </p>
                 <p className="text-sm text-[var(--color-text-secondary)] mt-1 leading-relaxed">
-                  {maskString(topRecommendation.description)}
+                  {maskAmounts(topRecommendation.description)}
                 </p>
               </div>
               <ArrowRight size={16} className="text-accent mt-1 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />

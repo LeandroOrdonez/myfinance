@@ -9,6 +9,11 @@ type PrivacyContextType = {
    * is on. Currency amounts should keep using formatPrivateAmount.
    */
   maskString: (value: string) => string;
+  /**
+   * Mask only currency amounts embedded in a longer string, keeping the
+   * surrounding text readable (e.g. recommendation titles/descriptions).
+   */
+  maskAmounts: (value: string) => string;
 };
 
 const PrivacyContext = createContext<PrivacyContextType | undefined>(undefined);
@@ -29,8 +34,15 @@ export const PrivacyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const maskString = (value: string): string =>
     privacyMode ? PRIVACY_MASK : value;
 
+  const maskAmounts = (value: string): string =>
+    privacyMode
+      ? value
+          .replace(/[€$£]\s?\d[\d.,]*\s?[kKmM]?/g, PRIVACY_MASK)
+          .replace(/\b\d[\d.,]*\s?[€$£]/g, PRIVACY_MASK)
+      : value;
+
   return (
-    <PrivacyContext.Provider value={{ privacyMode, togglePrivacyMode, maskString }}>
+    <PrivacyContext.Provider value={{ privacyMode, togglePrivacyMode, maskString, maskAmounts }}>
       {children}
     </PrivacyContext.Provider>
   );
